@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+      "target": "ES2016",
+      "module": "commonjs",
+      "lib": [
+        "ESNext",
+        "DOM"
+      ],
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "strictNullChecks": true,
+      "jsx": "react",
+      "sourceMap": true,
+      "strict": true,
+      "declaration": true,
+      "removeComments": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "baseUrl": "./",
+      "paths": {
+        "@src/*": ["./app/*"]
+      },
+      "moduleResolution": "node"
+    },
+    "exclude": ["dist", "node_modules"],
+    "include": ["app/**/*.ts", "app/**/*.tsx", "app/**/*.d.ts"]
+  }

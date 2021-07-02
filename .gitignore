@@ -1,0 +1,14 @@
+ec2-keys.pem
+keys.pem
+tmp
+dump.rdb
+npm-debug.log
+.env
+.ts-repl-history
+bin/scratch.ts
+.idea/
+dist/
+node_modules/
+.editorconfig
+settings.json
+.DS_STORE
