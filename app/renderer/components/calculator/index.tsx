@@ -23,7 +23,13 @@ import { fetchRuleContent as fetchDimensionalWeighContent } from '@src/store/dim
 import { fetchRuleContent as fetchFbaContent } from '@src/store/fbaSlice'
 import { fetchRuleContent as fetchReferralContent } from '@src/store/referralSlice'
 import { fetchRuleContent as fetchClosingContent } from '@src/store/closingSlice'
-import { selectCalculator, changeLoadStatus, changeProductInput, changeProductCategory, calculate } from '@src/store/calculatorSlice'
+import {
+  selectCalculator,
+  changeLoadStatus,
+  changeProductInput,
+  changeProductCategory,
+  calculate,
+} from '@src/store/calculatorSlice'
 import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch } from '@src/store/hooks'
 
@@ -131,7 +137,7 @@ function Calculator() {
     })
   }
   useEffect(() => {
-    const v = true // checkPrerequisite()
+    const v = checkPrerequisite()
     setInitialized(v)
   }, [initialized])
   useEffect(() => {
@@ -260,7 +266,7 @@ function Calculator() {
                     label="Dangerous"
                   />
                 </Grid>
-                <Button type="submit" variant="contained" color="primary" className={classes.submit}>
+                <Button type="button" variant="contained" color="primary" className={classes.submit}>
                   Estimate
                 </Button>
               </Grid>
@@ -288,7 +294,7 @@ function Calculator() {
                 </Grid>
                 <Grid item xs={3}>
                   <TextField
-                    id="outlined-read-only-input"
+                    id="price-value"
                     defaultValue="0"
                     type="number"
                     variant="outlined"
@@ -318,7 +324,7 @@ function Calculator() {
                 </Grid>
                 <Grid item xs={3}>
                   <TextField
-                    id="outlined-read-only-input"
+                    id="cost-value"
                     defaultValue="0"
                     type="number"
                     variant="outlined"
