@@ -30,7 +30,7 @@ export function determineTier(
   lengthGirthRule: number[]
 ): number {
   const { length, width, height, weight } = tierData
-  const ready = [length, width, height, weight].every(Boolean)
+  const ready = [length, width, height, weight, weightRule, volumeRule, lengthGirthRule].every(Boolean)
   if (ready) {
     const weightTier = weightRule.reduce(
       (pre, val, index) =>

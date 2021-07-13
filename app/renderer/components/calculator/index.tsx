@@ -7,6 +7,8 @@ import InputAdornment from '@material-ui/core/InputAdornment'
 import Divider from '@material-ui/core/Divider'
 import Grid from '@material-ui/core/Grid'
 import InputLabel from '@material-ui/core/InputLabel'
+import Checkbox from '@material-ui/core/Checkbox'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
 import MenuItem from '@material-ui/core/MenuItem'
 import Select from '@material-ui/core/Select'
 import BusinessIcon from '@material-ui/icons/Business'
@@ -14,13 +16,14 @@ import Typography from '@material-ui/core/Typography'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
+import { categoryItems } from '@src/service/constants'
 import { selectTierRule } from '@src/store/tiersSlice'
 import { fetchRuleContent as fetchTierContent } from '@src/store/tiersSlice'
 import { fetchRuleContent as fetchDimensionalWeighContent } from '@src/store/dimensionalWeightSlice'
 import { fetchRuleContent as fetchFbaContent } from '@src/store/fbaSlice'
 import { fetchRuleContent as fetchReferralContent } from '@src/store/referralSlice'
 import { fetchRuleContent as fetchClosingContent } from '@src/store/closingSlice'
-import { selectCalculator, changeLoadStatus, changeProductInput, calculate } from '@src/store/calculatorSlice'
+import { selectCalculator, changeLoadStatus, changeProductInput, changeProductCategory, calculate } from '@src/store/calculatorSlice'
 import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch } from '@src/store/hooks'
 
@@ -66,6 +69,8 @@ function Calculator() {
   const [width, setWidth] = useState(initProductInput(calculatorStore.productInput?.width))
   const [height, setHeight] = useState(initProductInput(calculatorStore.productInput?.height))
   const [weight, setWeight] = useState(initProductInput(calculatorStore.productInput?.weight))
+  const [apparel, setApparel] = useState(calculatorStore.productInput?.isApparel === true)
+  const [dangerous, setDangerous] = useState(calculatorStore.productInput?.isDangerous === true)
   const [price, setPrice] = useState(initProductInput(calculatorStore.productInput?.price))
   const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
   const [net, setNet] = useState(initProductInput(calculatorStore.productInput?.net))
@@ -84,6 +89,17 @@ function Calculator() {
   const handleWeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWeight(parseFloat(event.target.value))
   }
+  const handleCategoryChange = (event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>) => {
+    event.preventDefault()
+    // console.log(event.target.value)
+    dispatch(changeProductCategory(event.target.value as string))
+  }
+  const handleApparelChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setApparel(event.target.checked)
+  }
+  const handleDangerousChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDangerous(event.target.checked)
+  }
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPrice(parseFloat(event.target.value))
   }
@@ -92,7 +108,11 @@ function Calculator() {
   }
 
   const tryToCalculate = () => {
-    dispatch(changeProductInput({ productInput: { length, width, height, weight, price, cost } }))
+    dispatch(
+      changeProductInput({
+        productInput: { length, width, height, weight, isApparel: apparel, isDangerous: dangerous, price, cost },
+      })
+    )
     if (checkProductInputReady()) {
       dispatch(calculate())
     }
@@ -111,7 +131,7 @@ function Calculator() {
     })
   }
   useEffect(() => {
-    const v = checkPrerequisite()
+    const v = true // checkPrerequisite()
     setInitialized(v)
   }, [initialized])
   useEffect(() => {
@@ -120,7 +140,7 @@ function Calculator() {
     const referralFee = 2.6
     const closingFee = 0
     tryToCalculate()
-  }, [length, width, height, weight, cost, price])
+  }, [length, width, height, weight, apparel, dangerous, cost, price])
 
   return (
     <Container component="main" maxWidth="lg">
@@ -209,50 +229,36 @@ function Calculator() {
                     onChange={handleWeightChange}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={4}>
                   <InputLabel id="category">Product category:</InputLabel>
-                  <Select id="select" labelId="category" value="21">
-                    <MenuItem value="1">Amazon Device Accessories</MenuItem>
-                    <MenuItem value="2">Automotive and Powersports</MenuItem>
-                    <MenuItem value="3">Baby Products (excluding Baby Apparel)</MenuItem>
-                    <MenuItem value="4">Beauty</MenuItem>
-                    <MenuItem value="5">Books</MenuItem>
-                    <MenuItem value="6">Clothing and Accessories</MenuItem>
-                    <MenuItem value="7">Collectible Coins</MenuItem>
-                    <MenuItem value="8">Consumer Electronics</MenuItem>
-                    <MenuItem value="9">DVD</MenuItem>
-                    <MenuItem value="10">Electronics Accessories</MenuItem>
-                    <MenuItem value="11">Entertainment Collectibles</MenuItem>
-                    <MenuItem value="12">Fine Art</MenuItem>
-                    <MenuItem value="13">Furniture (including outdoor furniture) - Mattresses</MenuItem>
-                    <MenuItem value="14">Furniture (including outdoor furniture) - Others</MenuItem>
-                    <MenuItem value="15">Gift Cards</MenuItem>
-                    <MenuItem value="16">Gourmet and Grocery Food</MenuItem>
-                    <MenuItem value="17">Health & Personal Care (including Personal Care Appliances)</MenuItem>
-                    <MenuItem value="18">Home and Garden (including Pet Supplies)</MenuItem>
-                    <MenuItem value="19">
-                      Industrial & Scientific (including Food Service and Janitorial & Sanitation)
-                    </MenuItem>
-                    <MenuItem value="20">Jewelry</MenuItem>
-                    <MenuItem value="21">Kitchen</MenuItem>
-                    <MenuItem value="22">Major Appliances</MenuItem>
-                    <MenuItem value="23">Music</MenuItem>
-                    <MenuItem value="24">Musical Instruments</MenuItem>
-                    <MenuItem value="25">Office Products</MenuItem>
-                    <MenuItem value="26">Outdoors</MenuItem>
-                    <MenuItem value="27">Personal Computers</MenuItem>
-                    <MenuItem value="28">Shoes</MenuItem>
-                    <MenuItem value="29">Software and Computer/Video Games</MenuItem>
-                    <MenuItem value="30">Sports (excluding Sports Collectibles)</MenuItem>
-                    <MenuItem value="31">Sports Collectibles</MenuItem>
-                    <MenuItem value="32">Tools and Home Improvement</MenuItem>
-                    <MenuItem value="33">Tools and Home Improvement - Base Equipment Power Tools</MenuItem>
-                    <MenuItem value="34">Toys & Games - Collectible Cards</MenuItem>
-                    <MenuItem value="35">Toys and Games</MenuItem>
-                    <MenuItem value="36">Video Game Consoles</MenuItem>
-                    <MenuItem value="37">Watches</MenuItem>
-                    <MenuItem value="38">Everything Else</MenuItem>
+                  <Select
+                    id="select"
+                    labelId="category"
+                    value={calculatorStore.productInput.categoryCode ? calculatorStore.productInput.categoryCode : ''}
+                    onChange={handleCategoryChange}
+                  >
+                    {categoryItems.map((item) => (
+                      <MenuItem key={item.code} value={item.code}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
                   </Select>
+                </Grid>
+                <Grid item xs={4}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={apparel} onChange={handleApparelChange} name="checkedB" color="primary" />
+                    }
+                    label="Apparel"
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox checked={dangerous} onChange={handleDangerousChange} name="checkedB" color="primary" />
+                    }
+                    label="Dangerous"
+                  />
                 </Grid>
                 <Button type="submit" variant="contained" color="primary" className={classes.submit}>
                   Estimate
@@ -409,10 +415,10 @@ function Calculator() {
                 variant="contained"
                 color="primary"
                 className={classes.submit}
-                disabled={calculatorStore.loadStatus}
+                disabled={calculatorStore.loading}
                 onClick={handleLoadClick}
               >
-                {calculatorStore.loadStatus ? 'Loading' : 'Load'}
+                {calculatorStore.loading ? 'Loading' : 'Load'}
               </Button>
             </Typography>
           </Container>

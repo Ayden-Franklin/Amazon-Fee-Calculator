@@ -16,6 +16,7 @@ import Typography from '@material-ui/core/Typography'
 import { useHistory } from 'react-router-dom'
 import { changeLanguage } from '@src/store/languageSlice'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
+import { languageMenuItems } from '@src/service/constants'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -32,48 +33,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   })
 )
-const languageMenuItems = [
-  {
-    code: 'us',
-    name: 'Unitied State',
-  },
-  {
-    code: 'ca',
-    name: 'Canada',
-  },
-  {
-    code: 'it',
-    name: 'Italy',
-  },
-  {
-    code: 'fr',
-    name: 'France',
-  },
-  {
-    code: 'de',
-    name: 'Germany',
-  },
-  {
-    code: 'in',
-    name: 'India',
-  },
-  {
-    code: 'jp',
-    name: 'Japan',
-  },
-  {
-    code: 'se',
-    name: 'Spain',
-  },
-  {
-    code: 'mx',
-    name: 'Mexico',
-  },
-  {
-    code: 'uk',
-    name: 'United Kingdom',
-  },
-]
 export default function Header(props: HeaderProps) {
   const history = useHistory()
   const classes = useStyles()

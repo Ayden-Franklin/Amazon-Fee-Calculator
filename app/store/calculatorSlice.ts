@@ -2,8 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { TierData, determineTier, calculateShippingWeight } from '@src/service/calculator'
 interface CalculatorState {
   productInput?: ProductInput
+  loading: boolean
   tierIndex: number
-  loadStatus: boolean
   fbaFee: number
   referralFee: number
   closingFee: number
@@ -13,8 +13,8 @@ interface CalculatorState {
   error?: string
 }
 const initialState: CalculatorState = {
+  loading: false,
   tierIndex: -1,
-  loadStatus: false,
   status: 'idle',
   fbaFee: 0,
   referralFee: 0,
@@ -31,19 +31,19 @@ export interface ProductInput {
   weight: number
   price: number
   cost: number
+  categoryCode: string
+  isApparel: boolean
+  isDangerous: boolean
 }
 function startToCalculate(input: ProductInput | undefined, rules: any, setTierIndex: (index: number) => void) {
-  // console.log(' ------------- calculate', input?.length)
-  let weightRule: number[] = rules.tierRule.weightRule
-  let volumeRule: number[][] = rules.tierRule.volumeRule
-  let lengthGirthRule: number[] = rules.tierRule.lengthGirthRule
+  let weightRule: number[] = rules.tierRule?.weightRule
+  let volumeRule: number[][] = rules.tierRule?.volumeRule
+  let lengthGirthRule: number[] = rules.tierRule?.lengthGirthRule
   const tierData: TierData = { ...input, country: 'us' }
   const tierIndex: number = determineTier({ ...tierData }, weightRule, volumeRule, lengthGirthRule)
   // console.log('get tier index is ', tierIndex)
   if (!isNaN(tierIndex)) {
     setTierIndex(tierIndex)
-    // console.log('get tier name is ', rules.tierRule.tierNames[tierIndex])
-    // console.log('tierData is ', tierData)
     const weight = calculateShippingWeight({
       tierData: tierData,
       tierIndex: tierIndex,
@@ -59,18 +59,20 @@ const calculatorSlice = createSlice({
   initialState,
   reducers: {
     changeLoadStatus: (state, action: PayloadAction<{ status: boolean }>) => {
-      state.loadStatus = action.payload.status
+      state.loading = action.payload.status
     },
     changeProductInput: (state, action: PayloadAction<{ productInput: ProductInput }>) => {
-      state.productInput = action.payload.productInput
+      state.productInput = { ...state.productInput, ...action.payload.productInput }
+    },
+    changeProductCategory: (state, action: PayloadAction<string>) => {
+      state.productInput = { categoryCode: action.payload, ...state.productInput }
     },
     calculate: (state, action) => {
-      // console.log(action.payload)
       startToCalculate(state.productInput, action.payload, (index) => {
         state.tierIndex = index
       })
     },
   },
 })
-export const { changeLoadStatus, changeProductInput, calculate } = calculatorSlice.actions
+export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate } = calculatorSlice.actions
 export default calculatorSlice.reducer
