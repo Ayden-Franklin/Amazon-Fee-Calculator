@@ -1,8 +1,8 @@
-import path from 'path';
-import { app, BrowserWindow } from 'electron';
+import path from 'path'
+import { app, BrowserWindow } from 'electron'
 
 function isDev() {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === 'development'
 }
 
 function createWindow() {
@@ -14,18 +14,18 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-  });
+  })
 
   if (isDev()) {
-    mainWindow.loadURL(`http://127.0.0.1:6001`);
+    mainWindow.loadURL(`http://127.0.0.1:6001`)
   } else {
-    mainWindow.loadURL(`file://${path.join(__dirname, '../dist/index.html')}`);
+    mainWindow.loadURL(`file://${path.join(__dirname, '../dist/index.html')}`)
   }
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  createWindow()
   app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})

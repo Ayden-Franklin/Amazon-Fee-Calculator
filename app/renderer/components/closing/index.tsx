@@ -1,21 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import Box from '@material-ui/core/Box';
-import { loadClosingFee } from '@src/service/http';
+import React, { useEffect } from 'react'
+import { useAppSelector, useAppDispatch } from '@src/store/hooks'
+import Box from '@material-ui/core/Box'
+import { fetchRuleContent } from '@src/store/closingSlice'
 
 function ClosingFee() {
-  const [pageContent, setPageContent] = useState('loading');
+  const dispatch = useAppDispatch()
+  const pageContent = useAppSelector((state) => state.closing.content)
+  const loadStatus = useAppSelector((state) => state.closing.status)
+  const error = useAppSelector((state) => state.closing.error)
+
   useEffect(() => {
-    async function fetchData() {
-      const response = await loadClosingFee();
-      console.log('load successfully');
-      setPageContent(response);
+    if (loadStatus === 'idle') {
+      dispatch(fetchRuleContent())
     }
-    fetchData();
-  }, []);
-  return (
-    <Box m={2}>
-      <div dangerouslySetInnerHTML={{ __html: pageContent }} />
-    </Box>
-  );
+  }, [loadStatus, dispatch])
+
+  let content
+
+  if (loadStatus === 'loading') {
+    content = <div className="loader">Loading...</div>
+  } else if (loadStatus === 'succeeded') {
+    content = <div dangerouslySetInnerHTML={{ __html: pageContent }} />
+  } else if (loadStatus === 'failed') {
+    content = <div>{error}</div>
+  }
+  return <Box m={2}>{content}</Box>
 }
-export default ClosingFee;
+export default ClosingFee

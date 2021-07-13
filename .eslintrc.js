@@ -9,9 +9,11 @@ module.exports = {
   globals: {
     __dirname: false,
   },
+  plugins: ['prettier'],
   rules: {
     'no-undefined': 'warn',
     'no-debugger': 'off',
+    'prettier/prettier': 'error',
     complexity: ['error', { max: 99 }],
     indent: [
       1,

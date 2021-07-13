@@ -1,7 +1,7 @@
-import React from 'react';
-import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
-import Root from '@src/renderer/container/root';
-import About from '@src/renderer/container/about';
+import React from 'react'
+import { HashRouter, Route, Switch, Redirect } from 'react-router-dom'
+import Root from '@src/renderer/container/root'
+import About from '@src/renderer/container/about'
 
 function Router() {
   return (
@@ -16,6 +16,6 @@ function Router() {
       </Switch>
       <Redirect to="/main" />
     </HashRouter>
-  );
+  )
 }
-export default Router;
+export default Router

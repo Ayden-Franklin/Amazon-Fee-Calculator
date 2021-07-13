@@ -4,5 +4,8 @@
   "tabWidth": 2,
   "useTabs": false,
   "singleQuote": true,
-  "endOfLine": "auto"
+  //"trailingComma": "none",
+  "semi": false,
+  "endOfLine": "auto",
+  "interface-over-type-literal": false
 }

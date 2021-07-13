@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import { shell } from 'electron';
-import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import InfoIcon from '@material-ui/icons/Info';
-import Paper from '@material-ui/core/Paper';
-import HomeIcon from '@material-ui/icons/Home';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import { useHistory } from 'react-router-dom';
-import { changeLanguage } from '@src/store/languageSlice';
-import { useAppSelector, useAppDispatch } from '@src/store/hooks';
+import React, { useState } from 'react'
+import { shell } from 'electron'
+import { makeStyles, createStyles, Theme } from '@material-ui/core/styles'
+import AppBar from '@material-ui/core/AppBar'
+import Toolbar from '@material-ui/core/Toolbar'
+import InfoIcon from '@material-ui/icons/Info'
+import Paper from '@material-ui/core/Paper'
+import HomeIcon from '@material-ui/icons/Home'
+import Menu from '@material-ui/core/Menu'
+import MenuItem from '@material-ui/core/MenuItem'
+import Tabs from '@material-ui/core/Tabs'
+import Tab from '@material-ui/core/Tab'
+import Button from '@material-ui/core/Button'
+import IconButton from '@material-ui/core/IconButton'
+import Typography from '@material-ui/core/Typography'
+import { useHistory } from 'react-router-dom'
+import { changeLanguage } from '@src/store/languageSlice'
+import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: theme.spacing(1),
     },
   })
-);
+)
 const languageMenuItems = [
   {
     code: 'us',
@@ -73,35 +73,33 @@ const languageMenuItems = [
     code: 'uk',
     name: 'United Kingdom',
   },
-];
+]
 export default function Header(props: HeaderProps) {
-  const history = useHistory();
-  const classes = useStyles();
-  const { sections, title } = props;
-  const country = useAppSelector((state) => state.language);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [tabIndex, setTabIndex] = useState(-1);
-  const dispatch = useAppDispatch();
+  const history = useHistory()
+  const classes = useStyles()
+  const { sections, title } = props
+  const country = useAppSelector((state) => state.language)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [tabIndex, setTabIndex] = useState(-1)
+  const dispatch = useAppDispatch()
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+    setAnchorEl(event.currentTarget)
+  }
   const handleClose = () => {
-    setAnchorEl(null);
-  };
+    setAnchorEl(null)
+  }
   const handleMenuItemClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
-    event.preventDefault();
-    console.log('select country: ', index);
-    dispatch(changeLanguage(languageMenuItems[index]));
-    handleClose();
-  };
+    event.preventDefault()
+    dispatch(changeLanguage(languageMenuItems[index]))
+    handleClose()
+  }
   const handleAbout = () => {
-    history.push('/about');
-  };
+    history.push('/about')
+  }
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setTabIndex(newValue);
-    history.push(sections[newValue].url);
-    console.log('go to ', sections[newValue].url);
-  };
+    setTabIndex(newValue)
+    history.push(sections[newValue].url)
+  }
   return (
     <React.Fragment key="header-fragment">
       <AppBar position="static">
@@ -137,7 +135,7 @@ export default function Header(props: HeaderProps) {
             variant="outlined"
             size="small"
             onClick={() => {
-              shell.openExternal('https://www.amazon.com');
+              shell.openExternal('https://www.amazon.com')
               // alert('sss')
             }}
           >
@@ -156,7 +154,7 @@ export default function Header(props: HeaderProps) {
       </AppBar>
       <Paper square>
         <Tabs
-          value={tabIndex}
+          {...(tabIndex > -1 ? { value: tabIndex } : {})}
           onChange={handleTabChange}
           indicatorColor="primary"
           textColor="primary"
@@ -169,12 +167,12 @@ export default function Header(props: HeaderProps) {
         </Tabs>
       </Paper>
     </React.Fragment>
-  );
+  )
 }
 export interface HeaderProps {
   sections: {
-    title: string;
-    url: string;
-  }[];
-  title: string;
+    title: string
+    url: string
+  }[]
+  title: string
 }

@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import Box from '@material-ui/core/Box'
-import { fetchRuleContent } from '@src/store/dimensionalWeightSlice'
+import { fetchRuleContent } from '@src/store/referralSlice'
 
-function WeightRule() {
+function ReferralTable() {
   const dispatch = useAppDispatch()
-  const pageContent = useAppSelector((state) => state.dimensionalWeight.content)
-  const loadStatus = useAppSelector((state) => state.dimensionalWeight.status)
-  const error = useAppSelector((state) => state.dimensionalWeight.error)
+  const pageContent = useAppSelector((state) => state.referral.content)
+  const loadStatus = useAppSelector((state) => state.referral.status)
+  const error = useAppSelector((state) => state.referral.error)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
@@ -26,4 +26,4 @@ function WeightRule() {
   }
   return <Box m={2}>{content}</Box>
 }
-export default WeightRule
+export default ReferralTable
