@@ -1,19 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { loadFBATable } from '@src/service/amazon'
 import { parseFba } from '@src/service/parser'
-interface FulfillmentItem {
-  minimumShippingWeight: number
-  maximumShippingWeight: number
-  fee: number
-}
-interface TierItem {
-  tierName: string
-  fulfillments: FulfillmentItem[]
-}
-interface ProductTierItem {
-  productType: string
-  tiers: TierItem[]
-}
+import { ProductTierItem } from '@src/types/fba'
 interface FbaState {
   content: string
   status: string

@@ -1,26 +1,26 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { TierData, determineTier, calculateShippingWeight } from '@src/service/calculator'
+import { TierData, determineTier, calculateShippingWeight, calculateFbaFee } from '@src/service/calculator'
 interface CalculatorState {
   productInput?: ProductInput
   loading: boolean
   tierIndex: number
-  fbaFee: number
-  referralFee: number
-  closingFee: number
-  totalFee: number
-  net: number
+  shippingWeight: number
+  productFees: ProductFees
   status: string
   error?: string
 }
 const initialState: CalculatorState = {
   loading: false,
   tierIndex: -1,
+  shippingWeight: 0,
   status: 'idle',
-  fbaFee: 0,
-  referralFee: 0,
-  closingFee: 0,
-  totalFee: 0,
-  net: 0,
+  productFees: {
+    fbaFee: 0,
+    referralFee: 0,
+    closingFee: 0,
+    totalFee: 0,
+    net: 0,
+  },
 }
 
 export const selectCalculator = (state) => state.calculator
@@ -31,11 +31,18 @@ export interface ProductInput {
   weight: number
   price: number
   cost: number
-  categoryCode: string
+  categoryCode?: string
   isApparel: boolean
   isDangerous: boolean
 }
-function startToCalculate(input: ProductInput | undefined, rules: any, setTierIndex: (index: number) => void) {
+export interface ProductFees {
+  fbaFee: number
+  referralFee: number
+  closingFee: number
+  totalFee: number
+  net: number
+}
+function calculateTier(input: ProductInput | undefined, rules: any): number[] | undefined {
   let weightRule: number[] = rules.tierRule?.weightRule
   let volumeRule: number[][] = rules.tierRule?.volumeRule
   let lengthGirthRule: number[] = rules.tierRule?.lengthGirthRule
@@ -43,7 +50,6 @@ function startToCalculate(input: ProductInput | undefined, rules: any, setTierIn
   const tierIndex: number = determineTier({ ...tierData }, weightRule, volumeRule, lengthGirthRule)
   // console.log('get tier index is ', tierIndex)
   if (!isNaN(tierIndex)) {
-    setTierIndex(tierIndex)
     const weight = calculateShippingWeight({
       tierData: tierData,
       tierIndex: tierIndex,
@@ -51,6 +57,24 @@ function startToCalculate(input: ProductInput | undefined, rules: any, setTierIn
       minimumWeight: rules.diemnsionalWeightRule.minimumWeight,
       divisor: rules.diemnsionalWeightRule.divisor,
     })
+    return [tierIndex, weight]
+  }
+}
+function startToEstimate(state, rules: any): ProductFees {
+  console.log(rules)
+  calculateFbaFee(
+    state.tierIndex,
+    state.shippingWeight,
+    state.productInput.isApparel,
+    state.productInput.isDangerous,
+    rules.fbaRule
+  )
+  return {
+    fbaFee: 0,
+    referralFee: 0,
+    closingFee: 0,
+    totalFee: 0,
+    net: 0,
   }
 }
 
@@ -68,11 +92,21 @@ const calculatorSlice = createSlice({
       state.productInput = { categoryCode: action.payload, ...state.productInput }
     },
     calculate: (state, action) => {
-      startToCalculate(state.productInput, action.payload, (index) => {
-        state.tierIndex = index
-      })
+      const result = calculateTier(state.productInput, action.payload)
+      if (result) {
+        state.tierIndex = result[0]
+        state.shippingWeight = result[1]
+      }
+    },
+    estimate: (state, action) => {
+      console.log(action)
+      const result = startToEstimate(state, action.payload)
+      if (result) {
+        state.productFees = result
+      }
     },
   },
 })
-export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate } = calculatorSlice.actions
+export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate, estimate } =
+  calculatorSlice.actions
 export default calculatorSlice.reducer

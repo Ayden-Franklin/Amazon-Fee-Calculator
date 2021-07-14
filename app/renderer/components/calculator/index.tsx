@@ -29,6 +29,7 @@ import {
   changeProductInput,
   changeProductCategory,
   calculate,
+  estimate,
 } from '@src/store/calculatorSlice'
 import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch } from '@src/store/hooks'
@@ -80,6 +81,7 @@ function Calculator() {
   const [price, setPrice] = useState(initProductInput(calculatorStore.productInput?.price))
   const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
   const [net, setNet] = useState(initProductInput(calculatorStore.productInput?.net))
+  const [redayForCalculation, setRedayForCalculation] = useState(false)
 
   const tierRule = useSelector(selectTierRule)
 
@@ -119,8 +121,10 @@ function Calculator() {
         productInput: { length, width, height, weight, isApparel: apparel, isDangerous: dangerous, price, cost },
       })
     )
-    if (checkProductInputReady()) {
-      dispatch(calculate())
+    const ready = checkProductInputReady()
+    setRedayForCalculation(ready)
+    if (ready) {
+      dispatch(calculate({}))
     }
   }
   const handleLoadClick = () => {
@@ -135,6 +139,9 @@ function Calculator() {
       dispatch(changeLoadStatus({ status: false }))
       setInitialized(true)
     })
+  }
+  const handleEstimate = () => {
+    dispatch(estimate({}))
   }
   useEffect(() => {
     const v = checkPrerequisite()
@@ -266,14 +273,11 @@ function Calculator() {
                     label="Dangerous"
                   />
                 </Grid>
-                <Button type="button" variant="contained" color="primary" className={classes.submit}>
-                  Estimate
-                </Button>
               </Grid>
               <Grid item xs={1}>
                 <Divider orientation="vertical" flexItem />
               </Grid>
-              <Grid container item spacing={2} xs={6} className={classes.root}>
+              <Grid container item spacing={2} xs={6} className={classes.root} justify="center">
                 <Grid item xs={3}>
                   <Typography>Dimenstions</Typography>
                 </Grid>
@@ -339,7 +343,7 @@ function Calculator() {
                   <TextField
                     id="tier-value"
                     disabled
-                    value={`$${calculatorStore.fbaFee}`}
+                    value={`$${calculatorStore.productFees.fbaFee}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -354,7 +358,7 @@ function Calculator() {
                   <TextField
                     id="total-fee-value"
                     disabled
-                    value={`$${calculatorStore.totalFee}`}
+                    value={`$${calculatorStore.productFees.totalFee}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -369,7 +373,7 @@ function Calculator() {
                   <TextField
                     id="referral-value"
                     disabled
-                    value={`$${calculatorStore.referralFee}`}
+                    value={`$${calculatorStore.productFees.referralFee}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -383,7 +387,7 @@ function Calculator() {
                 <Grid item xs={3}>
                   <TextField
                     id="net-value"
-                    value={`$${calculatorStore.net}`}
+                    value={`$${calculatorStore.productFees.net}`}
                     disabled
                     size="small"
                     InputProps={{
@@ -399,13 +403,24 @@ function Calculator() {
                   <TextField
                     id="closing-value"
                     disabled
-                    value={`$${calculatorStore.closingFee}`}
+                    value={`$${calculatorStore.productFees.closingFee}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
                     }}
                     variant="outlined"
                   />
+                </Grid>
+                <Grid item xs={5}>
+                  <Button
+                    type="button"
+                    variant="contained"
+                    color="primary"
+                    disabled={redayForCalculation && calculatorStore.productInput.categoryCode ? false : true}
+                    onClick={handleEstimate}
+                  >
+                    Estimate
+                  </Button>
                 </Grid>
               </Grid>
             </Grid>

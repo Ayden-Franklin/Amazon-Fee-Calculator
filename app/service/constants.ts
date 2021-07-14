@@ -50,3 +50,8 @@ export const categoryItems = [
   { code: '37', name: 'Watches' },
   { code: '38', name: 'Everything Else' },
 ]
+export enum FbaProductType {
+  Normal,
+  Apparel,
+  Dangerous,
+}

@@ -9,7 +9,7 @@ import calculatorReducer from '@src/store/calculatorSlice'
 function interceptor({ getState }) {
   return next => action => {
     // console.log('will dispatch', action)
-    if (action.type === 'calculator/calculate') {
+    if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
       action.payload = {
         tierRule: getState().tier.tierRule,
         diemnsionalWeightRule: getState().dimensionalWeight.diemnsionalWeightRule,

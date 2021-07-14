@@ -1,5 +1,6 @@
 import store, { RootState } from '@src/store'
 import { sortDimensions } from '@src/service/utils'
+import { FulfillmentItem, TierItem, ProductTierItem } from '@src/types/fba'
 export interface TierData {
   length: number
   width: number
@@ -100,7 +101,7 @@ export function calculateShippingWeight({
   divisor,
 }: DimensionalWeightParameter) {
   const dimensionalWeight = calculateDimensionalWeight({ tierData, tierIndex, tierSize, minimumWeight, divisor })
-  const { length, width, height, weight } = tierData
+  const { weight } = tierData
   let shippingWeight = 0
   // TODO: Shipping weight in the small standard and large standard size tiers means tier index less or equals to 1(We should get this from parsing)
   if ((weight < minimumWeight && tierIndex <= 1) || tierIndex === tierSize - 1) {
@@ -109,4 +110,40 @@ export function calculateShippingWeight({
     shippingWeight = Math.max(weight, dimensionalWeight)
   }
   return shippingWeight
+}
+
+interface FbaParameter {
+  tierData: TierData
+  tierIndex: number
+  tierSize: number
+  weightRule: number[]
+}
+export function calculateFbaFee(tierIndex: number, shippingWeight: number, isApparel: boolean, isDangerous: boolean, rules: any) {
+  let tierItems: ProductTierItem[]
+  let productTierItems: TierItem[]
+  console.log(rules)
+  if (tierIndex <= 1) {
+    console.log('Standard-size product tiers')
+    tierItems = rules.standard
+    if (isApparel) {
+      productTierItems = tierItems[1].tiers
+    } else if (isDangerous) {
+      productTierItems = tierItems[2].tiers
+    } else {
+      productTierItems = tierItems[0].tiers
+    }
+  } else {
+    console.log('Oversize product tiers')
+    tierItems = rules.oversize
+    console.log(tierItems)
+    if (isApparel || isDangerous) {
+      productTierItems = tierItems[1].tiers
+    } else {
+      productTierItems = tierItems[0].tiers
+    }
+  }
+  const item: TierItem = productTierItems[tierIndex]
+  item.fulfillments.forEach((item) => {
+    console.log('check whether the weight ', shippingWeight, ' target weight', item.minimumShippingWeight)
+  })
 }
