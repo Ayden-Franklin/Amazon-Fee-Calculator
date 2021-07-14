@@ -1,4 +1,5 @@
 import path from 'path'
+import installExtension, { REDUX_DEVTOOLS } from 'electron-devtools-installer'
 import { app, BrowserWindow } from 'electron'
 
 function isDev() {
@@ -24,6 +25,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (isDev()) {
+    installExtension(REDUX_DEVTOOLS)
+      .then((name) => console.log(`Added Extension:  ${name}`))
+      .catch((err) => console.log('An error occurred: ', err))
+  }
   createWindow()
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
