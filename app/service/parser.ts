@@ -1,5 +1,6 @@
 import cheerio from 'cheerio'
 import { ProductTierItem, TierItem, FulfillmentItem } from '@src/types/fba'
+import { ReferralRangeFeeItem, ReferralFeeItem } from '@src/types/referral'
 export function parseTiers(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -160,7 +161,7 @@ export function parseFba(content: string) {
             const value: FulfillmentItem[] = []
             productTierMap.set(currentProductTierKey, value)
           }
-          console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
+          // console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
           productTierMap.get(currentProductTierKey)?.push(fulfillmentItem)
 
           if (!productTypeMap.has(currentProductTypeKey)) {
@@ -177,15 +178,75 @@ export function parseFba(content: string) {
   return {}
 }
 export function parseReferral(content: string) {
-  const newLocal = 35
-  return [
-    {
-      categoriy: 'aaa',
-      fee: newLocal,
-      minimumFee: 0.4,
-    },
-  ]
+  const $ = cheerio.load(content)
+  let referralRule: ReferralFeeItem[] = []
+  $('tbody tr').each((rowIndex, tr) => {
+    let categoryName: string
+    let minimumFee: number
+    let determinateRate = true
+    let rate: number
+    let rangeItems
+    $(tr)
+      .find('td')
+      .each((index, element) => {
+        if (index === 0) {
+          categoryName = $(element).text()
+        } else if (index === 1) {
+          if (element.children.length === 1) {
+            rate = parseFloat($(element).text())/100
+          } else {
+            determinateRate = false
+            rangeItems = praseReferralSubItem(element)
+          }
+        } else if (index === 2) {
+          minimumFee = parseFloat($(element).text().substring(1))
+        }
+      })
+      referralRule.push({
+        categoriy: categoryName,
+        determinateRate: determinateRate,
+        rate: rate,
+        rangeItems: rangeItems,
+        minimumFee: minimumFee,
+      })
+  })
+  return referralRule
+}
+function praseReferralSubItem(content) {
+  const $ = cheerio.load(content)
+  let rangeItems: ReferralRangeFeeItem[] = []
+  $(content).find('li').each((index, element) => {
+    const text = $(element).find('span').text()
+    const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
+    if (array?.length > 1) {
+      rangeItems.push({
+        price: parseFloat(array[1]),
+        rate: parseInt(array[0])
+      })
+    }
+  })
+  return rangeItems
 }
 export function parseClosing(content: string) {
-  return {}
+  const $ = cheerio.load(content)
+  $('.help-content').each((index, element) => {
+    if (index === 1) {
+      const p = $(element).find('div p')
+      const text = $(p).text()
+      const array = text.match(/\$\d+(\.\d*)?/)
+      const fee = array?.length > 0 ? array[0] : 0
+
+      const begin = text.indexOf('in the ') + 7
+      const end = text.lastIndexOf(' categories')
+      const categoryNames = text.substring(begin, end)
+      const names = categoryNames.split(', ')
+      if (names[names.length - 1].indexOf('and') > -1) {
+        names[names.length - 1] = names[names.length - 1].substring(4)
+      }
+      return {
+        category: names,
+        fee: parseFloat(fee)
+      }
+    }
+  })
 }

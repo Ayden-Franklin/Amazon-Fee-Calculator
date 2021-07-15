@@ -1,11 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { loadReferralTable } from '@src/service/amazon'
 import { parseReferral } from '@src/service/parser'
-interface ReferralFeeItem {
-  categoriy: string
-  fee: number
-  minimumFee: number
-}
+import { ReferralFeeItem } from '@src/types/referral'
 interface ReferralState {
   content: string
   status: string
