@@ -305,6 +305,9 @@ function Calculator() {
                     error
                     required
                     size="small"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
                     onChange={handlePriceChange}
                   />
                 </Grid>
@@ -333,6 +336,11 @@ function Calculator() {
                     type="number"
                     variant="outlined"
                     size="small"
+                    error
+                    required
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
                     onChange={handleCostChange}
                   />
                 </Grid>
@@ -416,7 +424,7 @@ function Calculator() {
                     type="button"
                     variant="contained"
                     color="primary"
-                    disabled={redayForCalculation && calculatorStore.productInput.categoryCode ? false : true}
+                    disabled={redayForCalculation && calculatorStore.productInput.categoryCode && price > 0 ? false : true}
                     onClick={handleEstimate}
                   >
                     Estimate

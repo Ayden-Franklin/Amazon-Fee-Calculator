@@ -45,7 +45,8 @@ export function determineTier(
         (isNaN(val[1]) || val[1] >= dimensions[1]) &&
         (isNaN(val[2]) || val[2] >= dimensions[2])
         ? pre !== -1 ||
-          (volumeRule[index][0] === volumeRule[index - 1][0] &&
+          (index > 0 &&
+            volumeRule[index][0] === volumeRule[index - 1][0] &&
             volumeRule[index][1] === volumeRule[index - 1][1] &&
             volumeRule[index][2] === volumeRule[index - 1][2])
           ? pre
@@ -118,32 +119,65 @@ interface FbaParameter {
   tierSize: number
   weightRule: number[]
 }
-export function calculateFbaFee(tierIndex: number, shippingWeight: number, isApparel: boolean, isDangerous: boolean, rules: any) {
-  let tierItems: ProductTierItem[]
-  let productTierItems: TierItem[]
-  console.log(rules)
+export function calculateFbaFee(tierIndex: number, tierName: string, shippingWeight: number, isApparel: boolean, isDangerous: boolean, rules: any): number | Error {
+  // let tierItems: ProductTierItem[]
+  // let productTierItems: TierItem[]
+  // let tierItems: Record<string, Array<Record<string, Array<string>>>>
+  let productTierItems: Array<Record<string, Array<string>>>
+  // console.log(rules)
+  let productTypekey: string
+  // TODO: Don't use index to determine the tier type
   if (tierIndex <= 1) {
-    console.log('Standard-size product tiers')
-    tierItems = rules.standard
-    if (isApparel) {
-      productTierItems = tierItems[1].tiers
-    } else if (isDangerous) {
-      productTierItems = tierItems[2].tiers
-    } else {
-      productTierItems = tierItems[0].tiers
-    }
+    productTypekey = convertProductTypeKey('standard', isApparel, isDangerous)
+    productTierItems = rules.standard[productTypekey]
   } else {
-    console.log('Oversize product tiers')
-    tierItems = rules.oversize
-    console.log(tierItems)
-    if (isApparel || isDangerous) {
-      productTierItems = tierItems[1].tiers
+    productTypekey = convertProductTypeKey('oversize', isApparel, isDangerous)
+    productTierItems = rules.oversize[productTypekey]
+  }
+  // const item: TierItem = productTierItems[tierIndex]
+  // item.fulfillments.forEach((item) => {
+  //   console.log('check whether the weight ', shippingWeight, ' target weight', item.minimumShippingWeight)
+  // })
+  const cutIndex = tierName.indexOf('-size')
+  if (cutIndex > -1) {
+    tierName = tierName.substring(0, cutIndex)
+  }
+  const items = productTierItems[tierName]
+  let item
+  for (let index = 0; index < items.length; index++) {
+    const element = items[index]
+    let target = element.maximumShippingWeight.value
+    // TODO: handle unit conversion
+    if (element.maximumShippingWeight.unit === 'oz') {
+      target /= 16
+    }
+    if (shippingWeight > target) {
+      continue
     } else {
-      productTierItems = tierItems[0].tiers
+      item = element
+      break
     }
   }
-  const item: TierItem = productTierItems[tierIndex]
-  item.fulfillments.forEach((item) => {
-    console.log('check whether the weight ', shippingWeight, ' target weight', item.minimumShippingWeight)
-  })
+  let fee = item.firstWeightFee + (shippingWeight - 1) * item.additionalUnitFee
+  return fee
+}
+
+function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean){
+  if (size === 'standard') {
+    if (isApparel) {
+      return 'Apparel'
+    } else if (isDangerous) {
+      return 'Dangerous goods'
+    } else {
+      return 'Most products (non-dangerous goods, non-apparel)'
+    }
+  } else if (size === 'oversize') {
+    if (isApparel || isDangerous) {
+      return 'Dangerous goods (both apparel and non-apparel)'
+    } else {
+      return 'Non-dangerous goods (both apparel and non-apparel)'
+    }
+  } else {
+    return 'unknown'
+  }
 }

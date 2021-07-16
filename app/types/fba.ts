@@ -1,7 +1,11 @@
+import { IWeightMeasure } from '@src/types'
+
 export interface FulfillmentItem {
-  // minimumShippingWeight: number
-  // maximumShippingWeight: number
-  // fee: number
+  minimumShippingWeight: IWeightMeasure
+  maximumShippingWeight: IWeightMeasure
+  firstWeightAmmount: number
+  firstWeightFee: number
+  additionalUnitFee: number
   shippingWeight: string
   fee: string
 }

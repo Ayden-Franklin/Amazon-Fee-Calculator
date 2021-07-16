@@ -8,10 +8,10 @@ interface FbaState {
   error?: string
   // value: Array<{ name: string }> | undefined
   fbaRule?: {
-    dimensionUnit: string
-    weightUnit: string
-    standard: ProductTierItem[]
-    oversize: ProductTierItem[]
+    standard: Record<string, Array<Record<string, Array<string>>>>
+    oversize: Record<string, Array<Record<string, Array<string>>>>
+    // standard: ProductTierItem[]
+    // oversize: ProductTierItem[]
   }
 }
 const initialState: FbaState = {

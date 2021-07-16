@@ -1,6 +1,7 @@
 import cheerio from 'cheerio'
 import { ProductTierItem, TierItem, FulfillmentItem } from '@src/types/fba'
 import { ReferralRangeFeeItem, ReferralFeeItem } from '@src/types/referral'
+import { IWeightMeasure } from '@src/types'
 export function parseTiers(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -13,7 +14,7 @@ export function parseTiers(content: string) {
       .find('td')
       .each((index, element) => {
         if (index === 0) {
-          names.push($(element).find('strong').text())
+          names.push($(element).find('strong').text().trim())
         } else if (index === 1) {
           weightRule.push(parseFloat($(element).text()))
         } else if (index === 5) {
@@ -37,9 +38,10 @@ export function parseWeight(content: string) {
   const $ = cheerio.load(content)
   const minimumWeightText = $('.a-vertical:eq(0)').find('li:eq(0)').find('span').text()
   const divisorText = $('.help-content:eq(1)').find('div p:eq(0)').text()
+  const minimumWeight = minimumWeightText.match(/\d+(\.\d*)?/)
   const divisor = divisorText.match(/(\d+)/)
   return {
-    minimumWeight: parseFloat(minimumWeightText),
+    minimumWeight: minimumWeight ? parseFloat(minimumWeight[0]) : 0,
     divisor: divisor ? parseFloat(divisor[0]) : 1,
   }
 }
@@ -69,22 +71,27 @@ export function parseFba(content: string) {
     // let productTierMap: {
       //   [key: string]: ProductTierItem[]
       // }
-    let productTypeMap = new Map()
+    let productTypeMap: Record<string, Record<string, FulfillmentItem[]>> = {}
     fbaRule[ruleName] = productTypeMap
-    let productTierMap: Map<string, FulfillmentItem[]> = new Map()
+    let productTierMap: Record<string, FulfillmentItem[]> = {}
     let currentProductTypeKey: string
     let currentProductTierKey: string
     $(e)
       .find('tr')
       .each((rowIndex, tr) => {
+        let offset = 0
         let shippingWeight: string
         let fulfillmentFee: string
-        let offset = 0
+        let minimumShippingWeight: IWeightMeasure
+        let maximumShippingWeight: IWeightMeasure
+        let firstWeightFee: number
+        let firstWeightAmmount: number
+        let additionalUnitFee: number
         if (rowIndex > 1) {
           $(tr)
             .find('td')
             .each((index, element) => {
-              console.log('============== begin to parse fba cell, row: ', rowIndex, 'column', index)
+              // console.log('============== begin to parse fba cell, row: ', rowIndex, 'column', index)
               let columnIndex = index
               if (index === 0) {
                 for (let i = 0; i < rowSpan.length; i++) {
@@ -115,6 +122,10 @@ export function parseFba(content: string) {
                 // console.log(' set rowColumnSkipFlag for column ', columnIndex, ' as 0')
                 // console.log('Now rowSpan :', rowSpan.toString())
                 // console.log('Now rowColumnSkipFlag :', rowColumnSkipFlag.toString())
+                if (columnIndex === 0) {
+                  // console.log('One productTierMap finished. reset it')
+                  productTierMap = {}
+                }
               }
               // if (rowColumnSkipFlag.length >= index + 1) {
               if (index === 0) {
@@ -128,54 +139,129 @@ export function parseFba(content: string) {
               if (columnIndex === 0) {
                 // console.log('check rowColumnSkipFlag === 0 for row', rowIndex, ' column ', columnIndex, 'it is for  productType', rowColumnSkipFlag[columnIndex] === 0)
                 if (rowColumnSkipFlag[columnIndex] === 0) {
-                  console.log('Find Product Type: ', $(element).find('strong').text())
+                  // console.log('Find Product Type: ', $(element).find('strong').text())
                   // names.push($(element).find('strong').text())
                   currentProductTypeKey = $(element).find('strong').text()
                 }
               } else if (columnIndex === 1) {
                 // console.log('check rowColumnSkipFlag ', 'row', rowIndex, ' column', columnIndex, 'it is for  sizeTiers', rowColumnSkipFlag[columnIndex] === 0)
-                console.log('Find Size Tier: ', $(element).text())
+                // console.log('Find Size Tier: ', $(element).text())
                 // sizeTiers.push($(element).text())
                 currentProductTierKey = $(element).text()
               } else if (columnIndex === 2) {
                 // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
                 // shippingWeight.push($(element).text())
                 shippingWeight = $(element).text()
+                const result = parseShippingWeight(shippingWeight)
+                // [minimumShippingWeight, maximumShippingWeight] = result
+                minimumShippingWeight = result[0]
+                maximumShippingWeight = result[1]
               } else if (columnIndex === 3) {
                 // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
                 // fulfillmentFee.push($(element).text())
                 fulfillmentFee = $(element).text()
+                const result = parseFulfillmentFeePerUnit(fulfillmentFee)
                 // volumeRule[rowIndex][index - 2] = parseFloat($(element).text())
+                // [firstWeightAmmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
+                firstWeightAmmount = result[0]
+                firstWeightFee = result[1]
+                additionalUnitFee = result[2]
               }
             })
-          console.log(' Finished a row: ')
-          console.log('                 currentProductTypeKey = ', currentProductTypeKey)
-          console.log('                 currentProductTierKey = ', currentProductTierKey)
-          console.log('                 shippingWeight = ', shippingWeight)
-          console.log('                 fulfillmentFee = ', fulfillmentFee)
+          // console.log(' Finished a row: ')
+          // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
+          // console.log('                 currentProductTierKey = ', currentProductTierKey)
+          // console.log('                 shippingWeight = ', shippingWeight)
+          // console.log('                 fulfillmentFee = ', fulfillmentFee)
           const fulfillmentItem: FulfillmentItem = {
             shippingWeight: shippingWeight,
-            fee: fulfillmentFee
+            fee: fulfillmentFee,
+            minimumShippingWeight,
+            maximumShippingWeight,
+            firstWeightAmmount,
+            firstWeightFee,
+            additionalUnitFee,
           }
-          if (!productTierMap.has(currentProductTierKey)) {
+          if (!productTierMap[currentProductTierKey]) {
             const value: FulfillmentItem[] = []
-            productTierMap.set(currentProductTierKey, value)
+            productTierMap[currentProductTierKey] = value
           }
           // console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
-          productTierMap.get(currentProductTierKey)?.push(fulfillmentItem)
-
-          if (!productTypeMap.has(currentProductTypeKey)) {
+          productTierMap[currentProductTierKey].push(fulfillmentItem)
+          
+          if (!productTypeMap[currentProductTypeKey]) {
             // productTierMap = new Map()
-            const value = []
-            productTypeMap.set(currentProductTypeKey, value)
+            productTypeMap[currentProductTypeKey] = []
           }
-          productTypeMap.get(currentProductTypeKey)?.push(productTierMap)
+          // console.log(' push a productTierMap', productTierMap, ' to ', currentProductTypeKey)
+          productTypeMap[currentProductTypeKey] = productTierMap
         }
       })
     // console.log(productTypeMap)
   })
-  console.log(fbaRule)
-  return {}
+  // console.log(fbaRule)
+  return {
+    standard: fbaRule.standard,
+    oversize: fbaRule.oversize,
+  }
+}
+function parseShippingWeight(content: string): IWeightMeasure[] {
+  const array = content.match(/\d+|oz|lb/g)
+  let unit = 'lb' // TODO: Suppose the default unit is lb
+  let num: number[] = []
+  if (array && array?.length > 0){
+    for (const element of array) {
+      if (element === 'oz' || element === 'lb'){
+        unit = element
+      } else {
+        let value = parseInt(element)
+        num.push(value)
+      }
+    }
+  }
+  // There should be 1 or 2 numbers
+  if (num.length === 1) {
+    if (content.indexOf('less') > -1) {
+      num.unshift(0)
+    } else if (content.indexOf('over')) {
+      num.push(Number.MAX_SAFE_INTEGER)
+    }
+  }
+  if (num.length === 2) {
+    return [
+      {
+        unit: unit,
+        value: num[0],
+      },
+      {
+        unit: unit,
+        value: num[1],
+      },
+    ]
+  } else {
+    return []
+  }
+}
+function parseFulfillmentFeePerUnit(content: string): number[] {
+  const array = content.match(/\d+(\.\d*)?/g)
+  if (array && array.length > 0) {
+    let firstWeightAmmount = 1
+    let firstWeightFee = 0
+    let additionalUnitFee = 0
+    // There should be 1 or 2 or 3 numbers
+    if (array.length > 0) {
+      firstWeightFee = parseFloat(array[0])
+    }
+    if (array.length > 1) {
+      additionalUnitFee = parseFloat(array[1])
+    }
+    if (array.length > 2) {
+      firstWeightAmmount = parseInt(array[2], 10)
+    }
+    return [firstWeightAmmount, firstWeightFee, additionalUnitFee]
+  } else {
+    return [1, 0, 0]
+  }
 }
 export function parseReferral(content: string) {
   const $ = cheerio.load(content)
@@ -193,7 +279,7 @@ export function parseReferral(content: string) {
           categoryName = $(element).text()
         } else if (index === 1) {
           if (element.children.length === 1) {
-            rate = parseFloat($(element).text())/100
+            rate = parseFloat($(element).text()) / 100
           } else {
             determinateRate = false
             rangeItems = praseReferralSubItem(element)
@@ -229,24 +315,21 @@ function praseReferralSubItem(content) {
 }
 export function parseClosing(content: string) {
   const $ = cheerio.load(content)
-  $('.help-content').each((index, element) => {
-    if (index === 1) {
-      const p = $(element).find('div p')
-      const text = $(p).text()
-      const array = text.match(/\$\d+(\.\d*)?/)
-      const fee = array?.length > 0 ? array[0] : 0
+  const table = $('.help-content:eq(1)')
+  const p = $(table).find('div p')
+  const text = $(p).text()
+  const array = text.match(/\$\d+(\.\d*)?/)
+  const fee = array?.length > 0 ? array[0] : '$0'
 
-      const begin = text.indexOf('in the ') + 7
-      const end = text.lastIndexOf(' categories')
-      const categoryNames = text.substring(begin, end)
-      const names = categoryNames.split(', ')
-      if (names[names.length - 1].indexOf('and') > -1) {
-        names[names.length - 1] = names[names.length - 1].substring(4)
-      }
-      return {
-        category: names,
-        fee: parseFloat(fee)
-      }
-    }
-  })
+  const begin = text.indexOf('in the ') + 7
+  const end = text.lastIndexOf(' categories')
+  const categoryNames = text.substring(begin, end)
+  const names = categoryNames.split(', ')
+  if (names[names.length - 1].indexOf('and') > -1) {
+    names[names.length - 1] = names[names.length - 1].substring(4)
+  }
+  return {
+    category: names,
+    fee: parseFloat(fee.substring(1)),
+  }
 }

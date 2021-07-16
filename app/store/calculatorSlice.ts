@@ -61,20 +61,20 @@ function calculateTier(input: ProductInput | undefined, rules: any): number[] | 
   }
 }
 function startToEstimate(state, rules: any): ProductFees {
-  console.log(rules)
-  calculateFbaFee(
+  const fbaFee = calculateFbaFee(
     state.tierIndex,
+    rules.tierRule.tierNames[state.tierIndex], // TODO: Linker will refactor the structure of tier rules to include the tier name
     state.shippingWeight,
     state.productInput.isApparel,
     state.productInput.isDangerous,
     rules.fbaRule
   )
   return {
-    fbaFee: 0,
+    fbaFee: fbaFee,
     referralFee: 0,
     closingFee: 0,
-    totalFee: 0,
-    net: 0,
+    totalFee: fbaFee,
+    net: state.productInput.price - state.productInput.cost - fbaFee,
   }
 }
 
@@ -99,7 +99,6 @@ const calculatorSlice = createSlice({
       }
     },
     estimate: (state, action) => {
-      console.log(action)
       const result = startToEstimate(state, action.payload)
       if (result) {
         state.productFees = result
