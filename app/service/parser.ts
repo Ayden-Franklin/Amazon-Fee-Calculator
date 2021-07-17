@@ -69,8 +69,8 @@ export function parseFba(content: string) {
       ruleName = 'oversize'
     }
     // let productTierMap: {
-      //   [key: string]: ProductTierItem[]
-      // }
+    //   [key: string]: ProductTierItem[]
+    // }
     let productTypeMap: Record<string, Record<string, FulfillmentItem[]>> = {}
     fbaRule[ruleName] = productTypeMap
     let productTierMap: Record<string, FulfillmentItem[]> = {}
@@ -188,7 +188,7 @@ export function parseFba(content: string) {
           }
           // console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
           productTierMap[currentProductTierKey].push(fulfillmentItem)
-          
+
           if (!productTypeMap[currentProductTypeKey]) {
             // productTierMap = new Map()
             productTypeMap[currentProductTypeKey] = []
@@ -209,12 +209,12 @@ function parseShippingWeight(content: string): IWeightMeasure[] {
   const array = content.match(/\d+|oz|lb/g)
   let unit = 'lb' // TODO: Suppose the default unit is lb
   let num: number[] = []
-  if (array && array?.length > 0){
+  if (array && array?.length > 0) {
     for (const element of array) {
-      if (element === 'oz' || element === 'lb'){
+      if (element === 'oz' || element === 'lb') {
         unit = element
       } else {
-        let value = parseInt(element)
+        let value = parseInt(element, 10)
         num.push(value)
       }
     }
@@ -288,29 +288,31 @@ export function parseReferral(content: string) {
           minimumFee = parseFloat($(element).text().substring(1))
         }
       })
-      referralRule.push({
-        categoriy: categoryName,
-        determinateRate: determinateRate,
-        rate: rate,
-        rangeItems: rangeItems,
-        minimumFee: minimumFee,
-      })
+    referralRule.push({
+      categoriy: categoryName,
+      determinateRate: determinateRate,
+      rate: rate,
+      rangeItems: rangeItems,
+      minimumFee: minimumFee,
+    })
   })
   return referralRule
 }
 function praseReferralSubItem(content) {
   const $ = cheerio.load(content)
   let rangeItems: ReferralRangeFeeItem[] = []
-  $(content).find('li').each((index, element) => {
-    const text = $(element).find('span').text()
-    const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
-    if (array?.length > 1) {
-      rangeItems.push({
-        price: parseFloat(array[1]),
-        rate: parseInt(array[0])
-      })
-    }
-  })
+  $(content)
+    .find('li')
+    .each((index, element) => {
+      const text = $(element).find('span').text()
+      const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
+      if (array && array?.length > 1) {
+        rangeItems.push({
+          price: parseFloat(array[1]),
+          rate: parseInt(array[0], 10),
+        })
+      }
+    })
   return rangeItems
 }
 export function parseClosing(content: string) {
@@ -319,7 +321,7 @@ export function parseClosing(content: string) {
   const p = $(table).find('div p')
   const text = $(p).text()
   const array = text.match(/\$\d+(\.\d*)?/)
-  const fee = array?.length > 0 ? array[0] : '$0'
+  const fee = array && array?.length > 0 ? array[0] : '$0'
 
   const begin = text.indexOf('in the ') + 7
   const end = text.lastIndexOf(' categories')
