@@ -119,7 +119,8 @@ interface FbaParameter {
   tierSize: number
   weightRule: number[]
 }
-export function calculateFbaFee(tierIndex: number, tierName: string, shippingWeight: number, isApparel: boolean, isDangerous: boolean, rules: any): number | Error {
+export function calculateFbaFee(tierIndex: number, tierName: string, shippingWeight: number, isApparel: boolean,
+  isDangerous: boolean, rules: any): number | Error {
   // let tierItems: ProductTierItem[]
   // let productTierItems: TierItem[]
   // let tierItems: Record<string, Array<Record<string, Array<string>>>>
@@ -158,8 +159,7 @@ export function calculateFbaFee(tierIndex: number, tierName: string, shippingWei
       break
     }
   }
-  let fee = item.firstWeightFee + (shippingWeight - 1) * item.additionalUnitFee
-  return fee
+  return item.firstWeightFee + (shippingWeight - 1) * item.additionalUnitFee
 }
 
 function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean){
@@ -179,5 +179,39 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
     }
   } else {
     return 'unknown'
+  }
+}
+
+export function calculateReferralFee(category: string, price: number, rules: any) {
+  for (let rule of rules) {
+    if (rule.category === category) {
+      if (rule.determinateRate) {
+        return Math.max(price  * rule.rate, rule.minimumFee)
+      } else {
+        let fee = 0
+        let calculatedAmount = 0
+        for(let i = 0; i <  rule.rangeItems.length;  i++) {
+          let rangeItem = rule.rangeItems[i]
+          let upperPrice = rangeItem.price
+          if( i !== rule.rangeItems.length - 1) {
+            upperPrice = rule.rangeItems[i + 1].price
+            fee += (upperPrice - rangeItem.price) * rangeItem.rate
+            calculatedAmount += upperPrice - rangeItem.price
+          } else {
+            fee += (price - calculatedAmount) * rangeItem.rate
+          }
+        }
+        return Math.max(fee, rule.minimumFee)
+      }
+    }
+  }
+  return 0
+}
+
+export function calculateClosingFee(category: string, rules: any) {
+  if (rules.categories.includes(category)) {
+    return rules.fee
+  } else {
+    return 0
   }
 }

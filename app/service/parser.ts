@@ -320,6 +320,14 @@ export function parseReferral(content: string) {
       .each((index, element) => {
         if (index === 0) {
           categoryName = $(element).text()
+          // categoryName = element.firstChild.data
+          // TODO: How to ignore the <sup> element?
+          const supElement = $(element).find('sup')
+          if (supElement.length > 0) {
+            // const text = supElement.text()
+            categoryName = categoryName.substring(0, categoryName.length - 1)
+          }
+          categoryName = categoryName.replace('&', 'and')
         } else if (index === 1) {
           if (element.children.length === 1) {
             rate = parseFloat($(element).text()) / 100
@@ -332,7 +340,7 @@ export function parseReferral(content: string) {
         }
       })
     referralRule.push({
-      categoriy: categoryName,
+      category: categoryName,
       determinateRate: determinateRate,
       rate: rate,
       rangeItems: rangeItems,
@@ -350,9 +358,13 @@ function praseReferralSubItem(content) {
       const text = $(element).find('span').text()
       const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
       if (array && array?.length > 1) {
+        let price = parseFloat(array[1].replace(',',''))
+        if(rangeItems.length === 0) {
+          price = 0
+        }
         rangeItems.push({
-          price: parseFloat(array[1]),
-          rate: parseInt(array[0], 10),
+          price: price,
+          rate: parseInt(array[0], 10)/100,
         })
       }
     })
@@ -374,7 +386,7 @@ export function parseClosing(content: string) {
     names[names.length - 1] = names[names.length - 1].substring(4)
   }
   return {
-    category: names,
+    categories: names,
     fee: parseFloat(fee.substring(1)),
   }
 }

@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { TierData, determineTier, calculateShippingWeight, calculateFbaFee } from '@src/service/calculator'
+import { TierData, determineTier, calculateShippingWeight, calculateFbaFee, calculateReferralFee, calculateClosingFee } from '@src/service/calculator'
+import { retrieveCategoryByCode } from "@src/service/utils";
+
 interface CalculatorState {
   productInput?: ProductInput
   loading: boolean
@@ -34,6 +36,7 @@ export interface ProductInput {
   price: number
   cost: number
   categoryCode?: string
+  categoryName?: string
   isApparel: boolean
   isDangerous: boolean
 }
@@ -71,12 +74,14 @@ function startToEstimate(state, rules: any): ProductFees {
     state.productInput.isDangerous,
     rules.fbaRule
   )
+  const referralFee = calculateReferralFee(state.productInput.categoryName, state.productInput.price, rules.referralRule)
+  const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRule)
   return {
-    fbaFee: fbaFee,
-    referralFee: 0,
-    closingFee: 0,
-    totalFee: fbaFee,
-    net: state.productInput.price - state.productInput.cost - fbaFee,
+    fbaFee: fbaFee.toFixed(2),
+    referralFee: referralFee,
+    closingFee: closingFee.toFixed(2),
+    totalFee: fbaFee.toFixed(2),
+    net: (state.productInput.price - state.productInput.cost - fbaFee - referralFee - closingFee).toFixed(2),
   }
 }
 
@@ -91,7 +96,9 @@ const calculatorSlice = createSlice({
       state.productInput = { ...state.productInput, ...action.payload.productInput }
     },
     changeProductCategory: (state, action: PayloadAction<string>) => {
-      state.productInput = { categoryCode: action.payload, ...state.productInput }
+      // Retrieve the category name
+      const categoryName = retrieveCategoryByCode(action.payload)
+      state.productInput = { ...state.productInput, categoryCode: action.payload, categoryName: categoryName }
     },
     calculate: (state, action) => {
       const result = calculateTier(state.productInput, action.payload)

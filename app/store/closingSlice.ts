@@ -7,7 +7,7 @@ interface ClosingState {
   status: string
   error?: string
   closingRule?: {
-    category: string[]
+    categories: string[]
     fee: number
   }
 }

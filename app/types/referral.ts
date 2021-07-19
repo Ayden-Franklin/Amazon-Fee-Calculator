@@ -3,7 +3,7 @@ export interface ReferralRangeFeeItem {
   rate: number
 }
 export interface ReferralFeeItem {
-  categoriy: string
+  category: string
   determinateRate: boolean
   rate: number
   rangeItems: ReferralRangeFeeItem[]
