@@ -1,16 +1,28 @@
 declare type Nullable<T> = T | null
 
-declare interface ITierFragment {
+declare type Undefinedable<T> = T | undefined
+
+declare type Nilable<T> = T | undefined | null
+
+declare interface Iu {
   value: number
   unit: string
-  // '=' or '>'
-  symbol: string
+  symbol?: string
+}
+
+declare interface IProduct {
+  length: Iu
+  width: Iu
+  height: Iu
+  weight: Iu
+  category: Undefinedable<string>
+  country: string
 }
 
 declare interface ITier {
   type: string
   order: number
-  weight: ITierFragment
-  volumes: Array<ITierFragment>
-  lengthGirth: ITierFragment
+  weight: Iu
+  volumes: Array<Iu>
+  lengthGirth: Iu
 }

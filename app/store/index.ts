@@ -12,6 +12,7 @@ function interceptor({ getState }) {
     if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
       action.payload = {
         tierRule: getState().tier.tierRule,
+        tierRules: getState().tier.tierRules,
         diemnsionalWeightRule: getState().dimensionalWeight.diemnsionalWeightRule,
         fbaRule: getState().fba.fbaRule,
         referralRule: getState().referral.referralRule,

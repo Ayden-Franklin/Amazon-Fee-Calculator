@@ -1,5 +1,5 @@
 import store, { RootState } from '@src/store'
-import { sortDimensions } from '@src/service/utils'
+import { sortDimensions, sortByUnit, less } from '@src/service/utils'
 import { FulfillmentItem, TierItem, ProductTierItem } from '@src/types/fba'
 export interface TierData {
   length: number
@@ -8,6 +8,24 @@ export interface TierData {
   weight: number
   category?: string
   country: string
+}
+type TierKey = keyof TierData
+export function toProductTier(
+  td: TierData,
+  unit: any = { weight: 'lb', width: 'inches', length: 'inches', height: 'inches' }
+): IProduct {
+  // defult unit = 'inches'
+  const defaultUnit = typeof unit === 'object' ? unit : typeof unit === 'string' ? unit : 'inches'
+  const getIn = (iN: TierKey) => ({ value: td[iN] as number, unit: defaultUnit?.[iN] || defaultUnit })
+  return {
+    ...td,
+    length: getIn('length'),
+    width: getIn('width'),
+    height: getIn('height'),
+    weight: getIn('weight'),
+    category: td.category,
+    country: td.country,
+  }
 }
 export function checkPrerequisite(): boolean {
   return checkStatus(store.getState())
@@ -22,6 +40,42 @@ export function checkProductInputReady(): boolean {
 }
 function checkStatus(state: RootState): boolean {
   return ['tier', 'dimensionalWeight', 'fba', 'referral', 'closing'].every((v) => state[v]['status'] === 'succeeded')
+}
+
+function calcLengthGirth(longest: Iu, median: Iu, short: Iu): Nullable<Iu> {
+  if (longest.unit === median.unit && median.unit === short.unit) {
+    return {
+      value: longest.value + (median.value + short.value) * 2,
+      unit: longest.unit,
+    }
+  }
+  return null
+}
+export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nullable<ITier> {
+  let cI = 0
+  let total = tiers.length
+  let tagetTier: Nullable<ITier> = null
+  // default tiers order ASCE
+  // sort
+  const [short, median, longest] = sortByUnit(product.length, product.width, product.height)
+  const lengthGirth = calcLengthGirth(longest, median, short)
+  // weight
+  while (cI < total) {
+    const tI = tiers[cI]
+    if (
+      less(product.weight, tI.weight) &&
+      less(longest, tI.volumes[0]) &&
+      less(median, tI.volumes[1]) &&
+      less(short, tI.volumes[2]) &&
+      lengthGirth &&
+      less(lengthGirth, tI.lengthGirth)
+    ) {
+      tagetTier = tI
+      break
+    }
+    cI++
+  }
+  return tagetTier
 }
 
 export function determineTier(

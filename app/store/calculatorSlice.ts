@@ -1,6 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { TierData, determineTier, calculateShippingWeight, calculateFbaFee, calculateReferralFee, calculateClosingFee } from '@src/service/calculator'
-import { retrieveCategoryByCode } from "@src/service/utils";
+import {
+  TierData,
+  determineTier,
+  determineTierByUnit,
+  calculateShippingWeight,
+  calculateFbaFee,
+  calculateReferralFee,
+  calculateClosingFee,
+  toProductTier,
+} from '@src/service/calculator'
+import { retrieveCategoryByCode } from '@src/service/utils'
 
 interface CalculatorState {
   productInput?: ProductInput
@@ -74,7 +83,11 @@ function startToEstimate(state, rules: any): ProductFees {
     state.productInput.isDangerous,
     rules.fbaRule
   )
-  const referralFee = calculateReferralFee(state.productInput.categoryName, state.productInput.price, rules.referralRule)
+  const referralFee = calculateReferralFee(
+    state.productInput.categoryName,
+    state.productInput.price,
+    rules.referralRule
+  )
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRule)
   return {
     fbaFee: fbaFee.toFixed(2),
@@ -101,7 +114,16 @@ const calculatorSlice = createSlice({
       state.productInput = { ...state.productInput, categoryCode: action.payload, categoryName: categoryName }
     },
     calculate: (state, action) => {
-      const result = calculateTier(state.productInput, action.payload)
+      const { productInput } = state
+      const { payload } = action
+
+      const productSizeData = productInput as any // TierData
+      const productSize = toProductTier(productSizeData)
+
+      const productTier = determineTierByUnit(productSize, payload.tierRules)
+      state.tier = productTier
+
+      const result = calculateTier(productInput, payload)
       if (result) {
         state.tierIndex = result[0]
         state.shippingWeight = result[1]
