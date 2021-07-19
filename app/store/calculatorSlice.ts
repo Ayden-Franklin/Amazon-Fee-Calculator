@@ -3,6 +3,7 @@ import { TierData, determineTier, calculateShippingWeight, calculateFbaFee } fro
 interface CalculatorState {
   productInput?: ProductInput
   loading: boolean
+  tier: Nullable<ITier>
   tierIndex: number
   shippingWeight: number
   productFees: ProductFees
@@ -11,6 +12,7 @@ interface CalculatorState {
 }
 const initialState: CalculatorState = {
   loading: false,
+  tier: null,
   tierIndex: -1,
   shippingWeight: 0,
   status: 'idle',

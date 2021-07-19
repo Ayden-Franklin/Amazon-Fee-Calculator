@@ -34,6 +34,49 @@ export function parseTiers(content: string) {
   }
 }
 
+export function parseTiers2Obj(content: string) {
+  const $ = cheerio.load(content)
+  const tiers: ITier[] = []
+
+  const parseFragment = (text: string): ITierFragment => {
+    const parseSymbol = (s: string) => {
+      switch (s.toLowerCase()) {
+        case 'over':
+          return '>'
+        default:
+          return s
+      }
+    }
+
+    const eles = text.split(' ')
+    const [unkonwV1, unkonwV2, unkonwV3] = eles
+    const unkonwValue = parseFloat(unkonwV1)
+    const value = isNaN(unkonwValue) ? (unkonwV1 === 'n/a' ? NaN : parseFloat(unkonwV2)) : unkonwValue
+    const symbol = parseSymbol(isNaN(unkonwValue) ? unkonwV1 : '=')
+    const unit = unkonwV3 || unkonwV2 || 'NaN'
+    return { value, symbol, unit }
+  }
+
+  $('tbody tr').each((rowIndex, element) => {
+    // Product size tier	Unit weight*	Longest side	Median side	Shortest side	Length + girth
+    const [name, weight, ...volumesAndLengthGirth] = $(element)
+      .find('td')
+      .map((_, e) => $(e).text())
+    const lengthGirth = volumesAndLengthGirth.pop()
+    const volumes = volumesAndLengthGirth
+
+    tiers.push({
+      type: name.trim(),
+      volumes: volumes.map((vt) => parseFragment(vt)),
+      order: rowIndex,
+      weight: parseFragment(weight),
+      lengthGirth: parseFragment(lengthGirth || ''),
+    })
+  })
+
+  return tiers
+}
+
 export function parseWeight(content: string) {
   const $ = cheerio.load(content)
   const minimumWeightText = $('.a-vertical:eq(0)').find('li:eq(0)').find('span').text()

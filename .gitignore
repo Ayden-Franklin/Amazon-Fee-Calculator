@@ -10,3 +10,4 @@ node_modules/
 .editorconfig
 settings.json
 .DS_STORE
+.npmrc

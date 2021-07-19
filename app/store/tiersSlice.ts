@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { loadTierTable } from '@src/service/amazon'
-import { parseTiers } from '@src/service/parser'
+import { parseTiers, parseTiers2Obj } from '@src/service/parser'
 interface TiersState {
   content: string
   status: string
@@ -14,6 +14,7 @@ interface TiersState {
     volumeRule: number[][]
     lengthGirthRule: number[]
   }
+  tierRules?: ITier[]
 }
 const initialState: TiersState = {
   content: '',
@@ -39,6 +40,7 @@ const tiersSlice = createSlice({
         state.status = 'succeeded'
         state.content = action.payload
         state.tierRule = parseTiers(action.payload)
+        state.tierRules = parseTiers2Obj(action.payload)
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
         state.status = 'failed'
