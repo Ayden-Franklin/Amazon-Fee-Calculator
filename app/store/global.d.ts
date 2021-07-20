@@ -1,8 +1,22 @@
+import { StateStatus } from '@src/service/constants'
+
 declare type Nullable<T> = T | null
 
 declare type Undefinedable<T> = T | undefined
 
 declare type Nilable<T> = T | undefined | null
+
+declare interface Country {
+  code: string
+  name: string
+}
+
+declare interface StateSlice {
+  content: string
+  status: StateStatus
+  error?: string
+  currentCountry: Country
+}
 
 declare interface Iu {
   value: number

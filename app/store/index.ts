@@ -1,5 +1,5 @@
 import { configureStore, applyMiddleware } from '@reduxjs/toolkit'
-import languageReducer from '@src/store/languageSlice'
+import countryReducer from '@src/store/countrySlice'
 import tiersReducer from '@src/store/tiersSlice'
 import dimensionalWeightReducer from '@src/store/dimensionalWeightSlice'
 import fbaReducer from '@src/store/fbaSlice'
@@ -11,7 +11,7 @@ function interceptor({ getState }) {
     // console.log('will dispatch', action)
     if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
       action.payload = {
-        country: getState().language.code,
+        country: getState().country.code,
         tierRules: getState().tier.tierRules,
         diemnsionalWeightRule: getState().dimensionalWeight.diemnsionalWeightRule,
         fbaRule: getState().fba.fbaRule,
@@ -31,7 +31,7 @@ function interceptor({ getState }) {
 }
 const store = configureStore({
   reducer: {
-    language: languageReducer,
+    country: countryReducer,
     tier: tiersReducer,
     dimensionalWeight: dimensionalWeightReducer,
     fba: fbaReducer,

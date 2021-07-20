@@ -1,4 +1,4 @@
-export const languageMenuItems = [
+export const countryMenuItems = [
   { code: 'us', name: 'Unitied State' },
   { code: 'ca', name: 'Canada' },
   { code: 'it', name: 'Italy' },
@@ -50,6 +50,20 @@ export const categoryItems = [
   { code: '37', name: 'Watches' },
   { code: '38', name: 'Everything Else' },
 ]
+
+export enum StateStatus {
+  Idel,
+  Loading,
+  Succeeded,
+  Failed,
+}
+
+export const InitializedStateSlice = {
+  content: '',
+  status: StateStatus.Idel,
+  currentCountry: countryMenuItems[0],
+}
+
 export enum FbaProductType {
   Normal,
   Apparel,

@@ -34,7 +34,7 @@ export function parseTiers(content: string) {
   }
 }
 
-export function parseTiers2Obj(content: string) {
+export function parseTiers2Obj(content: string, currentCountry: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
@@ -336,7 +336,7 @@ export function parseReferral(content: string) {
             rangeItems = praseReferralSubItem(element)
           }
         } else if (index === 2) {
-          minimumFee = parseFloat($(element).text().substring(1))
+          minimumFee = parseFloat($(element).text().substring(1)) || 0
         }
       })
     referralRule.push({
@@ -358,13 +358,13 @@ function praseReferralSubItem(content) {
       const text = $(element).find('span').text()
       const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
       if (array && array?.length > 1) {
-        let price = parseFloat(array[1].replace(',',''))
-        if(rangeItems.length === 0) {
+        let price = parseFloat(array[1].replace(',', ''))
+        if (rangeItems.length === 0) {
           price = 0
         }
         rangeItems.push({
           price: price,
-          rate: parseInt(array[0], 10)/100,
+          rate: parseInt(array[0], 10) / 100,
         })
       }
     })

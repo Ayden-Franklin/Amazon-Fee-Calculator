@@ -1,17 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '.'
 
-export const languageSlice = createSlice({
-  name: 'language',
+export const countrySlice = createSlice({
+  name: 'country',
   initialState: { code: 'us', name: 'United States' },
   reducers: {
-    changeLanguage: (state, action: PayloadAction<{ code: string; name: string }>) => {
+    changeCountry: (state, action: PayloadAction<Country>) => {
       state.code = action.payload.code
       state.name = action.payload.name
     },
   },
 })
 
-export const { changeLanguage } = languageSlice.actions
+export const { changeCountry } = countrySlice.actions
 
-export default languageSlice.reducer
+export default countrySlice.reducer

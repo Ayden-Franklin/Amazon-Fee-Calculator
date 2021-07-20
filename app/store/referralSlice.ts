@@ -1,17 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { loadReferralTable } from '@src/service/amazon'
 import { parseReferral } from '@src/service/parser'
+import { InitializedStateSlice, StateStatus } from '@src/service/constants'
 import { ReferralFeeItem } from '@src/types/referral'
-interface ReferralState {
-  content: string
-  status: string
-  error?: string
+interface ReferralState extends StateSlice {
   referralRule?: ReferralFeeItem[]
 }
-const initialState: ReferralState = {
-  content: '',
-  status: 'idle',
-}
+const initialState: ReferralState = InitializedStateSlice
 
 export const fetchRuleContent = createAsyncThunk('referral/fetchRuleContent', async (country: string) => {
   return await loadReferralTable(country)
@@ -26,15 +21,15 @@ const referralSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchRuleContent.pending, (state, action) => {
-        state.status = 'loading'
+        state.status = StateStatus.Loading
       })
       .addCase(fetchRuleContent.fulfilled, (state, action) => {
-        state.status = 'succeeded'
+        state.status = StateStatus.Succeeded
         state.content = action.payload
         state.referralRule = parseReferral(action.payload)
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
-        state.status = 'failed'
+        state.status = StateStatus.Failed
         state.error = action.error.message
       })
   },

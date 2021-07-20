@@ -1,6 +1,8 @@
 import store, { RootState } from '@src/store'
 import { sortDimensions, sortByUnit, less } from '@src/service/utils'
 import { FulfillmentItem, TierItem, ProductTierItem } from '@src/types/fba'
+import { StateStatus } from '@src/service/constants'
+
 export interface TierData {
   length: number
   width: number
@@ -39,7 +41,9 @@ export function checkProductInputReady(): boolean {
     : false
 }
 function checkStatus(state: RootState): boolean {
-  return ['tier', 'dimensionalWeight', 'fba', 'referral', 'closing'].every((v) => state[v]['status'] === 'succeeded')
+  return ['tier', 'dimensionalWeight', 'fba', 'referral', 'closing'].every(
+    (v) => state[v]['status'] === StateStatus.Succeeded
+  )
 }
 
 function calcLengthGirth(longest: Iu, median: Iu, short: Iu): Nullable<Iu> {

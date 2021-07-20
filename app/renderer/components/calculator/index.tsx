@@ -68,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
 function Calculator() {
   const classes = useStyles()
   const dispatch = useAppDispatch()
-  const country = useAppSelector((state) => state.language)
+  const country = useAppSelector((state) => state.country)
   const [initialized, setInitialized] = useState(false)
   const calculatorStore = useSelector(selectCalculator)
   const initProductInput = (v: number | undefined) => (v ? v : 0)
@@ -80,7 +80,6 @@ function Calculator() {
   const [dangerous, setDangerous] = useState(calculatorStore.productInput?.isDangerous === true)
   const [price, setPrice] = useState(initProductInput(calculatorStore.productInput?.price))
   const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
-  const [net, setNet] = useState(initProductInput(calculatorStore.productInput?.net))
   const [redayForCalculation, setRedayForCalculation] = useState(false)
 
   const handleLengthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,10 +131,10 @@ function Calculator() {
     dispatch(changeLoadStatus({ status: true }))
     Promise.all([
       dispatch(fetchTierContent(country.code)),
-      dispatch(fetchDimensionalWeighContent()),
-      dispatch(fetchFbaContent()),
-      dispatch(fetchReferralContent()),
-      dispatch(fetchClosingContent()),
+      dispatch(fetchDimensionalWeighContent(country.code)),
+      dispatch(fetchFbaContent(country.code)),
+      dispatch(fetchReferralContent(country.code)),
+      dispatch(fetchClosingContent(country.code)),
     ]).then((values) => {
       dispatch(changeLoadStatus({ status: false }))
       setInitialized(true)

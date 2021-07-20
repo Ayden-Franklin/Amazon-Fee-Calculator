@@ -14,9 +14,9 @@ import Button from '@material-ui/core/Button'
 import IconButton from '@material-ui/core/IconButton'
 import Typography from '@material-ui/core/Typography'
 import { useHistory } from 'react-router-dom'
-import { changeLanguage } from '@src/store/languageSlice'
+import { changeCountry } from '@src/store/countrySlice'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
-import { languageMenuItems } from '@src/service/constants'
+import { countryMenuItems } from '@src/service/constants'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -37,7 +37,7 @@ export default function Header(props: HeaderProps) {
   const history = useHistory()
   const classes = useStyles()
   const { sections, title } = props
-  const country = useAppSelector((state) => state.language)
+  const country = useAppSelector((state) => state.country)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [tabIndex, setTabIndex] = useState(-1)
   const dispatch = useAppDispatch()
@@ -49,7 +49,7 @@ export default function Header(props: HeaderProps) {
   }
   const handleMenuItemClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
     event.preventDefault()
-    dispatch(changeLanguage(languageMenuItems[index]))
+    dispatch(changeCountry(countryMenuItems[index]))
     handleClose()
   }
   const handleAbout = () => {
@@ -70,7 +70,7 @@ export default function Header(props: HeaderProps) {
             {title}
           </Typography>
           <Button
-            aria-controls="language-menu"
+            aria-controls="country-menu"
             aria-haspopup="true"
             variant="contained"
             color="primary"
@@ -78,8 +78,8 @@ export default function Header(props: HeaderProps) {
           >
             {country.name}
           </Button>
-          <Menu id="language-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
-            {languageMenuItems.map((menuItem, index) => (
+          <Menu id="country-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
+            {countryMenuItems.map((menuItem, index) => (
               <MenuItem
                 key={menuItem.code}
                 disabled={menuItem.code === country.code}
