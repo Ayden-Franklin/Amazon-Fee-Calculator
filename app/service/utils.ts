@@ -1,4 +1,6 @@
 import { categoryItems } from '@src/service/constants'
+import Qty from 'js-quantities/esm'
+
 export function sortDimensions(length: number, width: number, height: number) {
   const dimensions = [length, width, height].sort((a, b) => b - a)
   return dimensions
@@ -28,7 +30,7 @@ export function great(a: Iu, b: Iu): boolean {
 }
 
 export function less(a: Iu, b: Iu): boolean {
-  // TODO
+  // if unit NaN, will Ignore b.value, default less
   if (b.unit === 'NaN') {
     return true
   }
@@ -39,5 +41,8 @@ export function less(a: Iu, b: Iu): boolean {
       return a.value >= b.value
     }
   }
-  return false
+  // diff unit Comparison
+  const aV = `${a.value} ${a.unit}`
+  const bV = `${b.value} ${b.unit}`
+  return Qty(aV).lt(Qty(bV))
 }
