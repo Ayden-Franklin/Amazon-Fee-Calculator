@@ -10,8 +10,8 @@ interface DimensionalWeightState extends StateSlice {
 }
 const initialState: DimensionalWeightState = InitializedStateSlice
 
-export const fetchRuleContent = createAsyncThunk('weight/fetchRuleContent', async (country: string) => {
-  return await loadWeightRule(country)
+export const fetchRuleContent = createAsyncThunk('weight/fetchRuleContent', async () => {
+  return await loadWeightRule('us')
 })
 
 export const selectDimensionalWeightRule = (state) => state.dimensionalWeight.dimensionalWeightRule
@@ -22,6 +22,9 @@ const dimensionalWeightSlice = createSlice({
   reducers: {
     setCountry: (state, action: PayloadAction<Country>) => {
       state.currentCountry = action.payload
+      state.status = StateStatus.Idel
+      state.content = ''
+      state.diemnsionalWeightRule = undefined
     },
   },
   extraReducers: (builder) => {
@@ -40,4 +43,5 @@ const dimensionalWeightSlice = createSlice({
       })
   },
 })
+export const { setCountry } = dimensionalWeightSlice.actions
 export default dimensionalWeightSlice.reducer

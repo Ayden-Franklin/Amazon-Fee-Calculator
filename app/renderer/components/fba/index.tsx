@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import Box from '@material-ui/core/Box'
 import { fetchRuleContent } from '@src/store/fbaSlice'

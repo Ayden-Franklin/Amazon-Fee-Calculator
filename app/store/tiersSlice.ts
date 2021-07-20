@@ -1,14 +1,18 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { loadTierTable } from '@src/service/amazon'
 import { parseTiers, parseTiers2Obj } from '@src/service/parser'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
+import { UsProfitCalculator } from '@src/service/countries/UsProfitCalculator'
+import { CaProfitCalculator } from '@src/service/countries/CaProfitCalculator'
+import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfitCalculator'
 interface TiersState extends StateSlice {
   tierRules?: ITier[]
 }
 const initialState: TiersState = InitializedStateSlice
 
-export const fetchRuleContent = createAsyncThunk('tier/fetchRuleContent', async (country: string) => {
-  return await loadTierTable(country)
+let profitCaluclator: ProfitCaluclator
+
+export const fetchRuleContent = createAsyncThunk('tier/fetchRuleContent', () => {
+  return profitCaluclator.fetchRuleContent()
 })
 
 const tiersSlice = createSlice({
@@ -17,6 +21,19 @@ const tiersSlice = createSlice({
   reducers: {
     setCountry: (state, action: PayloadAction<Country>) => {
       state.currentCountry = action.payload
+      state.status = StateStatus.Idel
+      state.content = ''
+      delete state.tierRules
+      switch (state.currentCountry.code) {
+        case 'ca':
+          profitCaluclator = new CaProfitCalculator()
+          break
+        case 'us':
+          profitCaluclator = new UsProfitCalculator()
+          break
+        default:
+          profitCaluclator = new UndefinedProfitCalculator(state.currentCountry.name)
+      }
     },
   },
   extraReducers: (builder) => {

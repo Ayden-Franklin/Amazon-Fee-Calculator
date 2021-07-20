@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { loadClosingFee } from '@src/service/amazon'
 import { parseClosing } from '@src/service/parser'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
@@ -11,8 +11,8 @@ interface ClosingState extends StateSlice {
 }
 const initialState: ClosingState = InitializedStateSlice
 
-export const fetchRuleContent = createAsyncThunk('closing/fetchRuleContent', async (country: string) => {
-  return await loadClosingFee(country)
+export const fetchRuleContent = createAsyncThunk('closing/fetchRuleContent', async () => {
+  return await loadClosingFee('us')
 })
 
 export const selectClosingRule = (state) => state.closing.closingRule
@@ -20,7 +20,14 @@ export const selectClosingRule = (state) => state.closing.closingRule
 const closingSlice = createSlice({
   name: 'closing',
   initialState,
-  reducers: {},
+  reducers: {
+    setCountry: (state, action: PayloadAction<Country>) => {
+      state.currentCountry = action.payload
+      state.status = StateStatus.Idel
+      state.content = ''
+      delete state.closingRule
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchRuleContent.pending, (state, action) => {
@@ -37,4 +44,5 @@ const closingSlice = createSlice({
       })
   },
 })
+export const { setCountry } = closingSlice.actions
 export default closingSlice.reducer

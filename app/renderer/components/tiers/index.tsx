@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import { fetchRuleContent } from '@src/store/tiersSlice'
 import { StateStatus } from '@src/service/constants'
@@ -8,13 +8,11 @@ function TiersTable() {
   const pageContent = useAppSelector((state) => state.tier.content)
   const loadStatus = useAppSelector((state) => state.tier.status)
   const error = useAppSelector((state) => state.tier.error)
-  const country = useAppSelector((state) => state.country)
-
   useEffect(() => {
     if (loadStatus === StateStatus.Idel) {
-      dispatch(fetchRuleContent(country.code))
+      dispatch(fetchRuleContent())
     }
-  }, [loadStatus, dispatch, country.code])
+  }, [loadStatus, dispatch])
   return OriginalPage({ loadStatus, pageContent })
 }
 export default TiersTable

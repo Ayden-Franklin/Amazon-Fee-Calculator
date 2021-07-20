@@ -1,32 +1,94 @@
 import got from 'got'
 import cheerio from 'cheerio'
-export function loadTierTable(country: string): Promise<string> {
-  switch (country) {
-    case 'ca':
-      return loadTierTableCanada()
-    default:
-      return loadTierTableUS()
+
+const pageUrls = {
+  us: {
+    tier: {
+      url: 'https://sellercentral.amazon.com/gp/help/external/GG5KW835AHDJCH8W',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const result = cheerio.html($('table.help-table:eq(1)').attr('border', '1')) + cheerio.html($('.note'))
+        return result
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const result = $('table.help-table:eq(1)').html()
+        return result
+      },
+    },
+    weight: {
+      url: 'https://sellercentral.amazon.com/gp/help/external/G53Z9EKF8VVZVH29',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = ''
+        $('div.help-content').each((index, element) => {
+          if (index === 1 || index === 2) {
+            output += cheerio.html(element)
+          }
+        })
+        return output
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = ''
+        $('div.help-content').each((index, element) => {
+          if (index === 1 || index === 2) {
+            output += cheerio.html(element)
+          }
+        })
+        return output
+      },
+    },
+  },
+  ca: {
+    tier: {
+      url: 'https://sellercentral.amazon.ca/gp/help/external/G201105770',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const result = cheerio.html($('.help-content'))
+        return result
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const result = cheerio.html($('.help-content'))
+        return result
+      },
+    },
+    weight: {
+      url: 'https://sellercentral.amazon.ca/gp/help/help.html?itemID=201112650',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = ''
+        $('div.help-content').each((index, element) => {
+          if (index === 1 || index === 2) {
+            output += cheerio.html(element)
+          }
+        })
+        return output === '' ? response : output
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = ''
+        $('div.help-content').each((index, element) => {
+          if (index === 1 || index === 2) {
+            output += cheerio.html(element)
+          }
+        })
+        return output
+      },
+    },
+  },
+  mx: {
+    tier: 'https://sellercentral.amazon.com.mx/gp/help/external/200336920?language=en_MX',
+  },
+}
+export function loadTierTable(countryCode: string): Promise<string> {
+  if (!countryCode || !pageUrls.hasOwnProperty(countryCode)) {
+    return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
-}
-function loadTierTableUS(): Promise<string> {
-  const url = 'https://sellercentral.amazon.com/gp/help/external/GG5KW835AHDJCH8W?language=en_US'
-  return got(url)
+  return got(pageUrls[countryCode].tier.url)
     .then((response) => {
-      const $ = cheerio.load(response.body)
-      const result = cheerio.html($('table.help-table:eq(1)').attr('border', '1')) + cheerio.html($('.note'))
-      return result
-    })
-    .catch((err) => {
-      console.log(err)
-      return err
-    })
-}
-function loadTierTableCanada(): Promise<string> {
-  const url = 'https://sellercentral.amazon.ca/gp/help/external/G201105770'
-  return got(url)
-    .then((response) => {
-      const $ = cheerio.load(response.body)
-      const result = cheerio.html($('.help-content'))
+      const result = pageUrls[countryCode].tier.extractOriginalContent(response.body)
       return result
     })
     .catch((err) => {
@@ -35,32 +97,14 @@ function loadTierTableCanada(): Promise<string> {
     })
 }
 
-export function loadWeightRule(country: string): Promise<string> {
-  const url = 'https://sellercentral.amazon.com/gp/help/external/G53Z9EKF8VVZVH29?language=en_US'
-
-  return got(url)
+export function loadWeightRule(countryCode: string): Promise<string> {
+  if (!countryCode || !pageUrls.hasOwnProperty(countryCode)) {
+    return Promise.reject(new Error(`This country[$country] is not supported!`))
+  }
+  return got(pageUrls[countryCode].weight.url)
     .then((response) => {
-      const $ = cheerio.load(response.body)
-      // const result = cheerio.html($('table.help-content:eq(1) div ui.a-vertial').attr('border', '1'))
-      // const result = cheerio.html($('div.help-content:eq(1)')) // .attr('border', '1'))
-      // console.log(result)
-      // let output = []
-      // $( ".author-article" ).each( (i, elem ) => {
-      //     let $a = $(elem).find( 'a' )
-      //     let datum = {
-      //         title: $a.text(),
-      //         url: $a.attr( 'href' )
-      //     }
-      //     output.push(datum)
-      // })
-      // return output
-      let output = ''
-      $('div.help-content').each((index, element) => {
-        if (index === 1 || index === 2) {
-          output += cheerio.html(element)
-        }
-      })
-      return output
+      const result = pageUrls[countryCode].weight.extractOriginalContent(response.body)
+      return result
     })
     .catch((err) => {
       console.log(err)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { shell } from 'electron'
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles'
 import AppBar from '@material-ui/core/AppBar'
@@ -17,6 +17,8 @@ import { useHistory } from 'react-router-dom'
 import { changeCountry } from '@src/store/countrySlice'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import { countryMenuItems } from '@src/service/constants'
+import { setCountry as changeTierCountry } from '@src/store/tiersSlice'
+import { setCountry as changeClosingCountry } from '@src/store/closingSlice'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -39,7 +41,7 @@ export default function Header(props: HeaderProps) {
   const { sections, title } = props
   const country = useAppSelector((state) => state.country)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [tabIndex, setTabIndex] = useState(-1)
+  const [tabIndex, setTabIndex] = useState(5)
   const dispatch = useAppDispatch()
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget)
@@ -49,7 +51,10 @@ export default function Header(props: HeaderProps) {
   }
   const handleMenuItemClick = (event: React.MouseEvent<HTMLElement>, index: number) => {
     event.preventDefault()
-    dispatch(changeCountry(countryMenuItems[index]))
+    const country = countryMenuItems[index]
+    dispatch(changeCountry(country))
+    dispatch(changeTierCountry(country))
+    dispatch(changeClosingCountry(country))
     handleClose()
   }
   const handleAbout = () => {
@@ -59,6 +64,11 @@ export default function Header(props: HeaderProps) {
     setTabIndex(newValue)
     history.push(sections[newValue].url)
   }
+  useEffect(() => {
+    const country = countryMenuItems[0]
+    dispatch(changeTierCountry(country))
+    dispatch(changeClosingCountry(country))
+  }, [])
   return (
     <React.Fragment key="header-fragment">
       <AppBar position="static">
@@ -113,7 +123,7 @@ export default function Header(props: HeaderProps) {
       </AppBar>
       <Paper square>
         <Tabs
-          {...(tabIndex > -1 ? { value: tabIndex } : {})}
+          value={tabIndex}
           onChange={handleTabChange}
           indicatorColor="primary"
           textColor="primary"

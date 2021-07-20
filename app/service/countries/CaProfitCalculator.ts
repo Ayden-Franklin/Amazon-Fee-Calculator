@@ -1,12 +1,12 @@
 import { loadTierTable } from '@src/service/amazon'
 
-export class UsProfitCalculator implements ProfitCaluclator {
+export class CaProfitCalculator implements ProfitCaluclator {
   content: string
   constructor() {
-    this.content = 'This is for US'
+    this.content = 'This is content for Canada'
   }
   fetchRuleContent() {
-    return loadTierTable('us')
+    return loadTierTable('ca')
   }
   parseRule() {
     return null
