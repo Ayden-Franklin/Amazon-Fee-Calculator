@@ -15,7 +15,6 @@ interface CalculatorState {
   productInput?: ProductInput
   loading: boolean
   tier: Nullable<ITier>
-  tierIndex: number
   shippingWeight: number
   productFees: ProductFees
   status: string
@@ -24,7 +23,6 @@ interface CalculatorState {
 const initialState: CalculatorState = {
   loading: false,
   tier: null,
-  tierIndex: -1,
   shippingWeight: 0,
   status: 'idle',
   productFees: {
@@ -56,14 +54,13 @@ export interface ProductFees {
   totalFee: number
   net: number
 }
-function calculateTier(input: ProductInput | undefined, rules: any): number[] | undefined {
-  let weightRule: number[] = rules.tierRule?.weightRule
-  let volumeRule: number[][] = rules.tierRule?.volumeRule
-  let lengthGirthRule: number[] = rules.tierRule?.lengthGirthRule
+function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, number]> {
+  const productSize = toProductTier(input as any) // TierData to ProductSize
+  const productTier = determineTierByUnit(productSize, rules.tierRules)
   const tierData: TierData = { ...input, country: 'us' }
-  const tierIndex: number = determineTier({ ...tierData }, weightRule, volumeRule, lengthGirthRule)
-  // console.log('get tier index is ', tierIndex)
-  if (!isNaN(tierIndex)) {
+  if (productTier) {
+    const tierIndex = productTier.order
+
     const weight = calculateShippingWeight({
       tierData: tierData,
       tierIndex: tierIndex,
@@ -71,13 +68,13 @@ function calculateTier(input: ProductInput | undefined, rules: any): number[] | 
       minimumWeight: rules.diemnsionalWeightRule.minimumWeight,
       divisor: rules.diemnsionalWeightRule.divisor,
     })
-    return [tierIndex, weight]
+    return [productTier, weight]
   }
 }
 function startToEstimate(state, rules: any): ProductFees {
   const fbaFee = calculateFbaFee(
-    state.tierIndex,
-    rules.tierRule.tierNames[state.tierIndex], // TODO: Linker will refactor the structure of tier rules to include the tier name
+    state.tier.order,
+    state.tier.type,
     state.shippingWeight,
     state.productInput.isApparel,
     state.productInput.isDangerous,
@@ -117,16 +114,11 @@ const calculatorSlice = createSlice({
       const { productInput } = state
       const { payload } = action
 
-      const productSizeData = productInput as any // TierData
-      const productSize = toProductTier(productSizeData)
-
-      const productTier = determineTierByUnit(productSize, payload.tierRules)
-      state.tier = productTier
-
-      const result = calculateTier(productInput, payload)
+      const result = calculateProductSize(productInput, payload)
       if (result) {
-        state.tierIndex = result[0]
-        state.shippingWeight = result[1]
+        const [tier, weight] = result
+        state.tier = tier
+        state.shippingWeight = weight
       }
     },
     estimate: (state, action) => {
