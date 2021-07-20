@@ -8,10 +8,11 @@ function ClosingFee() {
   const pageContent = useAppSelector((state) => state.closing.content)
   const loadStatus = useAppSelector((state) => state.closing.status)
   const error = useAppSelector((state) => state.closing.error)
+  const country = useAppSelector((state) => state.language)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
-      dispatch(fetchRuleContent())
+      dispatch(fetchRuleContent(country.code))
     }
   }, [loadStatus, dispatch])
 

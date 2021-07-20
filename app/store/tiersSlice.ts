@@ -12,8 +12,8 @@ const initialState: TiersState = {
   status: 'idle',
 }
 
-export const fetchRuleContent = createAsyncThunk('tier/fetchRuleContent', async () => {
-  return await loadTierTable()
+export const fetchRuleContent = createAsyncThunk('tier/fetchRuleContent', async (country: string) => {
+  return await loadTierTable(country)
 })
 
 const tiersSlice = createSlice({

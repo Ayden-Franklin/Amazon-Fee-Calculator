@@ -16,8 +16,8 @@ const initialState: DimensionalWeightState = {
   status: 'idle',
 }
 
-export const fetchRuleContent = createAsyncThunk('weight/fetchRuleContent', async () => {
-  return await loadWeightRule()
+export const fetchRuleContent = createAsyncThunk('weight/fetchRuleContent', async (country: string) => {
+  return await loadWeightRule(country)
 })
 
 export const selectDimensionalWeightRule = (state) => state.dimensionalWeight.dimensionalWeightRule

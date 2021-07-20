@@ -8,10 +8,11 @@ function ReferralTable() {
   const pageContent = useAppSelector((state) => state.referral.content)
   const loadStatus = useAppSelector((state) => state.referral.status)
   const error = useAppSelector((state) => state.referral.error)
+  const country = useAppSelector((state) => state.language)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
-      dispatch(fetchRuleContent())
+      dispatch(fetchRuleContent(country.code))
     }
   }, [loadStatus, dispatch])
 

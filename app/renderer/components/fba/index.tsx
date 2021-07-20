@@ -8,10 +8,11 @@ function FBATable() {
   const pageContent = useAppSelector((state) => state.fba.content)
   const loadStatus = useAppSelector((state) => state.fba.status)
   const error = useAppSelector((state) => state.fba.error)
+  const country = useAppSelector((state) => state.language)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
-      dispatch(fetchRuleContent())
+      dispatch(fetchRuleContent(country.code))
     }
   }, [loadStatus, dispatch])
 

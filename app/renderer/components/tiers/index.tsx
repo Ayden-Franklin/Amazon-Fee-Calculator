@@ -8,10 +8,11 @@ function TiersTable() {
   const pageContent = useAppSelector((state) => state.tier.content)
   const loadStatus = useAppSelector((state) => state.tier.status)
   const error = useAppSelector((state) => state.tier.error)
+  const country = useAppSelector((state) => state.language)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
-      dispatch(fetchRuleContent())
+      dispatch(fetchRuleContent(country.code))
     }
   }, [loadStatus, dispatch])
 

@@ -16,8 +16,8 @@ const initialState: ClosingState = {
   status: 'idle',
 }
 
-export const fetchRuleContent = createAsyncThunk('closing/fetchRuleContent', async () => {
-  return await loadClosingFee()
+export const fetchRuleContent = createAsyncThunk('closing/fetchRuleContent', async (country: string) => {
+  return await loadClosingFee(country)
 })
 
 export const selectClosingRule = (state) => state.closing.closingRule

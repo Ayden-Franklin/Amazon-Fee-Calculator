@@ -19,8 +19,8 @@ const initialState: FbaState = {
   status: 'idle',
 }
 
-export const fetchRuleContent = createAsyncThunk('fba/fetchRuleContent', async () => {
-  return await loadFBATable()
+export const fetchRuleContent = createAsyncThunk('fba/fetchRuleContent', async (country: string) => {
+  return await loadFBATable(country)
 })
 
 export const selectFbaRule = (state) => state.fba.fbaRule

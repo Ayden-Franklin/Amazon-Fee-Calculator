@@ -13,8 +13,8 @@ const initialState: ReferralState = {
   status: 'idle',
 }
 
-export const fetchRuleContent = createAsyncThunk('referral/fetchRuleContent', async () => {
-  return await loadReferralTable()
+export const fetchRuleContent = createAsyncThunk('referral/fetchRuleContent', async (country: string) => {
+  return await loadReferralTable(country)
 })
 
 export const selectReferralRule = (state) => state.referral.referralRule

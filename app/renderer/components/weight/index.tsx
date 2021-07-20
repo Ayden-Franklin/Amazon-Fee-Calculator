@@ -8,10 +8,11 @@ function WeightRule() {
   const pageContent = useAppSelector((state) => state.dimensionalWeight.content)
   const loadStatus = useAppSelector((state) => state.dimensionalWeight.status)
   const error = useAppSelector((state) => state.dimensionalWeight.error)
+  const country = useAppSelector((state) => state.language)
 
   useEffect(() => {
     if (loadStatus === 'idle') {
-      dispatch(fetchRuleContent())
+      dispatch(fetchRuleContent(country.code))
     }
   }, [loadStatus, dispatch])
 

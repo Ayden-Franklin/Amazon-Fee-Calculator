@@ -1,6 +1,14 @@
 import got from 'got'
 import cheerio from 'cheerio'
-export function loadTierTable(): Promise<string> {
+export function loadTierTable(country: string): Promise<string> {
+  switch (country) {
+    case 'ca':
+      return loadTierTableCanada()
+    default:
+      return loadTierTableUS()
+  }
+}
+function loadTierTableUS(): Promise<string> {
   const url = 'https://sellercentral.amazon.com/gp/help/external/GG5KW835AHDJCH8W?language=en_US'
   return got(url)
     .then((response) => {
@@ -13,8 +21,21 @@ export function loadTierTable(): Promise<string> {
       return err
     })
 }
+function loadTierTableCanada(): Promise<string> {
+  const url = 'https://sellercentral.amazon.ca/gp/help/external/G201105770'
+  return got(url)
+    .then((response) => {
+      const $ = cheerio.load(response.body)
+      const result = cheerio.html($('.help-content'))
+      return result
+    })
+    .catch((err) => {
+      console.log(err)
+      return err
+    })
+}
 
-export function loadWeightRule(): Promise<string> {
+export function loadWeightRule(country: string): Promise<string> {
   const url = 'https://sellercentral.amazon.com/gp/help/external/G53Z9EKF8VVZVH29?language=en_US'
 
   return got(url)
@@ -47,7 +68,7 @@ export function loadWeightRule(): Promise<string> {
     })
 }
 
-export function loadFBATable(): Promise<string> {
+export function loadFBATable(country: string): Promise<string> {
   const url = 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP?language=en_US'
 
   return got(url)
@@ -69,7 +90,7 @@ export function loadFBATable(): Promise<string> {
     })
 }
 
-export function loadReferralTable(): Promise<string> {
+export function loadReferralTable(country: string): Promise<string> {
   const url =
     'https://sellercentral.amazon.com/gp/help/external/GTG4BAWSY39Z98Z3?language=en_US&ref=efph_GTG4BAWSY39Z98Z3_cont_6F7CN3EQS7MEGCN'
   return got(url)
@@ -89,7 +110,7 @@ export function loadReferralTable(): Promise<string> {
     })
 }
 
-export function loadClosingFee(): Promise<string> {
+export function loadClosingFee(country: string): Promise<string> {
   const url =
     'https://sellercentral.amazon.com/gp/help/external/GKD9U5REK5DKB38Y?language=en_US&ref=efph_GKD9U5REK5DKB38Y_cont_6F7CN3EQS7MEGCN'
   return got(url)

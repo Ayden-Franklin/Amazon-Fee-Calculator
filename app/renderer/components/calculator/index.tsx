@@ -31,8 +31,7 @@ import {
   estimate,
 } from '@src/store/calculatorSlice'
 import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
-import { useAppDispatch } from '@src/store/hooks'
-// import { useAppDispatch, useAppSelector } from '@src/store/hooks'
+import { useAppDispatch, useAppSelector } from '@src/store/hooks'
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -69,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
 function Calculator() {
   const classes = useStyles()
   const dispatch = useAppDispatch()
-  // const country = useAppSelector((state) => state.language)
+  const country = useAppSelector((state) => state.language)
   const [initialized, setInitialized] = useState(false)
   const calculatorStore = useSelector(selectCalculator)
   const initProductInput = (v: number | undefined) => (v ? v : 0)
@@ -132,7 +131,7 @@ function Calculator() {
 
     dispatch(changeLoadStatus({ status: true }))
     Promise.all([
-      dispatch(fetchTierContent()),
+      dispatch(fetchTierContent(country.code)),
       dispatch(fetchDimensionalWeighContent()),
       dispatch(fetchFbaContent()),
       dispatch(fetchReferralContent()),
