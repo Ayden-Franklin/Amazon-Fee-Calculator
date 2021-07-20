@@ -17,7 +17,6 @@ import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
 import { categoryItems } from '@src/service/constants'
-import { selectTierRule } from '@src/store/tiersSlice'
 import { fetchRuleContent as fetchTierContent } from '@src/store/tiersSlice'
 import { fetchRuleContent as fetchDimensionalWeighContent } from '@src/store/dimensionalWeightSlice'
 import { fetchRuleContent as fetchFbaContent } from '@src/store/fbaSlice'
@@ -33,6 +32,7 @@ import {
 } from '@src/store/calculatorSlice'
 import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch } from '@src/store/hooks'
+// import { useAppDispatch, useAppSelector } from '@src/store/hooks'
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -69,6 +69,7 @@ const useStyles = makeStyles((theme) => ({
 function Calculator() {
   const classes = useStyles()
   const dispatch = useAppDispatch()
+  // const country = useAppSelector((state) => state.language)
   const [initialized, setInitialized] = useState(false)
   const calculatorStore = useSelector(selectCalculator)
   const initProductInput = (v: number | undefined) => (v ? v : 0)
@@ -82,8 +83,6 @@ function Calculator() {
   const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
   const [net, setNet] = useState(initProductInput(calculatorStore.productInput?.net))
   const [redayForCalculation, setRedayForCalculation] = useState(false)
-
-  const tierRule = useSelector(selectTierRule)
 
   const handleLengthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLength(parseFloat(event.target.value))
@@ -124,10 +123,13 @@ function Calculator() {
     const ready = checkProductInputReady()
     setRedayForCalculation(ready)
     if (ready) {
+      // TODO calculate need by country
       dispatch(calculate({}))
     }
   }
   const handleLoadClick = () => {
+    // TODO load need country
+
     dispatch(changeLoadStatus({ status: true }))
     Promise.all([
       dispatch(fetchTierContent()),

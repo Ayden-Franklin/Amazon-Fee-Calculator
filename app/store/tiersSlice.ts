@@ -5,15 +5,6 @@ interface TiersState {
   content: string
   status: string
   error?: string
-  // value: Array<{ name: string }> | undefined
-  tierRule?: {
-    dimensionUnit: string
-    weightUnit: string
-    tierNames: string[]
-    weightRule: number[]
-    volumeRule: number[][]
-    lengthGirthRule: number[]
-  }
   tierRules?: ITier[]
 }
 const initialState: TiersState = {
@@ -24,8 +15,6 @@ const initialState: TiersState = {
 export const fetchRuleContent = createAsyncThunk('tier/fetchRuleContent', async () => {
   return await loadTierTable()
 })
-
-export const selectTierRule = (state) => state.tier.tierRule
 
 const tiersSlice = createSlice({
   name: 'tier',
@@ -39,7 +28,6 @@ const tiersSlice = createSlice({
       .addCase(fetchRuleContent.fulfilled, (state, action) => {
         state.status = 'succeeded'
         state.content = action.payload
-        state.tierRule = parseTiers(action.payload)
         state.tierRules = parseTiers2Obj(action.payload)
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {

@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
   TierData,
-  determineTier,
   determineTierByUnit,
   calculateShippingWeight,
   calculateFbaFee,
@@ -54,17 +53,30 @@ export interface ProductFees {
   totalFee: number
   net: number
 }
+/**
+ * rules => {
+ *   country
+ *   diemnsionalWeightRule
+ *   tierRules
+ * }
+ */
 function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, number]> {
-  const productSize = toProductTier(input as any) // TierData to ProductSize
-  const productTier = determineTierByUnit(productSize, rules.tierRules)
-  const tierData: TierData = { ...input, country: 'us' }
+  if (!input) return
+  // calc need country
+  const country = rules.country
+  const tierData: TierData = { ...input, country }
+  const tierRules: Array<ITier> = rules.tierRules
+
+  const productSize = toProductTier(tierData)
+  const productTier = determineTierByUnit(productSize, tierRules)
+
   if (productTier) {
     const tierIndex = productTier.order
 
     const weight = calculateShippingWeight({
       tierData: tierData,
       tierIndex: tierIndex,
-      tierSize: rules.tierRule.tierNames.length,
+      tierSize: tierRules.length,
       minimumWeight: rules.diemnsionalWeightRule.minimumWeight,
       divisor: rules.diemnsionalWeightRule.divisor,
     })
@@ -111,10 +123,7 @@ const calculatorSlice = createSlice({
       state.productInput = { ...state.productInput, categoryCode: action.payload, categoryName: categoryName }
     },
     calculate: (state, action) => {
-      const { productInput } = state
-      const { payload } = action
-
-      const result = calculateProductSize(productInput, payload)
+      const result = calculateProductSize(state.productInput, action.payload)
       if (result) {
         const [tier, weight] = result
         state.tier = tier

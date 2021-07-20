@@ -11,7 +11,7 @@ function interceptor({ getState }) {
     // console.log('will dispatch', action)
     if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
       action.payload = {
-        tierRule: getState().tier.tierRule,
+        country: getState().language.code,
         tierRules: getState().tier.tierRules,
         diemnsionalWeightRule: getState().dimensionalWeight.diemnsionalWeightRule,
         fbaRule: getState().fba.fbaRule,
