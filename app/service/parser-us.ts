@@ -1,7 +1,6 @@
 import cheerio from 'cheerio'
 import { ProductTierItem, TierItem, FulfillmentItem } from '@src/types/fba'
 import { ReferralRangeFeeItem, ReferralFeeItem } from '@src/types/referral'
-import { IWeightMeasure } from '@src/types'
 export function parseTiers_old(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -38,8 +37,8 @@ export function parseTier(content: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
-  const parseFragment = (text: string): ITierFragment => {
-    const parseSymbol = (s: string) => {
+  const parseFragment = (text: string): Iu => {
+    const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
         case 'over':
           return '>'
@@ -52,9 +51,9 @@ export function parseTier(content: string) {
     const [unkonwV1, unkonwV2, unkonwV3] = eles
     const unkonwValue = parseFloat(unkonwV1)
     const value = isNaN(unkonwValue) ? (unkonwV1 === 'n/a' ? NaN : parseFloat(unkonwV2)) : unkonwValue
-    const symbol = parseSymbol(isNaN(unkonwValue) ? unkonwV1 : '=')
+    const operator = parseOperator(isNaN(unkonwValue) ? unkonwV1 : '=')
     const unit = unkonwV3 || unkonwV2 || 'NaN'
-    return { value, symbol, unit }
+    return { value, operator, unit }
   }
 
   $('tbody tr').each((rowIndex, element) => {
@@ -125,8 +124,8 @@ export function parseFba(content: string) {
         let offset = 0
         let shippingWeight: string
         let fulfillmentFee: string
-        let minimumShippingWeight: IWeightMeasure
-        let maximumShippingWeight: IWeightMeasure
+        let minimumShippingWeight: Iu
+        let maximumShippingWeight: Iu
         let firstWeightFee: number
         let firstWeightAmmount: number
         let additionalUnitFee: number
@@ -248,7 +247,7 @@ export function parseFba(content: string) {
     oversize: fbaRule.oversize,
   }
 }
-function parseShippingWeight(content: string): IWeightMeasure[] {
+function parseShippingWeight(content: string): Iu[] {
   const array = content.match(/\d+|oz|lb/g)
   let unit = 'lb' // TODO: Suppose the default unit is lb
   let num: number[] = []
@@ -341,10 +340,10 @@ export function parseReferral(content: string) {
       })
     referralRule.push({
       category: categoryName,
-      determinateRate: determinateRate,
-      rate: rate,
-      rangeItems: rangeItems,
-      minimumFee: minimumFee,
+      determinateRate,
+      rate,
+      rangeItems,
+      minimumFee,
     })
   })
   return referralRule
