@@ -1,22 +1,15 @@
 import { configureStore, applyMiddleware } from '@reduxjs/toolkit'
 import countryReducer from '@src/store/countrySlice'
-import tiersReducer from '@src/store/tiersSlice'
-import dimensionalWeightReducer from '@src/store/dimensionalWeightSlice'
-import fbaReducer from '@src/store/fbaSlice'
-import referralReducer from '@src/store/referralSlice'
-import closingReducer from '@src/store/closingSlice'
+import rulesReducer from '@src/store/rulesSlice'
 import calculatorReducer from '@src/store/calculatorSlice'
 function interceptor({ getState }) {
   return next => action => {
     // console.log('will dispatch', action)
     if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
+      const rules = getState().rules
       action.payload = {
         country: getState().country.code,
-        tierRules: getState().tier.tierRules,
-        diemnsionalWeightRule: getState().dimensionalWeight.diemnsionalWeightRule,
-        fbaRule: getState().fba.fbaRule,
-        referralRule: getState().referral.referralRule,
-        closingRule: getState().closing.closingRule,
+        ...rules.rule,
       }
     }
     // Call the next dispatch method in the middleware chain.
@@ -32,11 +25,7 @@ function interceptor({ getState }) {
 const store = configureStore({
   reducer: {
     country: countryReducer,
-    tier: tiersReducer,
-    dimensionalWeight: dimensionalWeightReducer,
-    fba: fbaReducer,
-    referral: referralReducer,
-    closing: closingReducer,
+    rules: rulesReducer,
     calculator: calculatorReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(interceptor),

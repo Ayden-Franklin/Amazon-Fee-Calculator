@@ -90,14 +90,14 @@ function startToEstimate(state, rules: any): ProductFees {
     state.shippingWeight,
     state.productInput.isApparel,
     state.productInput.isDangerous,
-    rules.fbaRule
+    rules.fbaRules
   )
   const referralFee = calculateReferralFee(
     state.productInput.categoryName,
     state.productInput.price,
-    rules.referralRule
+    rules.referralRules
   )
-  const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRule)
+  const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {
     fbaFee: fbaFee.toFixed(2),
     referralFee: referralFee,

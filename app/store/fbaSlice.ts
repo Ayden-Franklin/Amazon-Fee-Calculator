@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { loadFBATable } from '@src/service/amazon'
-import { parseFba } from '@src/service/parser'
+import { parseFba } from '@src/service/parser-us'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
 import { ProductTierItem } from '@src/types/fba'
+import { StateSlice } from '@src/types'
 interface FbaState extends StateSlice {
   // value: Array<{ name: string }> | undefined
   fbaRule?: {

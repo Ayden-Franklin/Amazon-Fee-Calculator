@@ -16,12 +16,8 @@ import Typography from '@material-ui/core/Typography'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
-import { categoryItems } from '@src/service/constants'
-import { fetchRuleContent as fetchTierContent } from '@src/store/tiersSlice'
-import { fetchRuleContent as fetchDimensionalWeighContent } from '@src/store/dimensionalWeightSlice'
-import { fetchRuleContent as fetchFbaContent } from '@src/store/fbaSlice'
-import { fetchRuleContent as fetchReferralContent } from '@src/store/referralSlice'
-import { fetchRuleContent as fetchClosingContent } from '@src/store/closingSlice'
+import { categoryItems, StateStatus } from '@src/service/constants'
+import { fetchRuleContent } from '@src/store/rulesSlice'
 import {
   selectCalculator,
   changeLoadStatus,
@@ -30,7 +26,7 @@ import {
   calculate,
   estimate,
 } from '@src/store/calculatorSlice'
-import { checkPrerequisite, checkProductInputReady } from '@src/service/calculator'
+import { checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch, useAppSelector } from '@src/store/hooks'
 
 const useStyles = makeStyles((theme) => ({
@@ -68,8 +64,11 @@ const useStyles = makeStyles((theme) => ({
 function Calculator() {
   const classes = useStyles()
   const dispatch = useAppDispatch()
-  const country = useAppSelector((state) => state.country)
-  const [initialized, setInitialized] = useState(false)
+  // const country = useAppSelector((state) => state.country)
+  // const [initialized, setInitialized] = useState(false)
+  const loadStatus = useAppSelector((state) => state.rules.status)
+  const error = useAppSelector((state) => state.rules.error)
+  const [initialized, setInitialized] = useState(loadStatus === StateStatus.Succeeded)
   const calculatorStore = useSelector(selectCalculator)
   const initProductInput = (v: number | undefined) => (v ? v : 0)
   const [length, setLength] = useState(initProductInput(calculatorStore.productInput?.length))
@@ -129,24 +128,26 @@ function Calculator() {
     // TODO load need country
 
     dispatch(changeLoadStatus({ status: true }))
-    Promise.all([
-      dispatch(fetchTierContent(country.code)),
-      dispatch(fetchDimensionalWeighContent(country.code)),
-      dispatch(fetchFbaContent(country.code)),
-      dispatch(fetchReferralContent(country.code)),
-      dispatch(fetchClosingContent(country.code)),
-    ]).then((values) => {
+    dispatch(fetchRuleContent()).then((value) => {
+      if (value.type === 'rules/fetchRuleContent/fulfilled') {
+        setInitialized(true)
+      } else if (value.type === 'rules/fetchRuleContent/rejected') {
+        // console.log('Fail to load ', value.error.message)
+      }
       dispatch(changeLoadStatus({ status: false }))
-      setInitialized(true)
     })
   }
   const handleEstimate = () => {
     dispatch(estimate({}))
   }
+
   useEffect(() => {
-    const v = checkPrerequisite()
-    setInitialized(v)
-  }, [initialized])
+    if (loadStatus === StateStatus.Succeeded) {
+      setInitialized(true)
+    } else {
+      setInitialized(false)
+    }
+  }, [loadStatus, dispatch])
   useEffect(() => {
     // console.log('effect!!! length = ', length, ' width = ', width, ' height = ', height)
     const fbaFee = 3.5
@@ -444,12 +445,18 @@ function Calculator() {
                 variant="contained"
                 color="primary"
                 className={classes.submit}
-                disabled={calculatorStore.loading}
+                disabled={calculatorStore.loading || !!error}
                 onClick={handleLoadClick}
               >
                 {calculatorStore.loading ? 'Loading' : 'Load'}
               </Button>
             </Typography>
+            {error && (
+              <Typography variant="subtitle1" align="center" color="textSecondary" component="p">
+                Error : {error}
+                You need to pick another country to retry.
+              </Typography>
+            )}
           </Container>
         )}
       </div>

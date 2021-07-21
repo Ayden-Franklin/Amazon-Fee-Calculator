@@ -11,13 +11,13 @@ declare interface Country {
   name: string
 }
 
-declare interface StateSlice {
-  content: string
-  status: StateStatus
-  error?: string
-  currentCountry: Country
+declare interface RuleContent {
+  tier: string
+  weight: string
+  fba: string
+  referral: string
+  closing: string
 }
-
 declare interface Iu {
   value: number
   unit: string
@@ -39,4 +39,33 @@ declare interface ITier {
   weight: Iu
   volumes: Array<Iu>
   lengthGirth: Iu
+}
+
+declare interface ReferralRangeFeeItem {
+  price: number
+  rate: number
+}
+declare interface ReferralFeeItem {
+  category: string
+  determinateRate: boolean
+  rate: number
+  rangeItems: ReferralRangeFeeItem[]
+  minimumFee: number
+}
+
+declare interface Rule {
+  tierRules?: ITier[]
+  diemnsionalWeightRule?: {
+    minimumWeight: number
+    divisor: number
+  }
+  fbaRule?: {
+    standard: Record<string, Array<Record<string, Array<string>>>>
+    oversize: Record<string, Array<Record<string, Array<string>>>>
+  }
+  referralRule?: ReferralFeeItem[]
+  closingRule?: {
+    categories: string[]
+    fee: number
+  }
 }

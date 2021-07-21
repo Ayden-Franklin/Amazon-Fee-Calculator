@@ -2,7 +2,7 @@ import cheerio from 'cheerio'
 import { ProductTierItem, TierItem, FulfillmentItem } from '@src/types/fba'
 import { ReferralRangeFeeItem, ReferralFeeItem } from '@src/types/referral'
 import { IWeightMeasure } from '@src/types'
-export function parseTiers(content: string) {
+export function parseTiers_old(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
   let weightRule: number[] = []
@@ -34,7 +34,7 @@ export function parseTiers(content: string) {
   }
 }
 
-export function parseTiers2Obj(content: string, currentCountry: string) {
+export function parseTier(content: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 

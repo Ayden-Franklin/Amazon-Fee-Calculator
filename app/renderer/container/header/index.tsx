@@ -17,8 +17,7 @@ import { useHistory } from 'react-router-dom'
 import { changeCountry } from '@src/store/countrySlice'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import { countryMenuItems } from '@src/service/constants'
-import { setCountry as changeTierCountry } from '@src/store/tiersSlice'
-import { setCountry as changeClosingCountry } from '@src/store/closingSlice'
+import { setCountry } from '@src/store/rulesSlice'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -53,8 +52,7 @@ export default function Header(props: HeaderProps) {
     event.preventDefault()
     const country = countryMenuItems[index]
     dispatch(changeCountry(country))
-    dispatch(changeTierCountry(country))
-    dispatch(changeClosingCountry(country))
+    dispatch(setCountry(country))
     handleClose()
   }
   const handleAbout = () => {
@@ -66,9 +64,8 @@ export default function Header(props: HeaderProps) {
   }
   useEffect(() => {
     const country = countryMenuItems[0]
-    dispatch(changeTierCountry(country))
-    dispatch(changeClosingCountry(country))
-  }, [])
+    dispatch(setCountry(country))
+  }, [dispatch])
   return (
     <React.Fragment key="header-fragment">
       <AppBar position="static">

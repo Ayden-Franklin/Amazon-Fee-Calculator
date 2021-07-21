@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { loadClosingFee } from '@src/service/amazon'
-import { parseClosing } from '@src/service/parser'
+import { parseClosing } from '@src/service/parser-us'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
+import { StateSlice } from '@src/types'
 
 interface ClosingState extends StateSlice {
   closingRule?: {

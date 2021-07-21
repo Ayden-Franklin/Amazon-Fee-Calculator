@@ -59,7 +59,13 @@ export enum StateStatus {
 }
 
 export const InitializedStateSlice = {
-  content: '',
+  content: {
+    tier: 'Content has not been initialized',
+    weight: 'Content has not been initialized',
+    fba: 'Content has not been initialized',
+    referral: 'Content has not been initialized',
+    closing: 'Content has not been initialized',
+  },
   status: StateStatus.Idel,
   currentCountry: countryMenuItems[0],
 }

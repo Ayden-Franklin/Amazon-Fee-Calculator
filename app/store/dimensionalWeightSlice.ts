@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { loadWeightRule } from '@src/service/amazon'
-import { parseWeight } from '@src/service/parser'
+import { parseWeight } from '@src/service/parser-us'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
 interface DimensionalWeightState extends StateSlice {
   diemnsionalWeightRule?: {

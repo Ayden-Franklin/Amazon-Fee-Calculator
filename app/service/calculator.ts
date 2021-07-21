@@ -29,9 +29,7 @@ export function toProductTier(
     country: td.country,
   }
 }
-export function checkPrerequisite(): boolean {
-  return checkStatus(store.getState())
-}
+
 export function checkProductInputReady(): boolean {
   // console.log('checkProductInputReady', store.getState().calculator)
   const productInput = store.getState().calculator.productInput
@@ -39,11 +37,6 @@ export function checkProductInputReady(): boolean {
   return productInput
     ? [productInput.length, productInput.width, productInput.height, productInput.weight].every(Boolean)
     : false
-}
-function checkStatus(state: RootState): boolean {
-  return ['tier', 'dimensionalWeight', 'fba', 'referral', 'closing'].every(
-    (v) => state[v]['status'] === StateStatus.Succeeded
-  )
 }
 
 function calcLengthGirth(longest: Iu, median: Iu, short: Iu): Nullable<Iu> {
@@ -183,7 +176,6 @@ export function calculateFbaFee(tierIndex: number, tierName: string, shippingWei
   // let productTierItems: TierItem[]
   // let tierItems: Record<string, Array<Record<string, Array<string>>>>
   let productTierItems: Array<Record<string, Array<string>>>
-  // console.log(rules)
   let productTypekey: string
   // TODO: Don't use index to determine the tier type
   if (tierIndex <= 1) {
@@ -193,18 +185,14 @@ export function calculateFbaFee(tierIndex: number, tierName: string, shippingWei
     productTypekey = convertProductTypeKey('oversize', isApparel, isDangerous)
     productTierItems = rules.oversize[productTypekey]
   }
-  // const item: TierItem = productTierItems[tierIndex]
-  // item.fulfillments.forEach((item) => {
-  //   console.log('check whether the weight ', shippingWeight, ' target weight', item.minimumShippingWeight)
-  // })
+
   const cutIndex = tierName.indexOf('-size')
   if (cutIndex > -1) {
     tierName = tierName.substring(0, cutIndex)
   }
   const items = productTierItems[tierName]
   let item
-  for (let index = 0; index < items.length; index++) {
-    const element = items[index]
+  for (const element of items) {
     let target = element.maximumShippingWeight.value
     // TODO: handle unit conversion
     if (element.maximumShippingWeight.unit === 'oz') {
@@ -244,14 +232,14 @@ export function calculateReferralFee(category: string, price: number, rules: any
   for (let rule of rules) {
     if (rule.category === category) {
       if (rule.determinateRate) {
-        return Math.max(price  * rule.rate, rule.minimumFee)
+        return Math.max(price * rule.rate, rule.minimumFee)
       } else {
         let fee = 0
         let calculatedAmount = 0
-        for(let i = 0; i <  rule.rangeItems.length;  i++) {
+        for (let i = 0; i < rule.rangeItems.length; i++) {
           let rangeItem = rule.rangeItems[i]
           let upperPrice = rangeItem.price
-          if( i !== rule.rangeItems.length - 1) {
+          if (i !== rule.rangeItems.length - 1) {
             upperPrice = rule.rangeItems[i + 1].price
             fee += (upperPrice - rangeItem.price) * rangeItem.rate
             calculatedAmount += upperPrice - rangeItem.price

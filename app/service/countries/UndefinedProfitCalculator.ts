@@ -1,15 +1,23 @@
-export class UndefinedProfitCalculator implements ProfitCaluclator {
-  content: string
-  countryName: string
-  constructor(countryName: string) {
-    this.content = 'This is content for undefined country'
-    this.countryName = countryName
+import { IProfitCaluclator } from '@src/service/IProfitCalculator'
+
+export class UndefinedProfitCalculator implements IProfitCaluclator {
+  currentCountry: Country
+  content: RuleContent
+  constructor(country: Country) {
+    this.content = {
+      tier: 'This is content for undefined country',
+      weight: 'This is content for undefined country',
+      fba: 'This is content for undefined country',
+      referral: 'This is content for undefined country',
+      closing: 'This is content for undefined country',
+    }
+    this.currentCountry = country
   }
   fetchRuleContent() {
-    return Promise.resolve(`This country <span style="color: red">[${this.countryName}]</span> is not supported`)
+    return Promise.reject(Error(`This country [${this.currentCountry.name}] is not supported.`))
   }
   parseRule() {
-    return null
+    return {}
   }
   calculateFbaFee(): number | Error {
     return 0
