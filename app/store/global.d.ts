@@ -1,5 +1,3 @@
-import { StateStatus } from '@src/service/constants'
-
 declare type Nullable<T> = T | null
 
 declare type Undefinedable<T> = T | undefined
@@ -11,9 +9,9 @@ declare interface Country {
   name: string
 }
 
-declare interface StateSlice {
+interface StateSlice {
   content: string
-  status: StateStatus
+  status: import('@src/service/constants').StateStatus
   error?: string
   currentCountry: Country
 }
@@ -21,7 +19,7 @@ declare interface StateSlice {
 declare interface Iu {
   value: number
   unit: string
-  symbol?: string
+  operator?: string
 }
 
 declare interface IProduct {

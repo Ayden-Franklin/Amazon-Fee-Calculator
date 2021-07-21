@@ -37,7 +37,7 @@ export function less(a: Iu, b: Iu): boolean {
   if (a.unit === b.unit) {
     const temp = a.value < b.value
     if (temp) return true
-    if (b?.symbol === '>') {
+    if (b?.operator === '>') {
       return a.value >= b.value
     }
   }

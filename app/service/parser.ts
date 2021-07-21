@@ -38,8 +38,8 @@ export function parseTiers2Obj(content: string, currentCountry: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
-  const parseFragment = (text: string): ITierFragment => {
-    const parseSymbol = (s: string) => {
+  const parseFragment = (text: string): Iu => {
+    const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
         case 'over':
           return '>'
@@ -52,9 +52,9 @@ export function parseTiers2Obj(content: string, currentCountry: string) {
     const [unkonwV1, unkonwV2, unkonwV3] = eles
     const unkonwValue = parseFloat(unkonwV1)
     const value = isNaN(unkonwValue) ? (unkonwV1 === 'n/a' ? NaN : parseFloat(unkonwV2)) : unkonwValue
-    const symbol = parseSymbol(isNaN(unkonwValue) ? unkonwV1 : '=')
+    const operator = parseOperator(isNaN(unkonwValue) ? unkonwV1 : '=')
     const unit = unkonwV3 || unkonwV2 || 'NaN'
-    return { value, symbol, unit }
+    return { value, operator, unit }
   }
 
   $('tbody tr').each((rowIndex, element) => {
