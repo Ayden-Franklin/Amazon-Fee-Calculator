@@ -248,7 +248,7 @@ function Calculator() {
                   <Select
                     id="select"
                     labelId="category"
-                    value={calculatorStore.productInput.categoryCode ? calculatorStore.productInput.categoryCode : ''}
+                    value={calculatorStore.productInput?.categoryCode ? calculatorStore.productInput.categoryCode : ''}
                     onChange={handleCategoryChange}
                   >
                     {categoryItems.map((item) => (
