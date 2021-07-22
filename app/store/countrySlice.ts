@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { countryMenuItems } from '@src/service/constants'
-import type { RootState } from '.'
 
 export const countrySlice = createSlice({
   name: 'country',
@@ -12,7 +11,6 @@ export const countrySlice = createSlice({
     },
   },
 })
-// export const selectCountry = (state) => state.country.closingRule
 export const { changeCountry } = countrySlice.actions
 
 export default countrySlice.reducer

@@ -14,7 +14,7 @@ export class UndefinedProfitCalculator implements IProfitCaluclator {
     this.currentCountry = country
   }
   fetchRuleContent() {
-    return Promise.reject(Error(`This country [${this.currentCountry.name}] is not supported.`))
+    return Promise.reject(Error(`This country [${this.currentCountry.name}] is not supported yet.`))
   }
   parseRule() {
     return {}
