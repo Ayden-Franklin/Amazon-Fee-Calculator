@@ -39,6 +39,71 @@ const pageUrls = {
         return output
       },
     },
+    fba: {
+      url: 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let result = ''
+        $('table.help-table').each((index, element) => {
+          if (index === 2 || index === 3) {
+            $(element).attr('border', '1')
+            result += cheerio.html(element)
+          }
+        })
+        return result
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let result = ''
+        $('table.help-table').each((index, element) => {
+          if (index === 2 || index === 3) {
+            result += cheerio.html(element)
+          }
+        })
+        return result
+      },
+    },
+    referral: {
+      url: 'https://sellercentral.amazon.com/gp/help/external/GTG4BAWSY39Z98Z3',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const content = $('div.help-content:eq(3)')
+        let $table = content.find('table.help-table')
+        $table.attr('border', '1')
+        // const result = cheerio.html($('table.help-table:eq(2)').attr('border', '1'))
+
+        // $('table.help-table:eq(2)'
+        return cheerio.html(content)
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const content = $('div.help-content:eq(3)')
+        return cheerio.html(content)
+      },
+    },
+    closing: {
+      url: 'https://sellercentral.amazon.com/gp/help/external/GKD9U5REK5DKB38Y',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = cheerio.html($('h1.a-spacing-none'))
+        $('div.help-content').each((index, element) => {
+          if (index === 0 || index === 3) {
+            output += cheerio.html(element)
+          }
+        })
+        return output
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = cheerio.html($('h1.a-spacing-none'))
+        $('div.help-content').each((index, element) => {
+          if (index === 0 || index === 3) {
+            output += cheerio.html(element)
+          }
+        })
+        return output
+      },
+    },
   },
   ca: {
     tier: {
@@ -55,25 +120,57 @@ const pageUrls = {
       },
     },
     weight: {
-      url: 'https://sellercentral.amazon.ca/gp/help/help.html?itemID=201112650',
+      url: 'https://sellercentral.amazon.ca/gp/help/external/G201112650',
       extractOriginalContent: (response: string) => {
         const $ = cheerio.load(response)
-        let output = ''
-        $('div.help-content').each((index, element) => {
-          if (index === 1 || index === 2) {
-            output += cheerio.html(element)
-          }
-        })
-        return output === '' ? response : output
+        let output = $('div.help-content div p').eq(28).html()
+        return output && output === '' ? response : output
       },
       extractContent: (response: string) => {
         const $ = cheerio.load(response)
-        let output = ''
-        $('div.help-content').each((index, element) => {
-          if (index === 1 || index === 2) {
-            output += cheerio.html(element)
-          }
-        })
+        let output = $('div.help-content div p').eq(28).html()
+        return output && output === '' ? response : output
+      },
+    },
+    fba: {
+      url: 'https://sellercentral.amazon.ca/gp/help/external/201112670',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        return cheerio.html($('table.help-table:eq(0)').attr('border', '1'))
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        return $('table.help-table').html()
+      },
+    },
+    referral: {
+      url: 'https://sellercentral.amazon.ca/gp/help/external/200336920',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const content = $('div.help-content:eq(5)')
+        let $table = content.find('table.help-table')
+        $table.attr('border', '1')
+        // const result = cheerio.html($('table.help-table:eq(2)').attr('border', '1'))
+
+        // $('table.help-table:eq(2)'
+        return cheerio.html(content)
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        const content = $('div.help-content:eq(3)')
+        return cheerio.html(content)
+      },
+    },
+    closing: {
+      url: 'https://sellercentral.amazon.ca/gp/help/external/200336920',
+      extractOriginalContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = cheerio.html($('div.help-content:eq(6)'))
+        return output
+      },
+      extractContent: (response: string) => {
+        const $ = cheerio.load(response)
+        let output = cheerio.html($('div.help-content:eq(6)'))
         return output
       },
     },
@@ -82,94 +179,36 @@ const pageUrls = {
     tier: 'https://sellercentral.amazon.com.mx/gp/help/external/200336920?language=en_MX',
   },
 }
-export function loadTierTable(countryCode: string): Promise<string> {
+function loadContent(countryCode: string, name: string): Promise<string> {
   if (!countryCode || !pageUrls.hasOwnProperty(countryCode)) {
     return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
-  return got(pageUrls[countryCode].tier.url)
+  return got(pageUrls[countryCode][name].url)
     .then((response) => {
-      const result = pageUrls[countryCode].tier.extractOriginalContent(response.body)
+      const result = pageUrls[countryCode][name].extractOriginalContent(response.body)
       return result
     })
     .catch((err) => {
       console.log(err)
       return err
     })
+}
+export function loadTierTable(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'tier')
 }
 
 export function loadWeightRule(countryCode: string): Promise<string> {
-  if (!countryCode || !pageUrls.hasOwnProperty(countryCode)) {
-    return Promise.reject(new Error(`This country[$country] is not supported!`))
-  }
-  return got(pageUrls[countryCode].weight.url)
-    .then((response) => {
-      const result = pageUrls[countryCode].weight.extractOriginalContent(response.body)
-      return result
-    })
-    .catch((err) => {
-      console.log(err)
-      return err
-    })
+  return loadContent(countryCode, 'weight')
 }
 
-export function loadFBATable(country: string): Promise<string> {
-  const url = 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP?language=en_US'
-
-  return got(url)
-    .then((response) => {
-      const $ = cheerio.load(response.body)
-      // const result = cheerio.html($('table.help-table:eq(2)').attr('border', '1'))
-      let result = ''
-      $('table.help-table').each((index, element) => {
-        if (index === 2 || index === 3) {
-          $(element).attr('border', '1')
-          result += cheerio.html(element)
-        }
-      })
-      return result
-    })
-    .catch((err) => {
-      console.log(err)
-      return err
-    })
+export function loadFBATable(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'fba')
 }
 
-export function loadReferralTable(country: string): Promise<string> {
-  const url =
-    'https://sellercentral.amazon.com/gp/help/external/GTG4BAWSY39Z98Z3?language=en_US&ref=efph_GTG4BAWSY39Z98Z3_cont_6F7CN3EQS7MEGCN'
-  return got(url)
-    .then((response) => {
-      const $ = cheerio.load(response.body)
-      const content = $('div.help-content:eq(3)')
-      let $table = content.find('table.help-table')
-      $table.attr('border', '1')
-      // const result = cheerio.html($('table.help-table:eq(2)').attr('border', '1'))
-
-      // $('table.help-table:eq(2)'
-      return cheerio.html(content)
-    })
-    .catch((err) => {
-      console.log(err)
-      return err
-    })
+export function loadReferralTable(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'referral')
 }
 
-export function loadClosingFee(country: string): Promise<string> {
-  const url =
-    'https://sellercentral.amazon.com/gp/help/external/GKD9U5REK5DKB38Y?language=en_US&ref=efph_GKD9U5REK5DKB38Y_cont_6F7CN3EQS7MEGCN'
-  return got(url)
-    .then((response) => {
-      const $ = cheerio.load(response.body)
-      let output = cheerio.html($('h1.a-spacing-none'))
-      $('div.help-content').each((index, element) => {
-        if (index === 0 || index === 3) {
-          output += cheerio.html(element)
-        }
-      })
-      return output
-    })
-    .catch((err) => {
-      console.log(err)
-      return err
-    })
+export function loadClosingFee(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'closing')
 }

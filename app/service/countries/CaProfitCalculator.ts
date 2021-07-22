@@ -1,4 +1,4 @@
-import { loadTierTable } from '@src/service/amazon'
+import { loadTierTable, loadWeightRule, loadFBATable, loadReferralTable, loadClosingFee } from '@src/service/amazon'
 import { IProfitCaluclator } from '@src/service/IProfitCalculator'
 
 export class CaProfitCalculator implements IProfitCaluclator {
@@ -14,9 +14,14 @@ export class CaProfitCalculator implements IProfitCaluclator {
     }
     this.currentCountry = country
   }
-  fetchRuleContent() {
-    // return loadTierTable('ca')
-    throw new Error('Not support at this time.')
+  async fetchRuleContent() {
+    const tier = await loadTierTable(this.currentCountry.code)
+    const weight = await loadWeightRule(this.currentCountry.code)
+
+    const fba = await loadFBATable(this.currentCountry.code)
+    const referral = await loadReferralTable(this.currentCountry.code)
+    const closing = await loadClosingFee(this.currentCountry.code)
+    this.content = { tier, weight, fba, referral, closing }
   }
   parseRule() {
     return {}
