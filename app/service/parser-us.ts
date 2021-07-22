@@ -305,7 +305,7 @@ function parseFulfillmentFeePerUnit(content: string): number[] {
 }
 export function parseReferral(content: string) {
   const $ = cheerio.load(content)
-  let referralRule: ReferralFeeItem[] = []
+  let referralRule: ReferralFee[] = []
 
   // for handle Baby Products (excluding Baby Apparel)
   const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
@@ -345,15 +345,13 @@ export function parseReferral(content: string) {
   $('tbody tr').each((_, tr) => {
     const [nameEle, rateEle, miniFeeEle] = $(tr).find('td')
 
-    const rateOnlyOne = rateEle.children.length === 1
     const [category, excludingCategorys, includeingCategorys] = parseCategory($($(nameEle).contents().get(0)).text())
     referralRule.push({
       category,
       excludingCategorys,
       includeingCategorys,
-      determinateRate: rateOnlyOne,
-      rate: rateOnlyOne ? parseFloat($(rateEle).text()) / 100 : NaN,
-      rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
+      // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
+      rateItems: parseReferralSubItem($(rateEle).toString()),
       minimumFee: parseFloat($(miniFeeEle).text().substring(1)) || 0,
     })
   })
@@ -362,24 +360,57 @@ export function parseReferral(content: string) {
 
 function parseReferralSubItem(content: string) {
   const $ = cheerio.load(content)
-  let rangeItems: ReferralRangeFeeItem[] = []
+  const rateItems: ReferralRateFeeItem[] = []
+  const onlyOneRate = $('ul').length === 0
+
+  if (onlyOneRate) {
+    const desc = $(content).text()
+
+    rateItems.push({
+      minPrice: 0,
+      maxPrice: Number.MAX_VALUE,
+      rate: parseFloat(desc) / 100,
+      desc,
+    })
+
+    return rateItems
+  }
+
+  /** PARSE Referral
+   * <td>
+   *  <ul>
+   *    <li>
+   *    ...
+   *    </li>
+   *  </ul>
+   * </td>
+   */
   $(content)
     .find('li')
     .each((_, element) => {
-      const text = $(element).find('span').text()
-      const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
+      const desc = $(element).find('span').text()
+      const array = desc.match(/(\d+(,\d+)?(\.\d*)?)/g)
+
       if (array && array?.length > 1) {
-        let price = parseFloat(array[1].replace(',', ''))
-        if (rangeItems.length === 0) {
-          price = 0
-        }
-        rangeItems.push({
-          price: price,
-          rate: parseInt(array[0], 10) / 100,
+        let rate = parseInt(array[0], 10) / 100
+        let priceV1 = parseFloat(array[1].replace(',', ''))
+        let priceV2 = parseFloat(array[2]?.replace(',', ''))
+        // console.log('array', array, priceV1, priceV2)
+
+        const lastRate = rateItems.length && rateItems[rateItems.length - 1]
+        const minPrice = lastRate ? lastRate?.maxPrice : 0
+        const maxPrice = priceV2 || (minPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
+
+        rateItems.push({
+          minPrice,
+          maxPrice,
+          rate,
+          desc,
         })
       }
     })
-  return rangeItems
+
+  return rateItems
 }
 export function parseClosing(content: string) {
   const $ = cheerio.load(content)

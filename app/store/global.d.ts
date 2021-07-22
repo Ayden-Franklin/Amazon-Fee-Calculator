@@ -56,17 +56,17 @@ declare interface ProductTierItem {
   [key: string]: TierItem[]
 }
 
-declare interface ReferralRangeFeeItem {
-  price: number
+declare interface ReferralRateFeeItem {
   rate: number
+  minPrice: number
+  maxPrice: number
+  desc: string
 }
-declare interface ReferralFeeItem {
+declare interface ReferralFee {
   category: string
   excludingCategorys: string[]
   includeingCategorys: string[]
-  determinateRate: boolean
-  rate: number
-  rangeItems: ReferralRangeFeeItem[]
+  rateItems: ReferralRateFeeItem[]
   minimumFee: number
 }
 
@@ -80,7 +80,7 @@ declare interface Rule {
     standard: Record<string, Array<Record<string, Array<string>>>>
     oversize: Record<string, Array<Record<string, Array<string>>>>
   }
-  referralRule?: ReferralFeeItem[]
+  referralRule?: ReferralFee[]
   closingRule?: {
     categories: string[]
     fee: number

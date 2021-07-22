@@ -1,8 +1,5 @@
-import store, { RootState } from '@src/store'
+import store from '@src/store'
 import { sortDimensions, sortByUnit, compareWithUnit } from '@src/service/utils'
-import { FulfillmentItem, TierItem, ProductTierItem } from '@src/types/fba'
-import { StateStatus } from '@src/service/constants'
-
 export interface TierData {
   length: number
   width: number
@@ -228,30 +225,41 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
   }
 }
 
-export function calculateReferralFee(category: string, price: number, rules: any) {
-  for (let rule of rules) {
-    if (category.includes(rule.category)) {
-      if (rule.determinateRate) {
-        return Math.max(price * rule.rate, rule.minimumFee)
-      } else {
-        let fee = 0
-        let calculatedAmount = 0
-        for (let i = 0; i < rule.rangeItems.length; i++) {
-          let rangeItem = rule.rangeItems[i]
-          let upperPrice = rangeItem.price
-          if (i !== rule.rangeItems.length - 1) {
-            upperPrice = rule.rangeItems[i + 1].price
-            fee += (upperPrice - rangeItem.price) * rangeItem.rate
-            calculatedAmount += upperPrice - rangeItem.price
-          } else {
-            fee += (price - calculatedAmount) * rangeItem.rate
-          }
-        }
-        return Math.max(fee, rule.minimumFee)
-      }
+function calcReferralCategory(category: string, rule: ReferralFee) {
+  console.log('calcReferralCategory', category, rule.category)
+  // console.log('rule.category', rule.category)
+  return category.includes(rule.category)
+}
+
+export function calculateReferralFee(category: string, price: number, rules: ReferralFee[]) {
+  let refRule = null
+
+  for (const rule of rules) {
+    if (calcReferralCategory(category, rule)) {
+      refRule = rule
+      break
     }
   }
-  return 0
+
+  if (refRule === null) {
+    return NaN
+  }
+
+  let totalFee = 0
+  let calculatedAmount = 0
+
+  for (const rateItem of refRule.rateItems) {
+    // part calc fee
+    totalFee +=
+      (price > rateItem.maxPrice ? rateItem.maxPrice - rateItem.minPrice : price - calculatedAmount) * rateItem.rate
+    calculatedAmount += rateItem.maxPrice
+
+    if (calculatedAmount >= price) {
+      break
+    }
+  }
+
+  return Math.max(refRule.minimumFee, totalFee)
 }
 
 export function calculateClosingFee(category: string, rules: any) {

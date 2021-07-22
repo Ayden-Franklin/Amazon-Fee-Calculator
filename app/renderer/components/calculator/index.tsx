@@ -318,7 +318,7 @@ function Calculator() {
                 <Grid item xs={4}>
                   <TextField
                     id="tier-value"
-                    value={calculatorStore.tier?.type || 'Unknown'}
+                    value={calculatorStore.tier?.name || 'Unknown'}
                     disabled
                     size="small"
                     InputProps={{

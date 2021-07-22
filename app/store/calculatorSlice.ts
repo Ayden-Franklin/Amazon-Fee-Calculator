@@ -86,7 +86,7 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
 function startToEstimate(state, rules: any): ProductFees {
   const fbaFee = calculateFbaFee(
     state.tier.order,
-    state.tier.type,
+    state.tier.name,
     state.shippingWeight,
     state.productInput.isApparel,
     state.productInput.isDangerous,
