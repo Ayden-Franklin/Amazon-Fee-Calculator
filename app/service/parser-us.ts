@@ -35,7 +35,7 @@ export function parseTier(content: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
-  const parseFragment = (text: string): Iu => {
+  const parseExpression = (text: string): Iu => {
     const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
         case 'over':
@@ -49,7 +49,7 @@ export function parseTier(content: string) {
     const [unkonwV1, unkonwV2, unkonwV3] = eles
     const unkonwValue = parseFloat(unkonwV1)
     const value = isNaN(unkonwValue) ? (unkonwV1 === 'n/a' ? NaN : parseFloat(unkonwV2)) : unkonwValue
-    const operator = parseOperator(isNaN(unkonwValue) ? unkonwV1 : '=')
+    const operator = parseOperator(isNaN(unkonwValue) ? unkonwV1 : '<=')
     const unit = unkonwV3 || unkonwV2 || 'NaN'
     return { value, operator, unit }
   }
@@ -63,11 +63,11 @@ export function parseTier(content: string) {
     const volumes = volumesAndLengthGirth
 
     tiers.push({
-      type: name.trim(),
-      volumes: volumes.map((vt) => parseFragment(vt)),
+      name: name.trim(),
+      volumes: volumes.map((vt) => parseExpression(vt)),
       order: rowIndex,
-      weight: parseFragment(weight),
-      lengthGirth: parseFragment(lengthGirth || ''),
+      weight: parseExpression(weight),
+      lengthGirth: parseExpression(lengthGirth || ''),
     })
   })
 
