@@ -32,7 +32,7 @@ declare interface IProduct {
 }
 
 declare interface ITier {
-  type: string
+  name: string
   order: number
   weight: Iu
   volumes: Array<Iu>

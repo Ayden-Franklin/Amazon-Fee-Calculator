@@ -1,5 +1,5 @@
 import store, { RootState } from '@src/store'
-import { sortDimensions, sortByUnit, less } from '@src/service/utils'
+import { sortDimensions, sortByUnit, compareWithUnit } from '@src/service/utils'
 import { FulfillmentItem, TierItem, ProductTierItem } from '@src/types/fba'
 import { StateStatus } from '@src/service/constants'
 
@@ -51,7 +51,7 @@ function calcLengthGirth(longest: Iu, median: Iu, short: Iu): Nullable<Iu> {
 export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nullable<ITier> {
   let cI = 0
   let total = tiers.length
-  let tagetTier: Nullable<ITier> = null
+  let targetTier: Nullable<ITier> = null
   // default tiers order ASCE
   // sort
   const [short, median, longest] = sortByUnit(product.length, product.width, product.height)
@@ -60,22 +60,22 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
   while (cI < total) {
     const tI = tiers[cI]
     if (
-      less(product.weight, tI.weight) &&
-      less(longest, tI.volumes[0]) &&
-      less(median, tI.volumes[1]) &&
-      less(short, tI.volumes[2]) &&
+      compareWithUnit(product.weight, tI.weight) &&
+      compareWithUnit(longest, tI.volumes[0]) &&
+      compareWithUnit(median, tI.volumes[1]) &&
+      compareWithUnit(short, tI.volumes[2]) &&
       lengthGirth &&
-      less(lengthGirth, tI.lengthGirth)
+      compareWithUnit(lengthGirth, tI.lengthGirth)
     ) {
-      tagetTier = tI
+      targetTier = tI
       break
     }
     cI++
   }
-  return tagetTier
+  return targetTier
 }
 
-export function determineTier(
+export function determineTier_old(
   tierData: TierData,
   weightRule: number[],
   volumeRule: number[][],

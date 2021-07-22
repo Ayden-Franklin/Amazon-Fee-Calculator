@@ -22,28 +22,20 @@ export function sortByUnit(a: Iu, b: Iu, c: Iu) {
   return [a, b, c]
 }
 
-export function great(a: Iu, b: Iu): boolean {
-  // TODO
-  if (a.unit === b.unit) {
-    return a.value > b.value
-  }
-  return false
-}
-
-export function less(a: Iu, b: Iu): boolean {
-  // if unit NaN, will Ignore b.value, default less
-  if (b.unit === 'NaN') {
+export function compareWithUnit(a: Iu, b: Iu): boolean {
+  // if unit NaN or operator is not defined, will Ignore b.value, default less
+  if (b.unit === 'NaN' || !b.operator) {
     return true
   }
   if (a.unit === b.unit) {
-    const temp = a.value < b.value
-    if (temp) return true
-    if (b?.operator === '>') {
-      return a.value >= b.value
-    }
+    // eslint-disable-next-line no-eval
+    return global.eval(a.value + b?.operator + b.value)
   }
   // diff unit Comparison
   const aV = `${a.value} ${a.unit}`
   const bV = `${b.value} ${b.unit}`
-  return Qty(aV).lt(Qty(bV))
+  const r = Qty(aV).compareTo(Qty(bV))
+  return (
+    (b.operator.includes('=') && r === 0) || (b.operator.includes('>') && r > 0) || (b.operator.includes('<') && r < 0)
+  )
 }
