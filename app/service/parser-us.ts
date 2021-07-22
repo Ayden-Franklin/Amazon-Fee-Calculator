@@ -1,6 +1,4 @@
 import cheerio from 'cheerio'
-import { ProductTierItem, TierItem, FulfillmentItem } from '@src/types/fba'
-import { ReferralRangeFeeItem, ReferralFeeItem } from '@src/types/referral'
 export function parseTiers_old(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -308,52 +306,66 @@ function parseFulfillmentFeePerUnit(content: string): number[] {
 export function parseReferral(content: string) {
   const $ = cheerio.load(content)
   let referralRule: ReferralFeeItem[] = []
-  $('tbody tr').each((rowIndex, tr) => {
-    let categoryName: string
-    let minimumFee: number
-    let determinateRate = true
-    let rate: number
-    let rangeItems
-    $(tr)
-      .find('td')
-      .each((index, element) => {
-        if (index === 0) {
-          categoryName = $(element).text()
-          // categoryName = element.firstChild.data
-          // TODO: How to ignore the <sup> element?
-          const supElement = $(element).find('sup')
-          if (supElement.length > 0) {
-            // const text = supElement.text()
-            categoryName = categoryName.substring(0, categoryName.length - 1)
-          }
-          categoryName = categoryName.replace('&', 'and')
-        } else if (index === 1) {
-          if (element.children.length === 1) {
-            rate = parseFloat($(element).text()) / 100
-          } else {
-            determinateRate = false
-            rangeItems = praseReferralSubItem(element)
-          }
-        } else if (index === 2) {
-          minimumFee = parseFloat($(element).text().substring(1)) || 0
-        }
-      })
+
+  // for handle Baby Products (excluding Baby Apparel)
+  const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
+    let excludingCategorys: Array<string> = []
+    let includeingCategorys: Array<string> = []
+
+    const categoryMatchs = fullCategory.match(/\(.+\)/)
+
+    if (!categoryMatchs?.length) return [fullCategory, excludingCategorys, includeingCategorys]
+
+    let splitCategoryIndex = categoryMatchs.index || -1
+    let realCategory = fullCategory.substring(0, splitCategoryIndex).trim()
+
+    for (const cI of categoryMatchs) {
+      if (cI.includes('excluding')) {
+        excludingCategorys.push(
+          cI
+            .substring(1, cI.length - 1)
+            .replace('excluding', '')
+            .trim()
+        )
+        continue
+      }
+      if (cI.includes('including')) {
+        includeingCategorys.push(
+          cI
+            .substring(1, cI.length - 1)
+            .replace('including', '')
+            .trim()
+        )
+        continue
+      }
+    }
+    return [realCategory, excludingCategorys, includeingCategorys]
+  }
+
+  $('tbody tr').each((_, tr) => {
+    const [nameEle, rateEle, miniFeeEle] = $(tr).find('td')
+
+    const rateOnlyOne = rateEle.children.length === 1
+    const [category, excludingCategorys, includeingCategorys] = parseCategory($($(nameEle).contents().get(0)).text())
     referralRule.push({
-      category: categoryName,
-      determinateRate,
-      rate,
-      rangeItems,
-      minimumFee,
+      category,
+      excludingCategorys,
+      includeingCategorys,
+      determinateRate: rateOnlyOne,
+      rate: rateOnlyOne ? parseFloat($(rateEle).text()) / 100 : NaN,
+      rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
+      minimumFee: parseFloat($(miniFeeEle).text().substring(1)) || 0,
     })
   })
   return referralRule
 }
-function praseReferralSubItem(content) {
+
+function parseReferralSubItem(content: string) {
   const $ = cheerio.load(content)
   let rangeItems: ReferralRangeFeeItem[] = []
   $(content)
     .find('li')
-    .each((index, element) => {
+    .each((_, element) => {
       const text = $(element).find('span').text()
       const array = text.match(/(\d+(,\d+)?(\.\d*)?)/g)
       if (array && array?.length > 1) {

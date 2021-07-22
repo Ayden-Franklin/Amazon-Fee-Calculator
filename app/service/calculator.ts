@@ -230,7 +230,7 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
 
 export function calculateReferralFee(category: string, price: number, rules: any) {
   for (let rule of rules) {
-    if (rule.category === category) {
+    if (category.includes(rule.category)) {
       if (rule.determinateRate) {
         return Math.max(price * rule.rate, rule.minimumFee)
       } else {
