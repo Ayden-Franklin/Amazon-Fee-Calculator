@@ -62,6 +62,8 @@ declare interface ReferralRangeFeeItem {
 }
 declare interface ReferralFeeItem {
   category: string
+  excludingCategorys: string[]
+  includeingCategorys: string[]
   determinateRate: boolean
   rate: number
   rangeItems: ReferralRangeFeeItem[]

@@ -1,5 +1,6 @@
 import { categoryItems } from '@src/service/constants'
-import Qty from 'js-quantities/esm'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Qty = require('js-quantities')
 
 export function sortDimensions(length: number, width: number, height: number) {
   const dimensions = [length, width, height].sort((a, b) => b - a)
