@@ -179,14 +179,37 @@ const pageUrls = {
     tier: 'https://sellercentral.amazon.com.mx/gp/help/external/200336920?language=en_MX',
   },
 }
+const cacheStore = (function () {
+  return {
+    get: (key: string) => {
+      if (typeof global !== 'undefined') {
+        const value = global.localStorage.getItem(key)
+        if (value) return value
+      }
+    },
+    set: (key: string, value: any, ttl?: number) => {
+      global.localStorage.setItem(key, value)
+    },
+  }
+})()
+
 function loadContent(countryCode: string, name: string): Promise<string> {
   if (!countryCode || !pageUrls.hasOwnProperty(countryCode)) {
     return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
-  return got(pageUrls[countryCode][name].url)
+
+  const rq = pageUrls[countryCode][name]
+
+  const rqUrl = rq.url
+  const onRqBody = (body: string) => rq.extractOriginalContent(body)
+  // cache handle
+  const cache = cacheStore.get(rqUrl)
+  if (cache) return Promise.resolve(onRqBody(cache))
+  // request
+  return got(rqUrl)
     .then((response) => {
-      const result = pageUrls[countryCode][name].extractOriginalContent(response.body)
-      return result
+      cacheStore.set(rqUrl, response.body)
+      return onRqBody(response.body)
     })
     .catch((err) => {
       console.log(err)
