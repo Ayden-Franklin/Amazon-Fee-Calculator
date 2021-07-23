@@ -36,7 +36,7 @@ export function parseTier(content: string) {
   const tiers: ITier[] = []
 
   const parseExpression = (text: string): Iu => {
-    if (text === 'n/a') return { value: NaN, unit: null }
+    if (text === 'n/a') return { value: NaN, unit: 'n/a' }
     const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
         case 'over':
@@ -46,12 +46,12 @@ export function parseTier(content: string) {
       }
     }
 
-    const eles = text.split(' ')
-    const [unkonwV1, unkonwV2, unkonwV3] = eles
-    const unkonwValue = parseFloat(unkonwV1)
-    const value = !isNaN(unkonwValue) ? parseFloat(unkonwV2) : unkonwValue
-    const operator = isNaN(unkonwValue) ? parseOperator(unkonwV1) : '<='
-    const unit = unkonwV3 || unkonwV2
+    const array = text.split(' ')
+    const [unknownV1, unknownV2, unknownV3] = array
+    const unknownValue = parseFloat(unknownV1)
+    const value = isNaN(unknownValue) ? (unknownV1 === 'n/a' ? NaN : parseFloat(unknownV2)) : unknownValue
+    const operator = parseOperator(isNaN(unknownValue) ? unknownV1 : '<=')
+    const unit = unknownV3 || unknownV2
     return { value, operator, unit }
   }
 

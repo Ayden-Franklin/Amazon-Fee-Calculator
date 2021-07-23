@@ -23,16 +23,19 @@ export function sortByUnit(a: Iu, b: Iu, c: Iu) {
 }
 
 export function compareWithUnit(a: Iu, b: Iu): boolean {
-  // if unit or operator of b is undefined, will Ignore b.value, default true
-  if (!b.unit || !b.operator) {
+  // TODO: check whether the unit is null or undefined to make sure we parsed rule successfully
+
+  // if unit NaN or operator is not defined, will Ignore b.value, default less
+  if (b.unit === 'n/a' || !b.operator) {
     return true
   }
 
-  // if unit of a is undefined, will return false
-  if (!a.unit) return false
+  // if unit of a is n/a, will return false
+  if (a.unit === 'n/a') return false
+
   if (a.unit === b.unit) {
     // eslint-disable-next-line no-eval
-    return global.eval(a.value + b?.operator + b.value)
+    return global.eval(`${a.value}  ${b?.operator} ${b.value}`)
   }
   // diff unit Comparison
   const aV = `${a.value} ${a.unit}`

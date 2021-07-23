@@ -18,7 +18,7 @@ declare interface RuleContent {
 }
 declare interface Iu {
   value: number
-  unit: Nilable<string>
+  unit: string
   operator?: string
 }
 

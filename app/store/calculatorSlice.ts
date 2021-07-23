@@ -102,7 +102,7 @@ function startToEstimate(state, rules: any): ProductFees {
     fbaFee: fbaFee.toFixed(2),
     referralFee: referralFee.toFixed(2),
     closingFee: closingFee.toFixed(2),
-    totalFee: fbaFee.toFixed(2),
+    totalFee: (fbaFee + referralFee + closingFee).toFixed(2),
     net: (state.productInput.price - state.productInput.cost - fbaFee - referralFee - closingFee).toFixed(2),
   }
 }

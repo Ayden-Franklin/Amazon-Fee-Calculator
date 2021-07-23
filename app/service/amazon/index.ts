@@ -25,7 +25,7 @@ function loadContent(countryCode: string, name: CountryItemKey): Promise<string>
   if (!rq) return Promise.reject(new Error(countryCode + name + ' null'))
 
   const rqUrl = rq.url
-  const onRqBody = (body: string) => rq.extractOriginalContent(body) || 'Extract Unkown'
+  const onRqBody = (body: string) => rq.extractOriginalContent(body) || 'Extract Unknown'
   // cache handle
   const cache = cacheStore.get(rqUrl)
   if (cache) return Promise.resolve(onRqBody(cache))
