@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
 import { UsProfitCalculator } from '@src/service/countries/UsProfitCalculator'
 import { CaProfitCalculator } from '@src/service/countries/CaProfitCalculator'
+import { MxProfitCalculator } from '@src/service/countries/MxProfitCalculator'
 import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfitCalculator'
 import { IProfitCaluclator } from '@src/service/IProfitCalculator'
 import { StateSlice } from '@src/types'
@@ -34,6 +35,9 @@ const rulesSlice = createSlice({
       switch (state.currentCountry.code) {
         case 'ca':
           profitCaluclator = new CaProfitCalculator({ ...state.currentCountry })
+          break
+        case 'mx':
+          profitCaluclator = new MxProfitCalculator({ ...state.currentCountry })
           break
         case 'us':
           profitCaluclator = new UsProfitCalculator({ ...state.currentCountry })

@@ -14,7 +14,7 @@ declare interface RuleContent {
   weight: string
   fba: string
   referral: string
-  closing: string
+  closing: Nullable<string>
 }
 declare interface Iu {
   value: number
