@@ -3,7 +3,7 @@ import { countryMenuItems } from '@src/service/constants'
 
 export const countrySlice = createSlice({
   name: 'country',
-  initialState: countryMenuItems[1],
+  initialState: countryMenuItems[0],
   reducers: {
     changeCountry: (state, action: PayloadAction<Country>) => {
       state.code = action.payload.code

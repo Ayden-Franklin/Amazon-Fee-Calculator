@@ -65,7 +65,7 @@ export function parseTier(content: string) {
   const [...names] = $('div')
     .find('p strong')
     .map((_, e) => $(e).text())
-  names.push($('h2:eq(1)').text())
+  names.push($('h2:eq(1)').text().replace(' Handling',''))
   console.log('found names: = ', names)
   const lists = $('div').find('ul')
   console.log('found lists: = ', lists)
@@ -106,7 +106,9 @@ export function parseTier(content: string) {
       // The second line is for length+Girth
       const lengthGirth = parseOversizeSpecialExpression(list[1])
       // The third line is for weight
-      const weightAndUnit = list[2].match(/\d+(\.\d+)?|(kg|lb)/)
+      console.log('weight for oversize special = ', list[2])
+      const weightAndUnit = list[2].match(/\d+(\.\d+)?|(kg|lb)/g)
+      console.log('matched weight ', weightAndUnit)
       if (weightAndUnit?.length === 2) {
         weight.value = parseFloat(weightAndUnit[0])
         weight.unit = weightAndUnit[1]

@@ -100,7 +100,7 @@ function startToEstimate(state, rules: any): ProductFees {
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {
     fbaFee: fbaFee.toFixed(2),
-    referralFee: referralFee,
+    referralFee: referralFee.toFixed(2),
     closingFee: closingFee.toFixed(2),
     totalFee: fbaFee.toFixed(2),
     net: (state.productInput.price - state.productInput.cost - fbaFee - referralFee - closingFee).toFixed(2),
