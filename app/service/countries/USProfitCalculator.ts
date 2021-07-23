@@ -1,7 +1,7 @@
 import { loadTierTable, loadWeightRule, loadFBATable, loadReferralTable, loadClosingFee } from '@src/service/amazon'
-import { IProfitCaluclator } from '@src/service/IProfitCalculator'
+import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { parseTier, parseWeight, parseFba, parseReferral, parseClosing } from '@src/service/parser-us'
-export class UsProfitCalculator implements IProfitCaluclator {
+export class UsProfitCalculator implements IProfitCalculator {
   currentCountry: Country
   content: RuleContent
   constructor(country: Country) {

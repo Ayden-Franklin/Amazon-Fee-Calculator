@@ -22,6 +22,8 @@ export const InitializedStateSlice = {
   content: {
     tier: 'Content has not been initialized',
     weight: 'Content has not been initialized',
+    package: 'Content has not been initialized',
+    shipping: 'Content has not been initialized',
     fba: 'Content has not been initialized',
     referral: 'Content has not been initialized',
     closing: 'Content has not been initialized',

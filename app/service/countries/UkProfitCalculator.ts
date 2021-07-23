@@ -1,6 +1,6 @@
-import { IProfitCaluclator } from '@src/service/IProfitCalculator'
+import { IProfitCalculator } from '@src/service/IProfitCalculator'
 
-export class UkProfitCalculator implements IProfitCaluclator {
+export class UkProfitCalculator implements IProfitCalculator {
   currentCountry: Country
   content: RuleContent
   constructor(country: Country) {

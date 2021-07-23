@@ -4,19 +4,19 @@ import { UsProfitCalculator } from '@src/service/countries/UsProfitCalculator'
 import { CaProfitCalculator } from '@src/service/countries/CaProfitCalculator'
 import { MxProfitCalculator } from '@src/service/countries/MxProfitCalculator'
 import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfitCalculator'
-import { IProfitCaluclator } from '@src/service/IProfitCalculator'
+import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { StateSlice } from '@src/types'
 interface RulesState extends StateSlice {
   rule?: Rule
 }
 const initialState: RulesState = InitializedStateSlice
 
-let profitCaluclator: IProfitCaluclator
+let profitCalculator: IProfitCalculator
 
 export const fetchRuleContent = createAsyncThunk('rules/fetchRuleContent', async (): Promise<any> => {
   try {
-    await profitCaluclator.fetchRuleContent()
-    return Promise.resolve(profitCaluclator.content)
+    await profitCalculator.fetchRuleContent()
+    return Promise.resolve(profitCalculator.content)
   } catch (e) {
     return Promise.reject(e)
   }
@@ -34,16 +34,16 @@ const rulesSlice = createSlice({
       delete state.rule
       switch (state.currentCountry.code) {
         case 'ca':
-          profitCaluclator = new CaProfitCalculator({ ...state.currentCountry })
+          profitCalculator = new CaProfitCalculator({ ...state.currentCountry })
           break
         case 'mx':
-          profitCaluclator = new MxProfitCalculator({ ...state.currentCountry })
+          profitCalculator = new MxProfitCalculator({ ...state.currentCountry })
           break
         case 'us':
-          profitCaluclator = new UsProfitCalculator({ ...state.currentCountry })
+          profitCalculator = new UsProfitCalculator({ ...state.currentCountry })
           break
         default:
-          profitCaluclator = new UndefinedProfitCalculator({ ...state.currentCountry })
+          profitCalculator = new UndefinedProfitCalculator({ ...state.currentCountry })
       }
     },
   },
@@ -55,7 +55,7 @@ const rulesSlice = createSlice({
       .addCase(fetchRuleContent.fulfilled, (state, action) => {
         state.status = StateStatus.Succeeded
         state.content = action.payload
-        state.rule = profitCaluclator.parseRule()
+        state.rule = profitCalculator.parseRule()
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
         state.status = StateStatus.Failed
