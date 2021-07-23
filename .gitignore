@@ -11,3 +11,4 @@ node_modules/
 settings.json
 .DS_STORE
 .npmrc
+inject_global.ts

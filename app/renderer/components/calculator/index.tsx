@@ -300,12 +300,12 @@ function Calculator() {
                 <Grid item xs={3}>
                   <TextField
                     id="price-value"
-                    defaultValue="0"
                     type="number"
                     variant="outlined"
                     error
                     required
                     size="small"
+                    value={price}
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
