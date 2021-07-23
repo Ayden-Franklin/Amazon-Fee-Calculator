@@ -32,6 +32,7 @@ export function parseTiers_old(content: string) {
 }
 
 export function parseTier(content: string) {
+  const empty = { value: NaN, unit: 'n/a' }
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
@@ -47,7 +48,7 @@ export function parseTier(content: string) {
   }
   const parseExpression = (text: string): Iu => {
     const values = text.split(' ')
-    if (values.length < 4) return { value: 0, unit: null }
+    if (values.length < 4) return empty
     const value = parseFloat(values[0])
     const unit = values[1]
     const operator = parseOperator(`${values[2]} ${values[3]}`)
@@ -56,7 +57,7 @@ export function parseTier(content: string) {
 
   const parseOversizeSpecialExpression = (text: string): Iu => {
     const values = text.split(' ')
-    if (values.length < 3) return { value: 0, unit: null }
+    if (values.length < 3) return empty
     const value = parseFloat(values[1])
     const unit = values[2]
     const operator = parseOperator(values[0])
@@ -65,19 +66,15 @@ export function parseTier(content: string) {
   const [...names] = $('div')
     .find('p strong')
     .map((_, e) => $(e).text())
-  names.push($('h2:eq(1)').text().replace(' Handling',''))
-  console.log('found names: = ', names)
+  names.push($('h2:eq(1)').text().replace(' Handling', ''))
   const lists = $('div').find('ul')
-  console.log('found lists: = ', lists)
   // TODO: If the page layout changed, we have to change this loop accordingly
   for (let index = 0; index < names.length - 2; index++) {
     const name = names[index]
     const ul = lists[index]
-    console.log('parse for ', name, ' li is ', ul)
     const [...list] = $(ul)
       .find('li')
       .map((_, e) => $(e).text().trim())
-    console.log('get li for ', name, ' they are ', list)
     const weight = list.shift()
     tiers.push({
       name,
@@ -100,15 +97,13 @@ export function parseTier(content: string) {
       .find('li')
       .map((_, e) => $(e).text().trim())
     if (list.length === 3) {
-      let weight: Iu = { value: 0, unit: null }
+      let weight: Iu = { ...empty }
       // The first line is for longest side
       const longSide = parseOversizeSpecialExpression(list[0])
       // The second line is for length+Girth
       const lengthGirth = parseOversizeSpecialExpression(list[1])
       // The third line is for weight
-      console.log('weight for oversize special = ', list[2])
       const weightAndUnit = list[2].match(/\d+(\.\d+)?|(kg|lb)/g)
-      console.log('matched weight ', weightAndUnit)
       if (weightAndUnit?.length === 2) {
         weight.value = parseFloat(weightAndUnit[0])
         weight.unit = weightAndUnit[1]
@@ -117,14 +112,14 @@ export function parseTier(content: string) {
       tiers.push(
         {
           name: names[2],
-          volumes: [{ ...longSide, operator: '<=' }],
+          volumes: [{ ...longSide, operator: '<=' }, empty, empty],
           order: 2,
           weight: { ...weight, operator: '<=' },
           lengthGirth: { ...lengthGirth, operator: '<=' },
         },
         {
           name: names[3],
-          volumes: [longSide],
+          volumes: [longSide, empty, empty],
           order: 3,
           weight,
           lengthGirth,
@@ -134,45 +129,6 @@ export function parseTier(content: string) {
   } else {
     // TODO: Warning! Tha page layout is not fit this parser!
   }
-  console.log('finished to pase. tuers = ', tiers)
-  // names.forEach((name, index) => {
-  //   console.log('parse for ', name)
-  //   const ul = lists[index]
-  //   console.log('parse for ', name, ' li is ', ul)
-  //   const [...list] = $(ul)
-  //     .find('li')
-  //     .map((_, e) => $(e).text().trim())
-  //   console.log('get li for ', name, ' they are ', list)
-  //   const weight = list.shift()
-  //   tiers.push({
-  //     name,
-  //     volumes: list.map((vt) => parseExpression(vt)),
-  //     order: index,
-  //     weight: parseExpression(weight || ''),
-  //   })
-  // })
-  $('div')
-    .children()
-    .each((index, element) => {
-      console.log('element ', index, ' = ', element)
-      if (index === 4) {
-        console.log('name = ', $(element).find('strong').text())
-      }
-      // Product size tier	Unit weight*	Longest side	Median side	Shortest side	Length + girth
-      // const [name, weight, ...volumesAndLengthGirth] = $(element)
-      //   .find('td')
-      //   .map((_, e) => $(e).text())
-      // const lengthGirth = volumesAndLengthGirth.pop()
-      // const volumes = volumesAndLengthGirth
-
-      // tiers.push({
-      //   name: name.trim(),
-      //   volumes: volumes.map((vt) => parseFragment(vt)),
-      //   order: rowIndex,
-      //   weight: parseFragment(weight),
-      //   lengthGirth: parseFragment(lengthGirth || ''),
-      // })
-    })
   return tiers
 }
 

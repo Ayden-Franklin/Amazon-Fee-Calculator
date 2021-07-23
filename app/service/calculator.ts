@@ -62,12 +62,23 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
       compareWithUnit(median, tI.volumes[1]) &&
       compareWithUnit(short, tI.volumes[2]) &&
       lengthGirth &&
+      tI.lengthGirth &&
       compareWithUnit(lengthGirth, tI.lengthGirth)
     ) {
       targetTier = tI
       break
     }
     cI++
+    // The last tier grade  has a different logic: any matched condition should confirm this tier grad
+    if (
+      (cI === total && compareWithUnit(product.weight, tI.weight)) ||
+      compareWithUnit(longest, tI.volumes[0]) ||
+      compareWithUnit(median, tI.volumes[1]) ||
+      compareWithUnit(short, tI.volumes[2]) ||
+      (lengthGirth && tI.lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth))
+    ) {
+      targetTier = tI
+    }
   }
   return targetTier
 }
@@ -167,8 +178,14 @@ interface FbaParameter {
   tierSize: number
   weightRule: number[]
 }
-export function calculateFbaFee(tierIndex: number, tierName: string, shippingWeight: number, isApparel: boolean,
-  isDangerous: boolean, rules: any): number | Error {
+export function calculateFbaFee(
+  tierIndex: number,
+  tierName: string,
+  shippingWeight: number,
+  isApparel: boolean,
+  isDangerous: boolean,
+  rules: any
+): number | Error {
   // let tierItems: ProductTierItem[]
   // let productTierItems: TierItem[]
   // let tierItems: Record<string, Array<Record<string, Array<string>>>>
@@ -205,7 +222,7 @@ export function calculateFbaFee(tierIndex: number, tierName: string, shippingWei
   return item.firstWeightFee + (shippingWeight - 1) * item.additionalUnitFee
 }
 
-function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean){
+function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean) {
   if (size === 'standard') {
     if (isApparel) {
       return 'Apparel'
