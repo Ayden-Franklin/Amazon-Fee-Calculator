@@ -12,6 +12,8 @@ declare interface Country {
 declare interface RuleContent {
   tier: string
   weight: string
+  package: Nullable<string>
+  shipping: string
   fba: string
   referral: string
   closing: Nullable<string>
@@ -42,7 +44,7 @@ declare interface ITier {
 declare interface FulfillmentItem {
   minimumShippingWeight: Iu
   maximumShippingWeight: Iu
-  firstWeightAmmount: number
+  firstWeightAmount: number
   firstWeightFee: number
   additionalUnitFee: number
   shippingWeight: string
@@ -64,18 +66,20 @@ declare interface ReferralRateFeeItem {
 }
 declare interface ReferralFee {
   category: string
-  excludingCategorys: string[]
-  includeingCategorys: string[]
+  excludingCategories: string[]
+  includingCategories: string[]
   rateItems: ReferralRateFeeItem[]
   minimumFee: number
 }
 
 declare interface Rule {
   tierRules?: ITier[]
-  diemnsionalWeightRule?: {
+  dimensionalWeightRule?: {
     minimumWeight: number
     divisor: number
   }
+  packageRule?: any
+  shippingWeightRule?: any
   fbaRule?: {
     standard: Record<string, Array<Record<string, Array<string>>>>
     oversize: Record<string, Array<Record<string, Array<string>>>>

@@ -80,7 +80,7 @@ function Calculator() {
   const [dangerous, setDangerous] = useState(calculatorStore.productInput?.isDangerous === true)
   const [price, setPrice] = useState(initProductInput(calculatorStore.productInput?.price))
   const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
-  const [redayForCalculation, setRedayForCalculation] = useState(false)
+  const [readyForCalculation, setReadyForCalculation] = useState(false)
 
   const handleLengthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLength(parseFloat(event.target.value))
@@ -119,9 +119,8 @@ function Calculator() {
       })
     )
     const ready = checkProductInputReady()
-    setRedayForCalculation(ready)
+    setReadyForCalculation(ready)
     if (ready) {
-      // TODO calculate need by country
       dispatch(calculate({}))
       // maybe estimate ???
       dispatch(estimate({}))
@@ -429,7 +428,7 @@ function Calculator() {
                     type="button"
                     variant="contained"
                     color="primary"
-                    disabled={redayForCalculation && calculatorStore.productInput.categoryCode && price > 0 ? false : true}
+                    disabled={readyForCalculation && calculatorStore.productInput.categoryCode && price > 0 ? false : true}
                     onClick={handleEstimate}
                   >
                     Estimate

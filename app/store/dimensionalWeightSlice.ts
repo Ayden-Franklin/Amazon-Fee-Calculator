@@ -3,7 +3,7 @@ import { loadWeightRule } from '@src/service/amazon'
 import { parseWeight } from '@src/service/parser-us'
 import { InitializedStateSlice, StateStatus } from '@src/service/constants'
 interface DimensionalWeightState extends StateSlice {
-  diemnsionalWeightRule?: {
+  dimensionalWeightRule?: {
     minimumWeight: number
     divisor: number
   }
@@ -24,7 +24,7 @@ const dimensionalWeightSlice = createSlice({
       state.currentCountry = action.payload
       state.status = StateStatus.Idel
       state.content = ''
-      state.diemnsionalWeightRule = undefined
+      state.dimensionalWeightRule = undefined
     },
   },
   extraReducers: (builder) => {
@@ -35,7 +35,7 @@ const dimensionalWeightSlice = createSlice({
       .addCase(fetchRuleContent.fulfilled, (state, action) => {
         state.status = StateStatus.Succeeded
         state.content = action.payload
-        state.diemnsionalWeightRule = parseWeight(action.payload)
+        state.dimensionalWeightRule = parseWeight(action.payload)
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
         state.status = StateStatus.Failed

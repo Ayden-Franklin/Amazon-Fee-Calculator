@@ -9,6 +9,8 @@ export class CaProfitCalculator implements IProfitCaluclator {
     this.content = {
       tier: 'Loading tier content for Canada',
       weight: 'Loading weight content for Canada',
+      package: 'Loading package content for Canada',
+      shipping: 'Loading shipping content for Canada',
       fba: 'Loading fba content for Canada',
       referral: 'Loading referral content for Canada',
       closing: 'Loading closing content for Canada',
@@ -19,13 +21,13 @@ export class CaProfitCalculator implements IProfitCaluclator {
     const tier = await loadTierTable(this.currentCountry.code)
     const weight = await loadWeightRule(this.currentCountry.code)
 
+    const shipping = 'TODO'
     const fba = await loadFBATable(this.currentCountry.code)
     const referral = await loadReferralTable(this.currentCountry.code)
     const closing = await loadClosingFee(this.currentCountry.code)
-    this.content = { tier, weight, fba, referral, closing }
+    this.content = { tier, weight, package: null, shipping, fba, referral, closing }
   }
   parseRule() {
-    console.log('start to pares tier')
     const tierRules = parseTier(this.content.tier)
     return {}
   }

@@ -126,7 +126,7 @@ export function parseFba(content: string) {
         let minimumShippingWeight: Iu
         let maximumShippingWeight: Iu
         let firstWeightFee: number
-        let firstWeightAmmount: number
+        let firstWeightAmount: number
         let additionalUnitFee: number
         if (rowIndex > 1) {
           $(tr)
@@ -203,8 +203,8 @@ export function parseFba(content: string) {
                 fulfillmentFee = $(element).text()
                 const result = parseFulfillmentFeePerUnit(fulfillmentFee)
                 // volumeRule[rowIndex][index - 2] = parseFloat($(element).text())
-                // [firstWeightAmmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
-                firstWeightAmmount = result[0]
+                // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
+                firstWeightAmount = result[0]
                 firstWeightFee = result[1]
                 additionalUnitFee = result[2]
               }
@@ -219,7 +219,7 @@ export function parseFba(content: string) {
             fee: fulfillmentFee,
             minimumShippingWeight,
             maximumShippingWeight,
-            firstWeightAmmount,
+            firstWeightAmount,
             firstWeightFee,
             additionalUnitFee,
           }
@@ -286,7 +286,7 @@ function parseShippingWeight(content: string): Iu[] {
 function parseFulfillmentFeePerUnit(content: string): number[] {
   const array = content.match(/\d+(\.\d*)?/g)
   if (array && array.length > 0) {
-    let firstWeightAmmount = 1
+    let firstWeightAmount = 1
     let firstWeightFee = 0
     let additionalUnitFee = 0
     // There should be 1 or 2 or 3 numbers
@@ -297,9 +297,9 @@ function parseFulfillmentFeePerUnit(content: string): number[] {
       additionalUnitFee = parseFloat(array[1])
     }
     if (array.length > 2) {
-      firstWeightAmmount = parseInt(array[2], 10)
+      firstWeightAmount = parseInt(array[2], 10)
     }
-    return [firstWeightAmmount, firstWeightFee, additionalUnitFee]
+    return [firstWeightAmount, firstWeightFee, additionalUnitFee]
   } else {
     return [1, 0, 0]
   }
@@ -310,19 +310,19 @@ export function parseReferral(content: string) {
 
   // for handle Baby Products (excluding Baby Apparel)
   const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
-    let excludingCategorys: Array<string> = []
-    let includeingCategorys: Array<string> = []
+    let excludingCategories: Array<string> = []
+    let includingCategories: Array<string> = []
 
     const categoryMatchs = fullCategory.match(/\(.+\)/)
 
-    if (!categoryMatchs?.length) return [fullCategory, excludingCategorys, includeingCategorys]
+    if (!categoryMatchs?.length) return [fullCategory, excludingCategories, includingCategories]
 
     let splitCategoryIndex = categoryMatchs.index || -1
     let realCategory = fullCategory.substring(0, splitCategoryIndex).trim()
 
     for (const cI of categoryMatchs) {
       if (cI.includes('excluding')) {
-        excludingCategorys.push(
+        excludingCategories.push(
           cI
             .substring(1, cI.length - 1)
             .replace('excluding', '')
@@ -331,7 +331,7 @@ export function parseReferral(content: string) {
         continue
       }
       if (cI.includes('including')) {
-        includeingCategorys.push(
+        includingCategories.push(
           cI
             .substring(1, cI.length - 1)
             .replace('including', '')
@@ -340,17 +340,17 @@ export function parseReferral(content: string) {
         continue
       }
     }
-    return [realCategory, excludingCategorys, includeingCategorys]
+    return [realCategory, excludingCategories, includingCategories]
   }
 
   $('tbody tr').each((_, tr) => {
     const [nameEle, rateEle, miniFeeEle] = $(tr).find('td')
 
-    const [category, excludingCategorys, includeingCategorys] = parseCategory($($(nameEle).contents().get(0)).text())
+    const [category, excludingCategories, includingCategories] = parseCategory($($(nameEle).contents().get(0)).text())
     referralRule.push({
       category,
-      excludingCategorys,
-      includeingCategorys,
+      excludingCategories,
+      includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
       rateItems: parseReferralSubItem($(rateEle).toString()),
       minimumFee: parseFloat($(miniFeeEle).text().substring(1)) || 0,

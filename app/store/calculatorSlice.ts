@@ -55,13 +55,12 @@ export interface ProductFees {
 /**
  * rules => {
  *   country
- *   diemnsionalWeightRule
+ *   dimensionalWeightRule
  *   tierRules
  * }
  */
 function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, number]> {
   if (!input) return
-  // calc need country
   const country = rules.country
   const tierData: TierData = { ...input, country }
   const tierRules: Array<ITier> = rules.tierRules
@@ -76,14 +75,14 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
       tierData: tierData,
       tierIndex: tierIndex,
       tierSize: tierRules.length,
-      minimumWeight: rules.diemnsionalWeightRule.minimumWeight,
-      divisor: rules.diemnsionalWeightRule.divisor,
+      minimumWeight: rules.dimensionalWeightRule.minimumWeight,
+      divisor: rules.dimensionalWeightRule.divisor,
     })
     return [productTier, weight]
   }
 }
 function startToEstimate(state, rules: any): Nullable<ProductFees> {
-  if (!state.tier || !state.productInput || !state.shippingWeight) return null
+  if (!state.tier || !state.productInput || !state.productInput.categoryName || !state.shippingWeight) return null
   const fbaFee = calculateFbaFee(
     state.tier.order,
     state.tier.name,

@@ -8,6 +8,8 @@ export class UsProfitCalculator implements IProfitCaluclator {
     this.content = {
       tier: 'Loading tier content for US',
       weight: 'Loading tier content for US',
+      package: 'Loading package content for US',
+      shipping: 'Loading shipping content for US',
       fba: 'Loading tier content for US',
       referral: 'Loading tier content for US',
       closing: 'Loading tier content for US',
@@ -18,18 +20,19 @@ export class UsProfitCalculator implements IProfitCaluclator {
     const tier = await loadTierTable(this.currentCountry.code)
     const weight = await loadWeightRule(this.currentCountry.code)
 
+    const shipping = 'TODO'
     const fba = await loadFBATable(this.currentCountry.code)
     const referral = await loadReferralTable(this.currentCountry.code)
     const closing = await loadClosingFee(this.currentCountry.code)
-    this.content = { tier, weight, fba, referral, closing }
+    this.content = { tier, weight, package: null, shipping, fba, referral, closing }
   }
   parseRule() {
     const tierRules = parseTier(this.content.tier)
-    const diemnsionalWeightRule = parseWeight(this.content.weight)
+    const dimensionalWeightRule = parseWeight(this.content.weight)
     const fbaRules = parseFba(this.content.fba)
     const referralRules = parseReferral(this.content.referral)
     const closingRules = parseClosing(this.content.closing)
-    return { tierRules, diemnsionalWeightRule, fbaRules, referralRules, closingRules }
+    return { tierRules, dimensionalWeightRule, fbaRules, referralRules, closingRules }
   }
   calculateFbaFee(): number | Error {
     return 0
