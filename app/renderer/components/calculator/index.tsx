@@ -16,7 +16,8 @@ import Typography from '@material-ui/core/Typography'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
-import { categoryItems, StateStatus } from '@src/service/constants'
+import { StateStatus } from '@src/service/constants'
+import { getCategoryByCountryCode } from '@src/service/category'
 import { fetchRuleContent } from '@src/store/rulesSlice'
 import {
   selectCalculator,
@@ -64,7 +65,7 @@ const useStyles = makeStyles((theme) => ({
 function Calculator() {
   const classes = useStyles()
   const dispatch = useAppDispatch()
-  // const country = useAppSelector((state) => state.country)
+  const country = useAppSelector((state) => state.country)
   // const [initialized, setInitialized] = useState(false)
   const loadStatus = useAppSelector((state) => state.rules.status)
   const error = useAppSelector((state) => state.rules.error)
@@ -122,6 +123,8 @@ function Calculator() {
     if (ready) {
       // TODO calculate need by country
       dispatch(calculate({}))
+      // maybe estimate ???
+      dispatch(estimate({}))
     }
   }
   const handleLoadClick = () => {
@@ -178,7 +181,7 @@ function Calculator() {
           <form className={classes.form} noValidate>
             <Grid container spacing={2}>
               <Grid container item spacing={4} xs={5} className={classes.root}>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                   <TextField
                     name="length"
                     variant="outlined"
@@ -195,7 +198,7 @@ function Calculator() {
                     onChange={handleLengthChange}
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                   <TextField
                     variant="outlined"
                     required
@@ -211,7 +214,7 @@ function Calculator() {
                     onChange={handleWidthChange}
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                   <TextField
                     variant="outlined"
                     required
@@ -227,7 +230,7 @@ function Calculator() {
                     onChange={handleHeightChange}
                   />
                 </Grid>
-                <Grid item xs={10}>
+                <Grid item xs={6}>
                   <TextField
                     variant="outlined"
                     required
@@ -243,22 +246,23 @@ function Calculator() {
                     onChange={handleWeightChange}
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={12}>
                   <InputLabel id="category">Product category:</InputLabel>
                   <Select
                     id="select"
                     labelId="category"
-                    value={calculatorStore.productInput?.categoryCode ? calculatorStore.productInput.categoryCode : ''}
+                    label="Product category:"
+                    value={calculatorStore.productInput?.categoryName ?? ''}
                     onChange={handleCategoryChange}
                   >
-                    {categoryItems.map((item) => (
-                      <MenuItem key={item.code} value={item.code}>
-                        {item.name}
+                    {getCategoryByCountryCode(country.code).map((item) => (
+                      <MenuItem key={item} value={item}>
+                        {item}
                       </MenuItem>
                     ))}
                   </Select>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                   <FormControlLabel
                     control={
                       <Checkbox checked={apparel} onChange={handleApparelChange} name="checkedB" color="primary" />
@@ -266,7 +270,7 @@ function Calculator() {
                     label="Apparel"
                   />
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                   <FormControlLabel
                     control={
                       <Checkbox checked={dangerous} onChange={handleDangerousChange} name="checkedB" color="primary" />

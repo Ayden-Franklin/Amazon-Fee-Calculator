@@ -8,7 +8,6 @@ import {
   calculateClosingFee,
   toProductTier,
 } from '@src/service/calculator'
-import { retrieveCategoryByCode } from '@src/service/utils'
 
 interface CalculatorState {
   productInput?: ProductInput
@@ -83,7 +82,8 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
     return [productTier, weight]
   }
 }
-function startToEstimate(state, rules: any): ProductFees {
+function startToEstimate(state, rules: any): Nullable<ProductFees> {
+  if (!state.tier || !state.productInput || !state.shippingWeight) return null
   const fbaFee = calculateFbaFee(
     state.tier.order,
     state.tier.name,
@@ -118,9 +118,8 @@ const calculatorSlice = createSlice({
       state.productInput = { ...state.productInput, ...action.payload.productInput }
     },
     changeProductCategory: (state, action: PayloadAction<string>) => {
-      // Retrieve the category name
-      const categoryName = retrieveCategoryByCode(action.payload)
-      state.productInput = { ...state.productInput, categoryCode: action.payload, categoryName: categoryName }
+      const category = action.payload
+      state.productInput = { ...state.productInput, categoryCode: category, categoryName: category }
     },
     calculate: (state, action) => {
       const result = calculateProductSize(state.productInput, action.payload)
