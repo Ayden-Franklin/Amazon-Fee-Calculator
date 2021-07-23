@@ -66,6 +66,8 @@ declare interface ReferralRateFeeItem {
 }
 declare interface ReferralFee {
   category: string
+  // TODO for other category use referralRule
+  otherable: boolean
   excludingCategories: string[]
   includingCategories: string[]
   rateItems: ReferralRateFeeItem[]

@@ -349,6 +349,8 @@ export function parseReferral(content: string) {
     const [category, excludingCategories, includingCategories] = parseCategory($($(nameEle).contents().get(0)).text())
     referralRule.push({
       category,
+      // TODO , need by country diff handle
+      otherable: ['Everything Else'].includes(category),
       excludingCategories,
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],

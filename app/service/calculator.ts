@@ -1,5 +1,6 @@
 import store from '@src/store'
 import { sortDimensions, sortByUnit, compareWithUnit } from '@src/service/utils'
+import { getCategoryMappingByCountryCode } from '@src/service/category'
 export interface TierData {
   length: number
   width: number
@@ -242,21 +243,58 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
   }
 }
 
-function calcReferralCategory(category: string, rule: ReferralFee) {
-  console.log('calcReferralCategory', category, rule.category)
-  // console.log('rule.category', rule.category)
-  return category.includes(rule.category)
+function calcReferralCategory(
+  product: {
+    category?: string
+    rawCategory?: string
+  },
+  rule: ReferralFee
+) {
+  if (product?.category === rule.category) {
+    return true
+  }
+  if (product?.rawCategory === rule.category) {
+    return true
+  }
+  // get country map category
+  // TODO
+  const categoryMapping = getCategoryMappingByCountryCode('us')
+  const smallCategory = rule.category.replace(/&|and|\s|,|\/|-/g, '').toLowerCase()
+  const mappingCategories = categoryMapping[smallCategory]
+  if (mappingCategories) {
+    // TODO maybe power match rule
+    return (
+      (product?.category && mappingCategories.includes(product?.category)) ||
+      (product?.rawCategory && mappingCategories.includes(product?.rawCategory))
+    )
+  }
+  return false
 }
 
-export function calculateReferralFee(category: string, price: number, rules: ReferralFee[]) {
+export function calculateReferralFee(
+  product: {
+    rawCategory?: string
+    category: string
+    price: number
+  },
+  rules: ReferralFee[]
+) {
+  const { price } = product
   let refRule = null
-
+  let otherRule = null
+  console.log(rules.map((r) => r.category.replace(/&|and|\s|,|\/|-/g, '').toLowerCase()))
   for (const rule of rules) {
-    if (calcReferralCategory(category, rule)) {
+    if (otherRule === null && rule.otherable) {
+      otherRule = rule
+    }
+    if (calcReferralCategory(product, rule)) {
       refRule = rule
       break
     }
   }
+
+  refRule = refRule || otherRule
+  console.log('calculateReferralFee calc rule -> ', refRule)
 
   if (refRule === null) {
     return NaN

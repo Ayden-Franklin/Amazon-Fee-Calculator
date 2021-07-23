@@ -260,6 +260,17 @@ const CountryCategory: Record<string, Array<string>> = {
   ],
 }
 
+const CountryCategoryMapping: Record<string, Record<string, Array<string>>> = {
+  us: {
+    automotivepowersports: ['Automotive'],
+    babyproducts: ['Baby'],
+  },
+}
+
+export const getCategoryMappingByCountryCode = (countryCode: string) => {
+  return CountryCategoryMapping[countryCode] || {}
+}
+
 export const getCategoryByCountryCode = (countryCode: string) => {
   return CountryCategory[countryCode] || []
 }

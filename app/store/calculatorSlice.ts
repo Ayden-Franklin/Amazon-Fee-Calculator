@@ -91,11 +91,7 @@ function startToEstimate(state, rules: any): Nullable<ProductFees> {
     state.productInput.isDangerous,
     rules.fbaRules
   )
-  const referralFee = calculateReferralFee(
-    state.productInput.categoryName,
-    state.productInput.price,
-    rules.referralRules
-  )
+  const referralFee = calculateReferralFee(JSON.parse(JSON.stringify(state.productInput)), rules.referralRules)
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {
     fbaFee: fbaFee.toFixed(2),
