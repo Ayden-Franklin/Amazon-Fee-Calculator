@@ -1,5 +1,6 @@
 import { loadTierTable, loadWeightRule, loadFBATable, loadReferralTable, loadClosingFee } from '@src/service/amazon'
 import { IProfitCaluclator } from '@src/service/IProfitCalculator'
+import { parseTier, parseWeight, parseFba, parseReferral, parseClosing } from '@src/service/parser-ca'
 
 export class CaProfitCalculator implements IProfitCaluclator {
   currentCountry: Country
@@ -24,6 +25,8 @@ export class CaProfitCalculator implements IProfitCaluclator {
     this.content = { tier, weight, fba, referral, closing }
   }
   parseRule() {
+    console.log('start to pares tier')
+    const tierRules = parseTier(this.content.tier)
     return {}
   }
   calculateFbaFee(): number | Error {

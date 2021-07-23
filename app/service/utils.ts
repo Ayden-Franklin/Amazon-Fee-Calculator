@@ -23,10 +23,13 @@ export function sortByUnit(a: Iu, b: Iu, c: Iu) {
 }
 
 export function compareWithUnit(a: Iu, b: Iu): boolean {
-  // if unit NaN or operator is not defined, will Ignore b.value, default less
-  if (b.unit === 'NaN' || !b.operator) {
+  // if unit or operator of b is undefined, will Ignore b.value, default true
+  if (!b.unit || !b.operator) {
     return true
   }
+
+  // if unit of a is undefined, will return false
+  if (!a.unit) return false
   if (a.unit === b.unit) {
     // eslint-disable-next-line no-eval
     return global.eval(a.value + b?.operator + b.value)

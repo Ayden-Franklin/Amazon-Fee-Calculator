@@ -18,7 +18,7 @@ declare interface RuleContent {
 }
 declare interface Iu {
   value: number
-  unit: string
+  unit: Nilable<string>
   operator?: string
 }
 
@@ -36,7 +36,7 @@ declare interface ITier {
   order: number
   weight: Iu
   volumes: Array<Iu>
-  lengthGirth: Iu
+  lengthGirth?: Iu
 }
 
 declare interface FulfillmentItem {

@@ -63,7 +63,7 @@ export default function Header(props: HeaderProps) {
     history.push(sections[newValue].url)
   }
   useEffect(() => {
-    const country = countryMenuItems[0]
+    const country = countryMenuItems[1]
     dispatch(setCountry(country))
   }, [dispatch])
   return (
