@@ -1,3 +1,5 @@
+import { NotAvailable } from '@src/service/constants'
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Qty = require('js-quantities')
 
@@ -18,12 +20,12 @@ export function compareWithUnit(a: ICalculateUnit, b: ICalculateUnit): boolean {
   // TODO: check whether the unit is null or undefined to make sure we parsed rule successfully
 
   // if unit NaN or operator is not defined, will Ignore b.value, default less
-  if (b.unit === 'n/a' || !b.operator) {
+  if (b.unit === NotAvailable || !b.operator) {
     return true
   }
 
-  // if unit of a is n/a, will return false
-  if (a.unit === 'n/a') return false
+  // if unit of a is NotAvailable, will return false
+  if (a.unit === NotAvailable) return false
 
   if (a.unit === b.unit) {
     // eslint-disable-next-line no-eval

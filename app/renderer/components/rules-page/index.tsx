@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import { fetchRuleContent } from '@src/store/rulesSlice'
-import { StateStatus } from '@src/service/constants'
+import { StateStatus } from '@src/renderer/constants'
 import OriginalPage from '@src/renderer/components/originalPage'
 function RulesPage(props: { pageName: string }) {
   const dispatch = useAppDispatch()

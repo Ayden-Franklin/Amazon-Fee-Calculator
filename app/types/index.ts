@@ -1,4 +1,4 @@
-import { StateStatus } from '@src/service/constants'
+import { StateStatus } from '@src/renderer/constants'
 
 export interface StateSlice {
   content: RuleContent

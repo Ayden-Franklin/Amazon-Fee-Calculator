@@ -1,4 +1,5 @@
 import cheerio from 'cheerio'
+import { NotAvailable } from "@src/service/constants";
 export function parseTiers_old(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -36,7 +37,7 @@ export function parseTier(content: string) {
   const tiers: ITier[] = []
 
   const parseExpression = (text: string): ICalculateUnit => {
-    if (text === 'n/a') return { value: NaN, unit: 'n/a' }
+    if (text === NotAvailable) return { value: NaN, unit: NotAvailable }
     const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
         case 'over':
@@ -49,7 +50,7 @@ export function parseTier(content: string) {
     const array = text.split(' ')
     const [unknownV1, unknownV2, unknownV3] = array
     const unknownValue = parseFloat(unknownV1)
-    const value = isNaN(unknownValue) ? (unknownV1 === 'n/a' ? NaN : parseFloat(unknownV2)) : unknownValue
+    const value = isNaN(unknownValue) ? (unknownV1 === NotAvailable ? NaN : parseFloat(unknownV2)) : unknownValue
     const operator = parseOperator(isNaN(unknownValue) ? unknownV1 : '<=')
     const unit = unknownV3 || unknownV2
     return { value, operator, unit }
@@ -77,22 +78,95 @@ export function parseTier(content: string) {
 
 export function parseWeight(content: string) {
   const $ = cheerio.load(content)
-  const minimumWeightText = $('.a-vertical:eq(0)').find('li:eq(0)').find('span').text()
-  const divisorText = $('.help-content:eq(1)').find('div p:eq(0)').text()
-  const minimumWeight = minimumWeightText.match(/\d+(\.\d*)?/)
-  const divisor = divisorText.match(/(\d+)/)
+  const divisorText = content.match(/divided by \d+(\.\d+)?/)
+  const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
+  const minimumWeightText = content.match(/\d+(\.\d*)? (inches|cm)/)
+  const minimumWeightArray = minimumWeightText && minimumWeightText.length > 0 && minimumWeightText[0].split(' ')
+  const minimumWeightValue = minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
+  const minimumWeightUnit = minimumWeightArray && minimumWeightArray.length === 2 ? minimumWeightArray[1] : 'inches'
   return {
-    minimumWeight: minimumWeight ? parseFloat(minimumWeight[0]) : 0,
-    divisor: divisor ? parseFloat(divisor[0]) : 1,
+    tierName: 'oversize', // TODO: parse this name
+    minimumWeight: {
+      value: minimumWeightValue,
+      unit: minimumWeightUnit,
+    },
+    divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2]) : 1,
   }
 }
 export function parseShipping(content: string) {
+  const empty = { value: NaN, unit: NotAvailable }
   const $ = cheerio.load(content)
-  const minimumWeightText = $('.a-vertical:eq(0)').find('li:eq(0)').find('span').text()
-  const divisorText = $('.help-content:eq(1)').find('div p:eq(0)').text()
-  const minimumWeight = minimumWeightText.match(/\d+(\.\d*)?/)
-  const divisor = divisorText.match(/(\d+)/)
-  return {}
+  const items: ShippingWeight[] = []
+  const parseOperator = (s: string) => {
+    switch (s.toLowerCase()) {
+      case 'or less':
+        return '<='
+      case 'more than':
+        return '>'
+      default:
+        return s
+    }
+  }
+  const parseTierAndWeight = (text: string): ICalculateUnit => {
+    const values = text.split(' ')
+    if (values.length < 4) return empty
+    let operator = NotAvailable
+    let value = parseFloat(values[0])
+    let unit = 'lb' // TODO: Suppose the default unit is lb
+    // match '0.75 lb or less'
+    if (!isNaN(value)) {
+      operator = parseOperator(`${values[2]} ${values[3]}`)
+      unit = values[1]
+    } else if (!isNaN(parseFloat(values[2]))) {
+      value = parseFloat(values[2])
+      operator = parseOperator(`${values[0]} ${values[1]}`)
+      unit = values[3]
+    }
+    return { value, operator, unit }
+  }
+  const parseExpression = (text: string): { tierName: string; weight: ICalculateUnit } => {
+    const leftIndex = text.indexOf('(')
+    if (leftIndex > -1) {
+      const tierName = text.substring(0, leftIndex).trim()
+      const weightExpression = text.substring(leftIndex + 1, text.length - 1)
+      const weight = parseTierAndWeight(weightExpression)
+      return {
+        tierName,
+        weight,
+      }
+    } else {
+      return {
+        tierName: text,
+        weight: {
+          value: NaN,
+          unit: NotAvailable,
+        },
+      }
+    }
+  }
+  let roundingUp = empty
+  $('tbody tr').each((rowIndex, element) => {
+    if (rowIndex === 0) {
+      // TODO this should be an array
+      roundingUp = {
+        unit: 'lb',
+        value: 1,
+      }
+    } else {
+      const [tierElement, shippingWeightElement] = $(element).find('td')
+      const { tierName, weight } = parseExpression($(tierElement).text())
+      const shippingWeight = $($(shippingWeightElement).contents().get(0)).text()
+      const useGreater = shippingWeight !== 'Unit weight'
+      const roundingUp = {}
+      items.push({
+        tierName,
+        weight,
+        useGreater,
+        roundingUp,
+      })
+    }
+  })
+  return items
 }
 
 export function parseFba(content: string) {
@@ -201,7 +275,7 @@ export function parseFba(content: string) {
                 // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
                 // shippingWeight.push($(element).text())
                 shippingWeight = $(element).text()
-                const result = parseShippingWeight(shippingWeight)
+                const result = parseShippingWeightCell(shippingWeight)
                 // [minimumShippingWeight, maximumShippingWeight] = result
                 minimumShippingWeight = result[0]
                 maximumShippingWeight = result[1]
@@ -254,7 +328,7 @@ export function parseFba(content: string) {
     oversize: fbaRule.oversize,
   }
 }
-function parseShippingWeight(content: string): ICalculateUnit[] {
+function parseShippingWeightCell(content: string): ICalculateUnit[] {
   const array = content.match(/\d+|oz|lb/g)
   let unit = 'lb' // TODO: Suppose the default unit is lb
   let num: number[] = []
@@ -291,6 +365,11 @@ function parseShippingWeight(content: string): ICalculateUnit[] {
     return []
   }
 }
+
+export function parseShippingWeight(content: string): ShippingWeight[] {
+
+}
+
 function parseFulfillmentFeePerUnit(content: string): number[] {
   const array = content.match(/\d+(\.\d*)?/g)
   if (array && array.length > 0) {

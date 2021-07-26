@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { countryMenuItems } from '@src/service/constants'
+import { countryMenuItems } from '@src/renderer/constants'
 
 export const countrySlice = createSlice({
   name: 'country',

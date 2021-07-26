@@ -88,7 +88,7 @@ declare interface PackagingWeight {
 
 declare interface ShippingWeight {
   tierName: string
-  unitWeight: IMeasureUnit
+  weight: IMeasureUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
   roundingUp: IMeasureUnit
 }
@@ -96,7 +96,8 @@ declare interface ShippingWeight {
 declare interface Rule {
   tierRules?: ITier[]
   dimensionalWeightRule?: {
-    minimumWeight: number
+    tierName: string
+    minimumWeight: IMeasureUnit
     divisor: number
   }
   packageRule?: any

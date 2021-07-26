@@ -1,4 +1,5 @@
 import cheerio from 'cheerio'
+import { NotAvailable } from '@src/renderer/constants'
 export function parseTiers_old(content: string) {
   const $ = cheerio.load(content)
   let names: string[] = []
@@ -32,7 +33,7 @@ export function parseTiers_old(content: string) {
 }
 
 export function parseTier(content: string) {
-  const empty = { value: NaN, unit: 'n/a' }
+  const empty = { value: NaN, unit: NotAvailable }
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 

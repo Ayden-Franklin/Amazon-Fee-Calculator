@@ -16,8 +16,8 @@ import Typography from '@material-ui/core/Typography'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
-import { StateStatus } from '@src/service/constants'
-import { getCategoryByCountryCode } from '@src/service/constants'
+import { StateStatus } from '@src/renderer/constants'
+import { getCategoryByCountryCode } from '@src/renderer/constants'
 import { fetchRuleContent } from '@src/store/rulesSlice'
 import {
   selectCalculator,

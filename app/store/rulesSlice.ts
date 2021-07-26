@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { InitializedStateSlice, StateStatus } from '@src/service/constants'
+import { InitializedStateSlice, StateStatus } from '@src/renderer/constants'
 import { UsProfitCalculator } from '@src/service/countries/UsProfitCalculator'
 import { CaProfitCalculator } from '@src/service/countries/CaProfitCalculator'
 import { MxProfitCalculator } from '@src/service/countries/MxProfitCalculator'
@@ -16,7 +16,6 @@ let profitCalculator: IProfitCalculator
 export const fetchRuleContent = createAsyncThunk('rules/fetchRuleContent', async (): Promise<any> => {
   try {
     await profitCalculator.fetchRuleContent()
-    console.log(' finished to load rules. content = ', profitCalculator.content)
     return Promise.resolve(profitCalculator.content)
   } catch (e) {
     return Promise.reject(e)

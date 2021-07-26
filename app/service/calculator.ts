@@ -135,41 +135,37 @@ function calculateDimensionalWeight({
   tierData,
   tierIndex,
   tierSize,
-  minimumWeight,
+  minimumMeasureUnit,
   divisor,
 }: DimensionalWeightParameter) {
-  const { length, width, height, weight } = tierData
-  let dimensionalWeight = 0
-  if (weight < minimumWeight || tierIndex === tierSize - 1) {
-    dimensionalWeight = weight
-  } else {
-    dimensionalWeight = (length * width * height) / divisor
-  }
+  let { length, width, height, weight } = tierData
+  // TODO : check the minimumMeasureUnit if (width)
+  let dimensionalWeight = (length * width * height) / divisor
   return dimensionalWeight
 }
 interface DimensionalWeightParameter {
   tierData: TierData
   tierIndex: number
   tierSize: number
-  minimumWeight: number
+  minimumMeasureUnit: IMeasureUnit
   divisor: number
 }
 export function calculateShippingWeight({
   tierData,
   tierIndex,
   tierSize,
-  minimumWeight,
+  minimumMeasureUnit,
   divisor,
 }: DimensionalWeightParameter) {
-  const dimensionalWeight = calculateDimensionalWeight({ tierData, tierIndex, tierSize, minimumWeight, divisor })
+  const dimensionalWeight = calculateDimensionalWeight({ tierData, tierIndex, tierSize, minimumMeasureUnit, divisor })
   const { weight } = tierData
   let shippingWeight = 0
   // TODO: Shipping weight in the small standard and large standard size tiers means tier index less or equals to 1(We should get this from parsing)
-  if ((weight < minimumWeight && tierIndex <= 1) || tierIndex === tierSize - 1) {
-    shippingWeight = weight
-  } else {
-    shippingWeight = Math.max(weight, dimensionalWeight)
-  }
+  // if ((weight < minimumWeight && tierIndex <= 1) || tierIndex === tierSize - 1) {
+  //   shippingWeight = weight
+  // } else {
+  //   shippingWeight = Math.max(weight, dimensionalWeight)
+  // }
   return shippingWeight
 }
 

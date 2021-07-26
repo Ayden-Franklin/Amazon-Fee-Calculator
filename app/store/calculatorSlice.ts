@@ -8,7 +8,7 @@ import {
   calculateClosingFee,
   toProductTier,
 } from '@src/service/calculator'
-import { StateStatus } from '@src/service/constants'
+import { StateStatus } from '@src/renderer/constants'
 
 interface CalculatorState {
   productInput?: ProductInput

@@ -18,22 +18,12 @@ export default {
     url: 'https://sellercentral.amazon.com/gp/help/external/G53Z9EKF8VVZVH29',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = ''
-      $('div.help-content').each((index, element) => {
-        if (index === 1 || index === 2) {
-          output += cheerio.html(element)
-        }
-      })
+      let output = $('div.help-content:eq(2)').find('p:first-child').html()
       return output
     },
     extractContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = ''
-      $('div.help-content').each((index, element) => {
-        if (index === 1 || index === 2) {
-          output += cheerio.html(element)
-        }
-      })
+      let output = $('div.help-content:eq(2)').find('p:first-child').html()
       return output
     },
   },
@@ -44,11 +34,11 @@ export default {
       let content = $('div.help-content:eq(1)')
       let $table = content.find('table.help-table')
       $table.attr('border', '1')
-      return content.html()
+      return cheerio.html($table)
     },
     extractContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = $('div.help-content:eq(1)').html()
+      let output = $('div.help-content:eq(1)').find('table.help-table').html()
       return output
     },
   },
