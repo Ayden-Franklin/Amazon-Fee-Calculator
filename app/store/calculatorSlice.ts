@@ -110,7 +110,7 @@ const calculatorSlice = createSlice({
     changeLoadStatus: (state, action: PayloadAction<{ status: boolean }>) => {
       state.loading = action.payload.status
     },
-    changeProductInput: (state, action: PayloadAction<{ productInput: ProductInput }>) => {
+    changeProductInput: (state, action: PayloadAction<{ productInput: Partial<ProductInput> }>) => {
       state.productInput = { ...state.productInput, ...action.payload.productInput }
     },
     changeProductCategory: (state, action: PayloadAction<string>) => {

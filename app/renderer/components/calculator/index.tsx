@@ -71,61 +71,26 @@ function Calculator() {
   const error = useAppSelector((state) => state.rules.error)
   const [initialized, setInitialized] = useState(loadStatus === StateStatus.Succeeded)
   const calculatorStore = useSelector(selectCalculator)
-  const initProductInput = (v: number | undefined) => (v ? v : 0)
-  const [length, setLength] = useState(initProductInput(calculatorStore.productInput?.length))
-  const [width, setWidth] = useState(initProductInput(calculatorStore.productInput?.width))
-  const [height, setHeight] = useState(initProductInput(calculatorStore.productInput?.height))
-  const [weight, setWeight] = useState(initProductInput(calculatorStore.productInput?.weight))
-  const [apparel, setApparel] = useState(calculatorStore.productInput?.isApparel === true)
-  const [dangerous, setDangerous] = useState(calculatorStore.productInput?.isDangerous === true)
-  const [price, setPrice] = useState(initProductInput(calculatorStore.productInput?.price))
-  const [cost, setCost] = useState(initProductInput(calculatorStore.productInput?.cost))
   const [readyForCalculation, setReadyForCalculation] = useState(false)
 
-  const handleLengthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLength(parseFloat(event.target.value))
-  }
-  const handleWidthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setWidth(parseFloat(event.target.value))
-  }
-  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setHeight(parseFloat(event.target.value))
-  }
-  const handleWeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setWeight(parseFloat(event.target.value))
-  }
+  const productInput = calculatorStore.productInput || {}
+
   const handleCategoryChange = (event: React.ChangeEvent<{ name?: string | undefined; value: unknown }>) => {
     event.preventDefault()
     // console.log(event.target.value)
     dispatch(changeProductCategory(event.target.value as string))
   }
-  const handleApparelChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setApparel(event.target.checked)
-  }
-  const handleDangerousChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDangerous(event.target.checked)
-  }
-  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setPrice(parseFloat(event.target.value))
-  }
-  const handleCostChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setCost(parseFloat(event.target.value))
-  }
 
-  const tryToCalculate = () => {
-    dispatch(
-      changeProductInput({
-        productInput: { length, width, height, weight, isApparel: apparel, isDangerous: dangerous, price, cost },
-      })
-    )
-    const ready = checkProductInputReady()
-    setReadyForCalculation(ready)
-    if (ready) {
-      dispatch(calculate({}))
-      // maybe estimate ???
-      dispatch(estimate({}))
+  const onChangeProductInput =
+    (field: string, value?: (event: any) => any) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      event && event.preventDefault()
+      dispatch(
+        changeProductInput({
+          productInput: { [field]: typeof value === 'function' ? value(event) : parseFloat(event.target.value) },
+        })
+      )
     }
-  }
+
   const handleLoadClick = () => {
     // TODO load need country
 
@@ -151,30 +116,13 @@ function Calculator() {
     }
   }, [loadStatus, dispatch])
   useEffect(() => {
-    // console.log('effect!!! length = ', length, ' width = ', width, ' height = ', height)
-    const fbaFee = 3.5
-    const referralFee = 2.6
-    const closingFee = 0
-    tryToCalculate()
-  }, [length, width, height, weight, apparel, dangerous, cost, price])
-
-  useEffect(() => {
-    const setState: Record<string, any> = {
-      setWidth,
-      setLength,
-      setHeight,
-      setWeight,
-      setApparel,
-      setDangerous,
-      setPrice,
+    const ready = checkProductInputReady()
+    setReadyForCalculation(ready)
+    if (ready) {
+      dispatch(calculate({}))
+      // maybe estimate ???
+      dispatch(estimate({}))
     }
-    const currentState: Record<string, any> = { width, length, height, weight, apparel, dangerous, price }
-    const changeStateByField = (fieldName: string) => {
-      if (calculatorStore.productInput && currentState[fieldName] !== calculatorStore.productInput[fieldName]) {
-        setState['set' + fieldName.replace(/^\S/, (s) => s.toUpperCase())]?.(calculatorStore.productInput[fieldName])
-      }
-    }
-    Object.keys(currentState).map((key) => changeStateByField(key))
   }, [calculatorStore.productInput])
 
   return (
@@ -206,14 +154,14 @@ function Calculator() {
                     required
                     fullWidth
                     id="length"
-                    value={length > 0 ? length : ''}
+                    value={productInput?.length > 0 ? productInput?.length : ''}
                     label="Length"
                     autoFocus
                     type="number"
                     InputProps={{
                       startAdornment: <InputAdornment position="start">inches</InputAdornment>,
                     }}
-                    onChange={handleLengthChange}
+                    onChange={onChangeProductInput('length')}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -222,14 +170,14 @@ function Calculator() {
                     required
                     fullWidth
                     id="width"
-                    value={width > 0 ? width : ''}
+                    value={productInput?.width > 0 ? productInput?.width : ''}
                     label="Width"
                     name="width"
                     type="number"
                     InputProps={{
                       startAdornment: <InputAdornment position="start">inches</InputAdornment>,
                     }}
-                    onChange={handleWidthChange}
+                    onChange={onChangeProductInput('width')}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -238,14 +186,14 @@ function Calculator() {
                     required
                     fullWidth
                     id="height"
-                    value={height > 0 ? height : ''}
+                    value={productInput?.height > 0 ? productInput?.height : ''}
                     label="Height"
                     name="height"
                     type="number"
                     InputProps={{
                       startAdornment: <InputAdornment position="start">inches</InputAdornment>,
                     }}
-                    onChange={handleHeightChange}
+                    onChange={onChangeProductInput('height')}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -254,14 +202,14 @@ function Calculator() {
                     required
                     fullWidth
                     id="weight"
-                    value={weight > 0 ? weight : ''}
+                    value={productInput?.weight > 0 ? productInput?.weight : ''}
                     label="Unit weight"
                     name="weight"
                     type="number"
                     InputProps={{
                       startAdornment: <InputAdornment position="start">pounds</InputAdornment>,
                     }}
-                    onChange={handleWeightChange}
+                    onChange={onChangeProductInput('weight')}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -283,7 +231,12 @@ function Calculator() {
                 <Grid item xs={6}>
                   <FormControlLabel
                     control={
-                      <Checkbox checked={apparel} onChange={handleApparelChange} name="checkedB" color="primary" />
+                      <Checkbox
+                        checked={productInput?.isApparel}
+                        onChange={onChangeProductInput('isApparel', (event) => event.target.checked)}
+                        name="checkedB"
+                        color="primary"
+                      />
                     }
                     label="Apparel"
                   />
@@ -291,7 +244,12 @@ function Calculator() {
                 <Grid item xs={6}>
                   <FormControlLabel
                     control={
-                      <Checkbox checked={dangerous} onChange={handleDangerousChange} name="checkedB" color="primary" />
+                      <Checkbox
+                        checked={productInput?.isDangerous}
+                        onChange={onChangeProductInput('isDangerous', (event) => event.target.checked)}
+                        name="checkedB"
+                        color="primary"
+                      />
                     }
                     label="Dangerous"
                   />
@@ -307,7 +265,7 @@ function Calculator() {
                 <Grid item xs={4}>
                   <TextField
                     id="dimenstions-value"
-                    value={`${length} * ${width} * ${height}`}
+                    value={`${productInput?.length ?? 0} * ${productInput?.width ?? 0} * ${productInput?.height ?? 0}`}
                     disabled
                     size="small"
                     InputProps={{
@@ -327,11 +285,11 @@ function Calculator() {
                     error
                     required
                     size="small"
-                    value={price}
+                    value={productInput?.price}
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
-                    onChange={handlePriceChange}
+                    onChange={onChangeProductInput('price')}
                   />
                 </Grid>
                 <Grid item xs={3}>
@@ -364,7 +322,7 @@ function Calculator() {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>,
                     }}
-                    onChange={handleCostChange}
+                    onChange={onChangeProductInput('cost')}
                   />
                 </Grid>
                 <Grid item xs={3}>
@@ -447,7 +405,9 @@ function Calculator() {
                     type="button"
                     variant="contained"
                     color="primary"
-                    disabled={readyForCalculation && calculatorStore.productInput.categoryCode && price > 0 ? false : true}
+                    disabled={
+                      !(readyForCalculation && calculatorStore.productInput?.categoryName && productInput?.price > 0)
+                    }
                     onClick={handleEstimate}
                   >
                     Estimate

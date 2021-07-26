@@ -83,53 +83,6 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
   }
   return targetTier
 }
-//
-// export function determineTier_old(
-//   tierData: TierData,
-//   weightRule: number[],
-//   volumeRule: number[][],
-//   lengthGirthRule: number[]
-// ): number {
-//   const { length, width, height, weight } = tierData
-//   const ready = [length, width, height, weight, weightRule, volumeRule, lengthGirthRule].every(Boolean)
-//   if (ready) {
-//     const weightTier = weightRule.reduce(
-//       (pre, val, index) =>
-//         isNaN(val) || weight <= val ? (pre !== -1 || weightRule[index] === weightRule[index - 1] ? pre : index) : -1,
-//       -1
-//     )
-//     // console.log('According weight, result is: ', weightTier)
-//     const volumeTier = volumeRule.reduce((pre, val, index) => {
-//       const dimensions = sortDimensions(length, width, height)
-//       return (isNaN(val[0]) || val[0] >= dimensions[0]) &&
-//         (isNaN(val[1]) || val[1] >= dimensions[1]) &&
-//         (isNaN(val[2]) || val[2] >= dimensions[2])
-//         ? pre !== -1 ||
-//           (index > 0 &&
-//             volumeRule[index][0] === volumeRule[index - 1][0] &&
-//             volumeRule[index][1] === volumeRule[index - 1][1] &&
-//             volumeRule[index][2] === volumeRule[index - 1][2])
-//           ? pre
-//           : index
-//         : -1
-//     }, -1)
-//     // console.log('According volume, result is: ', volumeTier)
-//     const lengthGirthTier = lengthGirthRule.reduce((pre, val, index) => {
-//       const dimensions = sortDimensions(length, width, height)
-//       const lengthGirth = dimensions[0] + (dimensions[1] + dimensions[2]) * 2
-//       return isNaN(val) || lengthGirth <= val
-//         ? pre !== -1 || lengthGirthRule[index] === lengthGirthRule[index - 1]
-//           ? pre
-//           : index
-//         : -1
-//     }, -1)
-//     // console.log('According lengthGirth, result is: ', lengthGirthTier)
-//     return Math.max(weightTier, volumeTier, lengthGirthTier)
-//   } else {
-//     // console.log('not ready ', [length, width, height, weight])
-//     return NaN
-//   }
-// }
 
 function calculateDimensionalWeight({
   tierData,
@@ -307,7 +260,7 @@ function calcReferralCategory(
 
 export function calculateReferralFee(product: IProductCategory, rules: ReferralFee[]) {
   // temp handle category
-  product.category = product.category || product.categoryName || ''
+  product.category = product.categoryName || product.category || ''
 
   const { price } = product
   let filRule = null
