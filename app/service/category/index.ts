@@ -2,6 +2,7 @@ const CountryCategory: Record<string, Array<string>> = {
   us: [
     'Automotive',
     'Electronics',
+    'Books',
     'Tools & Home Improvement',
     'Patio, Lawn & Garden',
     'Cell Phones & Accessories',
@@ -263,7 +264,35 @@ const CountryCategory: Record<string, Array<string>> = {
 const CountryCategoryMapping: Record<string, Record<string, Array<string>>> = {
   us: {
     automotivepowersports: ['Automotive'],
+    // Amazon Explore, we no suppor ??
     babyproducts: ['Baby'],
+    // Books =
+    // Camera and Photo = or by breadcrumbTree
+    cellphonedevices: ['Cell Phones', 'Cell Phones & Accessories'],
+    // Warning TODO
+    consumerelectronics: ['Electronics'],
+    // TODO Electronics Accessories
+    // TODO furnitrue
+    furniture: ['Home & Kitchen', 'Patio, Lawn & Garden'],
+    // homegarden: ['Patio, Lawn & Garden'],
+    // kitchen: ['Home & Kitchen']
+    compactappliances: ['Kitchen & Dining'],
+    // mattresses = by breadcrumbTree
+    // Music or Musical Instruments =
+    // office Products =
+    // Outdoors and Sports =
+    sports: ['Sports & Outdoors'],
+    personalcomputers: ['Computers & Accessories'],
+    // Pet Supplies =
+    softwarecomputervideogames: ['Video Games', 'Software'],
+    // Tools & Home Improvement =
+    // Toys & Games =
+    videodvd: ['Movies & TV'],
+    // Video Game Consoles TODO
+    // Categories requiring approval TODO
+    // Full-Size Appliances TODO
+    // 3dprintedproducts TODO
+    beauty: ['Beauty & Personal Care'],
   },
 }
 

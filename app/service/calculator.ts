@@ -1,5 +1,5 @@
 import store from '@src/store'
-import { sortDimensions, sortByUnit, compareWithUnit } from '@src/service/utils'
+import { sortByUnit, compareWithUnit, minify } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
 export interface TierData {
   length: number
@@ -243,46 +243,47 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
   }
 }
 
-function calcReferralCategory(
-  product: {
-    category?: string
-    rawCategory?: string
-  },
-  rule: ReferralFee
-) {
-  if (product?.category === rule.category) {
+// Temp interface , final use IProduct
+interface IProductCategory {
+  category: string
+  rawCategory?: string
+  breadcrumbTree?: Array<{ name: string }>
+  price: number
+}
+
+function calcReferralCategory(product: IProductCategory, rule: ReferralFee) {
+  const minifyCategory = minify(rule.category)
+  if (product?.category && minify(product?.category) === minifyCategory) {
     return true
   }
-  if (product?.rawCategory === rule.category) {
+  if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
+    return true
+  }
+  // product breadcrumbTree
+  if (product?.breadcrumbTree && product.breadcrumbTree?.some((bc) => minify(bc.name) === minifyCategory)) {
     return true
   }
   // get country map category
   // TODO
   const categoryMapping = getCategoryMappingByCountryCode('us')
-  const smallCategory = rule.category.replace(/&|and|\s|,|\/|-/g, '').toLowerCase()
-  const mappingCategories = categoryMapping[smallCategory]
+  const mappingCategories = categoryMapping[minifyCategory]
+
   if (mappingCategories) {
     // TODO maybe power match rule
+    const compValues = mappingCategories.map((c) => minify(c))
     return (
-      (product?.category && mappingCategories.includes(product?.category)) ||
-      (product?.rawCategory && mappingCategories.includes(product?.rawCategory))
+      (product?.category && compValues.includes(minify(product?.category))) ||
+      (product?.rawCategory && compValues.includes(minify(product?.rawCategory))) ||
+      (product?.breadcrumbTree && product?.breadcrumbTree?.some((bc) => compValues.includes(minify(bc.name))))
     )
   }
   return false
 }
 
-export function calculateReferralFee(
-  product: {
-    rawCategory?: string
-    category: string
-    price: number
-  },
-  rules: ReferralFee[]
-) {
+export function calculateReferralFee(product: IProductCategory, rules: ReferralFee[]) {
   const { price } = product
   let refRule = null
   let otherRule = null
-  console.log(rules.map((r) => r.category.replace(/&|and|\s|,|\/|-/g, '').toLowerCase()))
   for (const rule of rules) {
     if (otherRule === null && rule.otherable) {
       otherRule = rule

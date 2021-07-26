@@ -37,3 +37,7 @@ export function compareWithUnit(a: Iu, b: Iu): boolean {
     (b.operator.includes('=') && r === 0) || (b.operator.includes('>') && r > 0) || (b.operator.includes('<') && r < 0)
   )
 }
+
+export function minify(s: string) {
+  return typeof s === 'string' ? s.replace(/&|and|\s|,|\/|-/g, '').toLowerCase() : s
+}
