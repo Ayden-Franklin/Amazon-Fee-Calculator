@@ -158,6 +158,26 @@ function Calculator() {
     tryToCalculate()
   }, [length, width, height, weight, apparel, dangerous, cost, price])
 
+  useEffect(() => {
+    const setState: Record<string, any> = {
+      setWidth,
+      setLength,
+      setHeight,
+      setWeight,
+      setApparel,
+      setDangerous,
+      setPrice,
+    }
+    const currentState: Record<string, any> = { width, length, height, weight, apparel, dangerous, price }
+    const changeStateByField = (fieldName: string) => {
+      if (calculatorStore.productInput && currentState[fieldName] !== calculatorStore.productInput[fieldName]) {
+        console.log('diff', fieldName)
+        setState['set' + fieldName.replace(/^\S/, (s) => s.toUpperCase())]?.(calculatorStore.productInput[fieldName])
+      }
+    }
+    Object.keys(currentState).map((key) => changeStateByField(key))
+  }, [calculatorStore.productInput])
+
   return (
     <Container component="main" maxWidth="lg">
       <CssBaseline />
