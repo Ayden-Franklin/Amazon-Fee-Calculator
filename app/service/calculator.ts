@@ -37,7 +37,7 @@ export function checkProductInputReady(): boolean {
     : false
 }
 
-function calcLengthGirth(longest: Iu, median: Iu, short: Iu): Nullable<Iu> {
+function calcLengthGirth(longest: ICalculateUnit, median: ICalculateUnit, short: ICalculateUnit): Nullable<ICalculateUnit> {
   if (longest.unit === median.unit && median.unit === short.unit) {
     return {
       value: longest.value + (median.value + short.value) * 2,

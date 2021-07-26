@@ -46,7 +46,7 @@ export function parseTier(content: string) {
         return s
     }
   }
-  const parseExpression = (text: string): Iu => {
+  const parseExpression = (text: string): ICalculateUnit => {
     const values = text.split(' ')
     if (values.length < 4) return empty
     const value = parseFloat(values[0])
@@ -55,7 +55,7 @@ export function parseTier(content: string) {
     return { value, operator, unit }
   }
 
-  const parseOversizeSpecialExpression = (text: string): Iu => {
+  const parseOversizeSpecialExpression = (text: string): ICalculateUnit => {
     const values = text.split(' ')
     if (values.length < 3) return empty
     const value = parseFloat(values[1])
@@ -97,7 +97,7 @@ export function parseTier(content: string) {
       .find('li')
       .map((_, e) => $(e).text().trim())
     if (list.length === 3) {
-      let weight: Iu = { ...empty }
+      let weight: ICalculateUnit = { ...empty }
       // The first line is for longest side
       const longSide = parseOversizeSpecialExpression(list[0])
       // The second line is for length+Girth

@@ -7,7 +7,7 @@ export class UndefinedProfitCalculator implements IProfitCalculator {
     this.content = {
       tier: 'This is content for undefined country',
       weight: 'This is content for undefined country',
-      package: 'Loading package content for undefined country',
+      packaging: 'Loading packaging content for undefined country',
       shipping: 'Loading shipping content for undefined country',
       fba: 'This is content for undefined country',
       referral: 'This is content for undefined country',

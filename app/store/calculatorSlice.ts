@@ -8,6 +8,7 @@ import {
   calculateClosingFee,
   toProductTier,
 } from '@src/service/calculator'
+import { StateStatus } from '@src/service/constants'
 
 interface CalculatorState {
   productInput?: ProductInput
@@ -15,14 +16,14 @@ interface CalculatorState {
   tier: Nullable<ITier>
   shippingWeight: number
   productFees: ProductFees
-  status: string
+  status: StateStatus
   error?: string
 }
 const initialState: CalculatorState = {
   loading: false,
   tier: null,
   shippingWeight: 0,
-  status: 'idle',
+  status: StateStatus.Idle,
   productFees: {
     fbaFee: 0,
     referralFee: 0,

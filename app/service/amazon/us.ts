@@ -37,6 +37,21 @@ export default {
       return output
     },
   },
+  shipping: {
+    url: 'https://sellercentral.amazon.com/gp/help/external/GEVWP48HPBLEFJEY',
+    extractOriginalContent: (response: string) => {
+      const $ = cheerio.load(response)
+      let content = $('div.help-content:eq(1)')
+      let $table = content.find('table.help-table')
+      $table.attr('border', '1')
+      return content.html()
+    },
+    extractContent: (response: string) => {
+      const $ = cheerio.load(response)
+      let output = $('div.help-content:eq(1)').html()
+      return output
+    },
+  },
   fba: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP',
     extractOriginalContent: (response: string) => {

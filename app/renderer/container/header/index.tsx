@@ -40,7 +40,7 @@ export default function Header(props: HeaderProps) {
   const { sections, title } = props
   const country = useAppSelector((state) => state.country)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [tabIndex, setTabIndex] = useState(5)
+  const [tabIndex, setTabIndex] = useState(7)
   const dispatch = useAppDispatch()
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget)

@@ -9,7 +9,7 @@ function RulesPage(props: { pageName: string }) {
   const loadStatus = useAppSelector((state) => state.rules.status)
   const error = useAppSelector((state) => state.rules.error)
   useEffect(() => {
-    if (loadStatus === StateStatus.Idel) {
+    if (loadStatus === StateStatus.Idle) {
       dispatch(fetchRuleContent())
     }
   }, [loadStatus, dispatch])

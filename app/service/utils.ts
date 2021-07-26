@@ -6,7 +6,7 @@ export function sortDimensions(length: number, width: number, height: number) {
   return dimensions
 }
 
-export function sortByUnit(a: Iu, b: Iu, c: Iu) {
+export function sortByUnit(a: ICalculateUnit, b: ICalculateUnit, c: ICalculateUnit) {
   if (a.unit === b.unit && b.unit === c.unit) {
     return [a, b, c].sort((_1, _2) => _1.value - _2.value)
   }
@@ -14,7 +14,7 @@ export function sortByUnit(a: Iu, b: Iu, c: Iu) {
   return [a, b, c]
 }
 
-export function compareWithUnit(a: Iu, b: Iu): boolean {
+export function compareWithUnit(a: ICalculateUnit, b: ICalculateUnit): boolean {
   // TODO: check whether the unit is null or undefined to make sure we parsed rule successfully
 
   // if unit NaN or operator is not defined, will Ignore b.value, default less

@@ -35,7 +35,7 @@ export function parseTier(content: string) {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
-  const parseExpression = (text: string): Iu => {
+  const parseExpression = (text: string): ICalculateUnit => {
     if (text === 'n/a') return { value: NaN, unit: 'n/a' }
     const parseOperator = (s: string) => {
       switch (s.toLowerCase()) {
@@ -86,6 +86,14 @@ export function parseWeight(content: string) {
     divisor: divisor ? parseFloat(divisor[0]) : 1,
   }
 }
+export function parseShipping(content: string) {
+  const $ = cheerio.load(content)
+  const minimumWeightText = $('.a-vertical:eq(0)').find('li:eq(0)').find('span').text()
+  const divisorText = $('.help-content:eq(1)').find('div p:eq(0)').text()
+  const minimumWeight = minimumWeightText.match(/\d+(\.\d*)?/)
+  const divisor = divisorText.match(/(\d+)/)
+  return {}
+}
 
 export function parseFba(content: string) {
   const $ = cheerio.load(content)
@@ -123,8 +131,8 @@ export function parseFba(content: string) {
         let offset = 0
         let shippingWeight: string
         let fulfillmentFee: string
-        let minimumShippingWeight: Iu
-        let maximumShippingWeight: Iu
+        let minimumShippingWeight: ICalculateUnit
+        let maximumShippingWeight: ICalculateUnit
         let firstWeightFee: number
         let firstWeightAmount: number
         let additionalUnitFee: number
@@ -246,7 +254,7 @@ export function parseFba(content: string) {
     oversize: fbaRule.oversize,
   }
 }
-function parseShippingWeight(content: string): Iu[] {
+function parseShippingWeight(content: string): ICalculateUnit[] {
   const array = content.match(/\d+|oz|lb/g)
   let unit = 'lb' // TODO: Suppose the default unit is lb
   let num: number[] = []

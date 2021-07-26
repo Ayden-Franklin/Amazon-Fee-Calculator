@@ -16,6 +16,7 @@ let profitCalculator: IProfitCalculator
 export const fetchRuleContent = createAsyncThunk('rules/fetchRuleContent', async (): Promise<any> => {
   try {
     await profitCalculator.fetchRuleContent()
+    console.log(' finished to load rules. content = ', profitCalculator.content)
     return Promise.resolve(profitCalculator.content)
   } catch (e) {
     return Promise.reject(e)
@@ -28,7 +29,7 @@ const rulesSlice = createSlice({
   reducers: {
     setCountry: (state, action: PayloadAction<Country>) => {
       state.currentCountry = action.payload
-      state.status = StateStatus.Idel
+      state.status = StateStatus.Idle
       state.content = InitializedStateSlice.content
       delete state.error
       delete state.rule

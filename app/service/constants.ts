@@ -12,7 +12,7 @@ export const countryMenuItems = [
 ]
 
 export enum StateStatus {
-  Idel,
+  Idle,
   Loading,
   Succeeded,
   Failed,
@@ -28,7 +28,7 @@ export const InitializedStateSlice = {
     referral: 'Content has not been initialized',
     closing: 'Content has not been initialized',
   },
-  status: StateStatus.Idel,
+  status: StateStatus.Idle,
   currentCountry: countryMenuItems[0],
 }
 

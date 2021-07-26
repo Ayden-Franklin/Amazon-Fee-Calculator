@@ -48,6 +48,13 @@ export function loadWeightRule(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'weight')
 }
 
+export function loadShippingRule(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'shipping')
+}
+
+export function loadPackagingRule(countryCode: string): Promise<string> {
+  return loadContent(countryCode, 'packaging')
+}
 export function loadFBATable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'fba')
 }
