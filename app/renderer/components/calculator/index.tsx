@@ -17,7 +17,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
 import { StateStatus } from '@src/service/constants'
-import { getCategoryByCountryCode } from '@src/service/category'
+import { getCategoryByCountryCode } from '@src/service/constants'
 import { fetchRuleContent } from '@src/store/rulesSlice'
 import {
   selectCalculator,
@@ -171,7 +171,6 @@ function Calculator() {
     const currentState: Record<string, any> = { width, length, height, weight, apparel, dangerous, price }
     const changeStateByField = (fieldName: string) => {
       if (calculatorStore.productInput && currentState[fieldName] !== calculatorStore.productInput[fieldName]) {
-        console.log('diff', fieldName)
         setState['set' + fieldName.replace(/^\S/, (s) => s.toUpperCase())]?.(calculatorStore.productInput[fieldName])
       }
     }
@@ -271,7 +270,7 @@ function Calculator() {
                     id="select"
                     labelId="category"
                     label="Product category:"
-                    value={calculatorStore.productInput?.categoryName ?? ''}
+                    value={calculatorStore.productInput?.categoryName ?? calculatorStore.productInput?.category ?? ''}
                     onChange={handleCategoryChange}
                   >
                     {getCategoryByCountryCode(country.code).map((item) => (

@@ -245,23 +245,25 @@ function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: bo
 
 // Temp interface , final use IProduct
 interface IProductCategory {
+  // ??? maybe only category
+  categoryName?: string
   category: string
   rawCategory?: string
   breadcrumbTree?: Array<{ name: string }>
   price: number
 }
 
-function calcReferralCategory(product: IProductCategory, rule: ReferralFee) {
+function calcReferralCategory(
+  product: IProductCategory,
+  rule: ReferralFee
+): Nullable<Array<{ order: number; by: string }>> {
   const minifyCategory = minify(rule.category)
+
   if (product?.category && minify(product?.category) === minifyCategory) {
-    return true
+    return [{ order: -1, by: 'category' }]
   }
   if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
-    return true
-  }
-  // product breadcrumbTree
-  if (product?.breadcrumbTree && product.breadcrumbTree?.some((bc) => minify(bc.name) === minifyCategory)) {
-    return true
+    return [{ order: -1, by: 'rawCategory' }]
   }
   // get country map category
   // TODO
@@ -269,42 +271,84 @@ function calcReferralCategory(product: IProductCategory, rule: ReferralFee) {
   const mappingCategories = categoryMapping[minifyCategory]
 
   if (mappingCategories) {
-    // TODO maybe power match rule
-    const compValues = mappingCategories.map((c) => minify(c))
-    return (
-      (product?.category && compValues.includes(minify(product?.category))) ||
-      (product?.rawCategory && compValues.includes(minify(product?.rawCategory))) ||
-      (product?.breadcrumbTree && product?.breadcrumbTree?.some((bc) => compValues.includes(minify(bc.name))))
-    )
+    const compValues = mappingCategories.map((c) => ({
+      order: c.order,
+      name: minify(c.name),
+      require: c.require?.map((rc) => minify(rc)),
+    }))
+
+    if (product?.category) {
+      const mifyCategory = minify(product?.category)
+      const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
+      if (fitByCategory.length) {
+        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' }))
+      }
+    }
+
+    if (product?.rawCategory) {
+      const mifyCategory = minify(product?.rawCategory)
+      const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
+      if (fitByCategory.length) {
+        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' }))
+      }
+    }
+
+    if (product?.breadcrumbTree) {
+      const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
+      const fitByCategory = compValues.filter((c) => {
+        if (c.require) {
+          return c.require.every((rc) => mifyCategories.includes(rc)) && mifyCategories.includes(c.name)
+        }
+        return mifyCategories.includes(c.name)
+      })
+      if (fitByCategory.length) {
+        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> breadcrumbTree' }))
+      }
+    }
   }
-  return false
+  return null
 }
 
 export function calculateReferralFee(product: IProductCategory, rules: ReferralFee[]) {
+  // temp handle category
+  product.category = product.category || product.categoryName || ''
+
   const { price } = product
-  let refRule = null
+  let filRule = null
+  let refRules = []
   let otherRule = null
   for (const rule of rules) {
     if (otherRule === null && rule.otherable) {
       otherRule = rule
     }
-    if (calcReferralCategory(product, rule)) {
-      refRule = rule
-      break
+    const calcRes = calcReferralCategory(product, rule)
+    if (calcRes?.length) {
+      refRules.push({
+        _calc: calcRes,
+        _maxCalcOrder: Math.max(...calcRes.map((c) => c.order)),
+        ...rule,
+      })
     }
   }
 
-  refRule = refRule || otherRule
-  console.log('calculateReferralFee calc rule -> ', refRule)
+  // how to calc filRule by refRules? eg: get order max!
+  let maxOrderRule = null
+  for (const rRule of refRules) {
+    if (!maxOrderRule || maxOrderRule?._maxCalcOrder < rRule._maxCalcOrder) {
+      maxOrderRule = rRule
+    }
+  }
+  filRule = refRules?.length ? maxOrderRule : otherRule
+  console.log('calculateReferralFee calc rule -> ', refRules, filRule)
 
-  if (refRule === null) {
+  if (filRule === null) {
     return NaN
   }
 
   let totalFee = 0
   let calculatedAmount = 0
 
-  for (const rateItem of refRule.rateItems) {
+  for (const rateItem of filRule.rateItems) {
     // part calc fee
     totalFee +=
       (price > rateItem.maxPrice ? rateItem.maxPrice - rateItem.minPrice : price - calculatedAmount) * rateItem.rate
@@ -315,7 +359,7 @@ export function calculateReferralFee(product: IProductCategory, rules: ReferralF
     }
   }
 
-  return Math.max(refRule.minimumFee, totalFee)
+  return Math.max(filRule.minimumFee, totalFee)
 }
 
 export function calculateClosingFee(category: string, rules: any) {
