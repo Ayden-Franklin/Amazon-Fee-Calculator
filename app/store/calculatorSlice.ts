@@ -79,19 +79,25 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
       minimumWeight: rules.dimensionalWeightRule.minimumWeight,
       divisor: rules.dimensionalWeightRule.divisor,
     })
+    console.log('calc shippingWeight', weight)
     return [productTier, weight]
   }
 }
 function startToEstimate(state, rules: any): Nullable<ProductFees> {
-  if (!state.tier || !state.productInput || !state.productInput.categoryName || !state.shippingWeight) return null
-  const fbaFee = calculateFbaFee(
-    state.tier.order,
-    state.tier.name,
-    state.shippingWeight,
-    state.productInput.isApparel,
-    state.productInput.isDangerous,
-    rules.fbaRules
-  )
+  if (!state.tier || !state.productInput || !state.productInput.categoryName) return null
+  let fbaFee = 0
+  if (state.shippingWeight) {
+    const filFbaFee = calculateFbaFee(
+      state.tier.order,
+      state.tier.name,
+      state.shippingWeight,
+      state.productInput.isApparel,
+      state.productInput.isDangerous,
+      rules.fbaRules
+    )
+    fbaFee = typeof filFbaFee === 'number' ? filFbaFee : fbaFee
+    console.log('calc FbaFee', fbaFee)
+  }
   const referralFee = calculateReferralFee(JSON.parse(JSON.stringify(state.productInput)), rules.referralRules)
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {
@@ -99,7 +105,7 @@ function startToEstimate(state, rules: any): Nullable<ProductFees> {
     referralFee: referralFee.toFixed(2),
     closingFee: closingFee.toFixed(2),
     totalFee: (fbaFee + referralFee + closingFee).toFixed(2),
-    net: (state.productInput.price - state.productInput.cost - fbaFee - referralFee - closingFee).toFixed(2),
+    net: (state.productInput.price - (state.productInput.cost ?? 0) - fbaFee - referralFee - closingFee).toFixed(2),
   }
 }
 
