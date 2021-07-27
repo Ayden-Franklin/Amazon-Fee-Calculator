@@ -2,7 +2,7 @@ import { IProfitCalculator } from '@src/service/IProfitCalculator'
 
 export class UkProfitCalculator implements IProfitCalculator {
   currentCountry: Country
-  content: RuleContent
+  content: IRuleContent
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for United Kingdom',

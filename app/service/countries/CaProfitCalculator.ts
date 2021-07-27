@@ -4,7 +4,7 @@ import { parseTier, parseWeight, parseFba, parseReferral, parseClosing } from '@
 
 export class CaProfitCalculator implements IProfitCalculator {
   currentCountry: Country
-  content: RuleContent
+  content: IRuleContent
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for Canada',

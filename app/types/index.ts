@@ -1,7 +1,7 @@
 import { StateStatus } from '@src/renderer/constants'
 
 export interface StateSlice {
-  content: RuleContent
+  content: IRuleContent
   status: StateStatus
   error?: string
   currentCountry: Country

@@ -72,10 +72,10 @@ const shippingTiersMap: Record<string, Array<string>> = {
   Oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
   'Special oversize': ['Special oversize'],
 }
-export function parseShippingWeight(content: string): ShippingWeight[] {
+export function parseShippingWeight(content: string): IShippingWeight[] {
   const empty = { value: NaN, unit: NotAvailable }
   const $ = cheerio.load(content)
-  const items: ShippingWeight[] = []
+  const items: IShippingWeight[] = []
   const parseOperator = (s: string) => {
     switch (s.toLowerCase()) {
       case 'or less':

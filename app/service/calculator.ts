@@ -129,25 +129,18 @@ export function calculateShippingWeight({
   shippingWeights,
 }: {
   tierName: string
-  weight: ICalculateUnit
+  weight: IMeasureUnit
   dimensionalWeight: number
-  shippingWeights: ShippingWeight[]
+  shippingWeights: IShippingWeight[]
 }) {
-  // TODO: Shipping weight in the small standard and large standard size tiers means tier index less or equals to 1(We should get this from parsing)
-  // if ((weight < minimumWeight && tierIndex <= 1) || tierIndex === tierSize - 1) {
-  //   shippingWeight = weight
-  // } else {
-  //   shippingWeight = Math.max(weight, dimensionalWeight)
-  // }
-  // TODO need a function to convert the name
-  let shippingWeightItem: ShippingWeight
+  let shippingWeightItem: IShippingWeight
   for (const shippingWeight of shippingWeights) {
     if (shippingWeight.standardTierNames.includes(tierName)) {
       if (shippingWeight.weight.unit === NotAvailable) {
         shippingWeightItem = shippingWeight
         break
       } else {
-        if (compareWithUnit(shippingWeight.weight, weight)) {
+        if (compareWithUnit(weight, shippingWeight.weight)) {
           shippingWeightItem = shippingWeight
           break
         } else {

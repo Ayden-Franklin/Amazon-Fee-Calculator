@@ -8,7 +8,7 @@ export function sortDimensions(length: number, width: number, height: number) {
   return dimensions
 }
 
-export function sortByUnit(a: ICalculateUnit, b: ICalculateUnit, c: ICalculateUnit) {
+export function sortByUnit(a: IMeasureUnit, b: IMeasureUnit, c: IMeasureUnit) {
   if (a.unit === b.unit && b.unit === c.unit) {
     return [a, b, c].sort((_1, _2) => _1.value - _2.value)
   }
@@ -16,27 +16,29 @@ export function sortByUnit(a: ICalculateUnit, b: ICalculateUnit, c: ICalculateUn
   return [a, b, c]
 }
 
-export function compareWithUnit(a: ICalculateUnit, b: ICalculateUnit): boolean {
+export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit): boolean {
   // TODO: check whether the unit is null or undefined to make sure we parsed rule successfully
 
   // if unit NaN or operator is not defined, will Ignore b.value, default less
-  if (b.unit === NotAvailable || !b.operator) {
+  if (reference.unit === NotAvailable || typeof reference.operator === 'undefined') {
     return true
   }
 
-  // if unit of a is NotAvailable, will return false
-  if (a.unit === NotAvailable) return false
+  // if unit of operand is NotAvailable, will return false
+  if (operand.unit === NotAvailable) return false
 
-  if (a.unit === b.unit) {
+  if (operand.unit === reference.unit) {
     // eslint-disable-next-line no-eval
-    return global.eval(`${a.value}  ${b?.operator} ${b.value}`)
+    return global.eval(`${operand.value}  ${reference?.operator} ${reference.value}`)
   }
   // diff unit Comparison
-  const aV = `${a.value} ${a.unit}`
-  const bV = `${b.value} ${b.unit}`
-  const r = Qty(aV).compareTo(Qty(bV))
+  const operandV = `${operand.value} ${operand.unit}`
+  const referenceV = `${reference.value} ${reference.unit}`
+  const r = Qty(operandV).compareTo(Qty(referenceV))
   return (
-    (b.operator.includes('=') && r === 0) || (b.operator.includes('>') && r > 0) || (b.operator.includes('<') && r < 0)
+    (reference.operator.includes('=') && r === 0) ||
+    (reference.operator.includes('>') && r > 0) ||
+    (reference.operator.includes('<') && r < 0)
   )
 }
 
