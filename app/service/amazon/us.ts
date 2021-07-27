@@ -68,6 +68,20 @@ export default {
   },
   referral: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GTG4BAWSY39Z98Z3',
+    sub: {
+      fullSizeAppliancesCategorize: {
+        url: 'https://sellercentral.amazon.com/gp/help/external/GGH3QLLAE3N8PM83',
+        extractOriginalContent: (response: string) => {
+          const $ = cheerio.load(response)
+          let result = ''
+          $('table.help-table').each((_, element) => {
+            $(element).attr('border', '1')
+            result += cheerio.html(element)
+          })
+          return result
+        },
+      },
+    },
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
       const content = $('div.help-content:eq(3)')

@@ -76,7 +76,7 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
   if (!input) return
   const country = rules.country
   const tierData: TierData = { ...input, country }
-  const tierRules: Array<ITier> = rules.tierRules
+  const tierRules: Array<ITier> = rules.tierRules ?? []
 
   const initialProductSize = toProductTier(tierData)
   let { length, width, height } = { ...initialProductSize }

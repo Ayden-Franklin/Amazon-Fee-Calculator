@@ -4,6 +4,7 @@ import us from './us'
 
 interface CountryItemValue {
   url: string
+  sub?: Record<string, CountryItemValue>
   extractOriginalContent: (response: string) => string | null
   extractContent: (response: string) => string | null
 }

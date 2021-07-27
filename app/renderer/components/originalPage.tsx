@@ -4,7 +4,22 @@ import { StateStatus } from '@src/renderer/constants'
 function OriginalPage({ loadStatus, pageContent, error }: OriginalPageProps): JSX.Element {
   let content = <div className="loader">Loading...</div>
   if (loadStatus === StateStatus.Succeeded) {
-    content = <div dangerouslySetInnerHTML={{ __html: pageContent }} />
+    if (!pageContent || typeof pageContent === 'string') {
+      content = <div dangerouslySetInnerHTML={{ __html: pageContent }} />
+    }
+
+    if (pageContent && typeof pageContent === 'object') {
+      content = (
+        <>
+          {Object.entries(pageContent).map(([key, value]) => (
+            <React.Fragment key={key}>
+              <h1>{key}</h1>
+              <div dangerouslySetInnerHTML={{ __html: value || '' }} />
+            </React.Fragment>
+          ))}
+        </>
+      )
+    }
   } else if (loadStatus === StateStatus.Failed) {
     content = <div>{error}</div>
   }

@@ -5,6 +5,7 @@ import {
   loadFBATable,
   loadReferralTable,
   loadClosingFee,
+  loadReferralSubRule,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import {
@@ -35,7 +36,9 @@ export class UsProfitCalculator implements IProfitCalculator {
     const weight = await loadDimensionalWeightRule(this.currentCountry.code)
     const shipping = await loadShippingWeightRule(this.currentCountry.code)
     const fba = await loadFBATable(this.currentCountry.code)
-    const referral = await loadReferralTable(this.currentCountry.code)
+    const referralRule = await loadReferralTable(this.currentCountry.code)
+    const referralSub = await loadReferralSubRule(this.currentCountry.code)
+    const referral = referralSub !== null ? { rule: referralRule, ...referralSub } : referralRule
     const closing = await loadClosingFee(this.currentCountry.code)
     this.content = { tier, weight, packaging: null, shipping, fba, referral, closing }
   }
@@ -44,7 +47,10 @@ export class UsProfitCalculator implements IProfitCalculator {
     const dimensionalWeightRules = parseDimensionalWeight(this.content.weight)
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
     const fbaRules = parseFba(this.content.fba)
-    const referralRules = parseReferral(this.content.referral)
+    // referral maybe string or object
+    const referralRuleContext =
+      typeof this.content.referral === 'string' ? this.content.referral : this.content.referral.rule ?? ''
+    const referralRules = parseReferral(referralRuleContext)
     const closingRules = this.content.closing && parseClosing(this.content.closing)
     return {
       tierRules,

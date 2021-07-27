@@ -1,7 +1,7 @@
 import store from '@src/store'
-import { sortByUnit, compareWithUnit, minify } from '@src/service/utils'
+import { compareWithUnit, minify } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
-import { NotAvailable } from '@src/renderer/constants'
+import { NotAvailable } from '@src/service/constants'
 export interface TierData {
   length: number
   width: number

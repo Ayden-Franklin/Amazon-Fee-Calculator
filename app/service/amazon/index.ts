@@ -15,14 +15,11 @@ const cacheStore = (function () {
   }
 })()
 
-function loadContent(countryCode: string, name: CountryItemKey): Promise<string> {
-  if (!countryCode || !Constants[countryCode]) {
-    return Promise.reject(new Error(`This country[$country] is not supported!`))
-  }
-
-  const rq = Constants[countryCode][name]
-
-  if (!rq) return Promise.reject(new Error(countryCode + name + ' null'))
+function fetchWithCacheByCountryItemValue(rq: {
+  url: string
+  extractOriginalContent: (response: string) => string | null
+}): Promise<string> {
+  if (!rq) return Promise.reject(new Error(`fetchWithCacheByCountryItemValue rq null`))
 
   const rqUrl = rq.url
   const onRqBody = (body: string) => rq.extractOriginalContent(body) || 'Extract Unknown'
@@ -39,6 +36,16 @@ function loadContent(countryCode: string, name: CountryItemKey): Promise<string>
       console.log(err)
       return err
     })
+}
+
+function loadContent(countryCode: string, name: CountryItemKey): Promise<string> {
+  if (!countryCode || !Constants[countryCode]) {
+    return Promise.reject(new Error(`This country[$country] is not supported!`))
+  }
+
+  const rq = Constants[countryCode][name]
+
+  return fetchWithCacheByCountryItemValue(rq)
 }
 export function loadTierTable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'tier')
@@ -61,6 +68,27 @@ export function loadFBATable(countryCode: string): Promise<string> {
 
 export function loadReferralTable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'referral')
+}
+
+export function loadReferralSubRule(countryCode: string): Promise<Nullable<Record<string, string>>> {
+  if (!countryCode || !Constants[countryCode]) {
+    return Promise.reject(new Error(`This country[$country] is not supported!`))
+  }
+
+  const rq = Constants[countryCode].referral
+  const sub = rq.sub
+
+  if (!sub) return Promise.resolve(null)
+
+  const subKeys = Object.keys(sub)
+  const result: Record<string, string> = {}
+
+  return Promise.all(subKeys.map((key) => fetchWithCacheByCountryItemValue(sub[key]))).then((res) => {
+    return subKeys.reduce((prev, key, index) => {
+      prev[key] = res[index]
+      return prev
+    }, result)
+  })
 }
 
 export function loadClosingFee(countryCode: string): Promise<string> {
