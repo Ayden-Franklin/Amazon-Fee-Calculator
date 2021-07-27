@@ -66,7 +66,7 @@ declare interface ReferralRateFeeItem {
   maxPrice: number
   desc: string
 }
-declare interface ReferralFee {
+declare interface IReferralFee {
   category: string
   // TODO for other category use referralRule
   otherable: boolean
@@ -106,7 +106,7 @@ declare interface Rule {
     standard: Record<string, Array<Record<string, Array<string>>>>
     oversize: Record<string, Array<Record<string, Array<string>>>>
   }
-  referralRule?: ReferralFee[]
+  referralRule?: IReferralFee[]
   closingRule?: {
     categories: string[]
     fee: number

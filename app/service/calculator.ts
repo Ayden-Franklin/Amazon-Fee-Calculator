@@ -204,7 +204,7 @@ interface IProductCategory {
 
 function calcReferralCategory(
   product: IProductCategory,
-  rule: ReferralFee
+  rule: IReferralFee
 ): Nullable<Array<{ order: number; by: string }>> {
   const minifyCategory = minify(rule.category)
 
@@ -258,7 +258,7 @@ function calcReferralCategory(
   return null
 }
 
-export function calculateReferralFee(product: IProductCategory, rules: ReferralFee[]) {
+export function calculateReferralFee(product: IProductCategory, rules: IReferralFee[]) {
   // temp handle category
   product.category = product.categoryName || product.category || ''
 

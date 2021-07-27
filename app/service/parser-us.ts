@@ -393,7 +393,7 @@ function parseFulfillmentFeePerUnit(content: string): number[] {
 }
 export function parseReferral(content: string) {
   const $ = cheerio.load(content)
-  let referralRule: ReferralFee[] = []
+  let referralRule: IReferralFee[] = []
 
   // for handle Baby Products (excluding Baby Apparel)
   const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
