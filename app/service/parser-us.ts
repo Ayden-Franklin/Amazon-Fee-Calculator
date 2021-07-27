@@ -154,35 +154,194 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
   })
   return items
 }
-
+const fbaProductTiersMap: Record<string, Record<string, { tierName: string, isApparel: boolean | NotAvailable, isDangerous: boolean}>> = {
+  'Most products (non-dangerous goods, non-apparel)': {
+    'Small standard': {
+      tierName: 'Small standard-size',
+      isApparel: false,
+      isDangerous: false,
+    },
+    'Large standard': {
+      tierName: 'Large standard-size',
+      isApparel: false,
+      isDangerous: false,
+    },
+  },
+  Apparel: {
+    'Small standard': {
+      tierName: 'Small standard-size',
+      isApparel: true,
+      isDangerous: false,
+    },
+    'Large standard':{
+      tierName: 'Large standard-size',
+      isApparel: true,
+      isDangerous: false,
+    },
+  },
+  'Dangerous goods': {
+    'Small standard': {
+      tierName: 'Small standard-size',
+      isApparel: false,
+      isDangerous: true,
+    },
+    'Large standard':{
+      tierName: 'Large standard-size',
+      isApparel: false,
+      isDangerous: true,
+    },
+  },
+  'Non-dangerous goods (both apparel and non-apparel)': {
+    'Small oversize': {
+      tierName: 'Small oversize',
+      isApparel: NotAvailable,
+      isDangerous: false,
+    },
+    'Medium oversize': {
+      tierName: 'Medium oversize',
+      isApparel: NotAvailable,
+      isDangerous: false,
+    },
+    'Large oversize':{
+      tierName: 'Large oversize',
+      isApparel: NotAvailable,
+      isDangerous: false,
+    },
+    'Special oversize':{
+      tierName: 'Special oversize',
+      isApparel: NotAvailable,
+      isDangerous: false,
+    },
+  },
+  'Dangerous goods (both apparel and non-apparel)': {
+    'Small oversize': {
+      tierName: 'Small oversize',
+      isApparel: NotAvailable,
+      isDangerous: true,
+    },
+    'Medium oversize':{
+      tierName: 'Medium oversize',
+      isApparel: NotAvailable,
+      isDangerous: true,
+    },
+    'Large oversize':{
+      tierName: 'Large oversize',
+      isApparel: NotAvailable,
+      isDangerous: true,
+    },
+    'Special oversize':{
+      tierName: 'Special oversize',
+      isApparel: NotAvailable,
+      isDangerous: true,
+    },
+  },
+}
 export function parseFba(content: string) {
-  const $ = cheerio.load(content)
-  type FbaRule = {
-    standard: ProductTierItem[]
-    oversize: ProductTierItem[]
+  const determineTier = (productType: string, sizeTierName: string) => {
+    return fbaProductTiersMap[productType][sizeTierName]
   }
-  let fbaRule: FbaRule = {}
-  let ruleName: string
+
+  const fbaRuleItems: IFbaRuleItem[] = []
+  const $ = cheerio.load(content)
+  let fulfillmentItems: IFulfillmentItem[] = []
+  let currentProductTypeKey: string
+  let currentProductTierKey: string
+  const rows = $('.help-table tbody tr')
+  rows.each((rowIndex, tr) => {
+    console.log('handle row: ', rowIndex)
+    const cells = $(tr)
+      .find('td')
+      .map((_, cell): string => $(cell).text())
+    // console.log('row ', rowIndex, ' cells = ', cells)
+    let firstWeightFee: number
+    let firstWeightAmount: number
+    let additionalUnitFee: number
+    const [column1, column2, column3, column4] = cells
+    // console.log('column 1 = ', column1)
+    // console.log('column 2 = ', column2)
+    // console.log('column 3 = ', column3)
+    // console.log('column 4 = ', column4)
+    if (column1 !== 'Product type') {
+      if (column3 && currentProductTypeKey && currentProductTierKey) {
+        console.log('One Product type finished. need to push')
+        const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
+        fbaRuleItems.push({
+          ...tierData,
+          items: fulfillmentItems,
+        })
+        fulfillmentItems = []
+      }
+
+      let shippingWeightText = column1
+      let fulfillmentFee = column2
+      if (column4) {
+        currentProductTypeKey = column1
+        currentProductTierKey = column2
+        shippingWeightText = column3
+        fulfillmentFee = column4
+      } else if (column3) {
+        currentProductTierKey = column1
+        shippingWeightText = column2
+        fulfillmentFee = column3
+        fulfillmentItems = []
+      }
+      const shippingWeightResult = parseShippingCell(shippingWeightText)
+      const minimumShippingWeight = shippingWeightResult[0]
+      const maximumShippingWeight = shippingWeightResult[1]
+      const fulfillmentFeeResult = parseFulfillmentFeePerUnit(fulfillmentFee)
+      // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
+      const firstWeightAmount = fulfillmentFeeResult[0]
+      const firstWeightFee = fulfillmentFeeResult[1]
+      const additionalUnitFee = fulfillmentFeeResult[2]
+      // console.log(' Finished a row: ')
+      // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
+      // console.log('                 currentProductTierKey = ', currentProductTierKey)
+      // console.log('                 shippingWeight = ', shippingWeight)
+      // console.log('                 fulfillmentFee = ', fulfillmentFee)
+      const fulfillmentItem: IFulfillmentItem = {
+        shippingWeightText,
+        fee: fulfillmentFee,
+        minimumShippingWeight,
+        maximumShippingWeight,
+        firstWeightAmount,
+        firstWeightFee,
+        additionalUnitFee,
+      }
+      fulfillmentItems.push(fulfillmentItem)
+    }
+    if (rowIndex === rows.length - 1) {
+      // push the last one item
+      const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
+      fbaRuleItems.push({
+        ...tierData,
+        items: fulfillmentItems,
+      })
+    }
+  })
+  return fbaRuleItems
+}
+export function parseFba_old(content: string) {
+  const determineTier = (productType: string, sizeTierName: string) => {
+    return fbaProductTiersMap[productType][sizeTierName]
+  }
+  const $ = cheerio.load(content)
+
+  let fbaRuleItems: IFbaRuleItem[] = []
   $('.help-table').each((tableIndex, e) => {
     let rowSpan: number[] = []
     let rowColumnSkipFlag: number[] = []
-    // let names: string[] = []
-    // let sizeTiers: string[] = []
-    // let shippingWeight: string[] = []
-    // let fulfillmentFee: string[] = []
-    //let volumeRule: number[][] = []
-    //let lengthGirthRule: number[] = []
-    if (tableIndex === 0) {
-      ruleName = 'standard'
-    } else if (tableIndex === 1) {
-      ruleName = 'oversize'
-    }
+
+    // if (tableIndex === 0) {
+    //   ruleName = 'standard'
+    // } else if (tableIndex === 1) {
+    //   ruleName = 'oversize'
+    // }
     // let productTierMap: {
     //   [key: string]: ProductTierItem[]
     // }
-    let productTypeMap: Record<string, Record<string, FulfillmentItem[]>> = {}
-    fbaRule[ruleName] = productTypeMap
-    let productTierMap: Record<string, FulfillmentItem[]> = {}
+    // let productTypeMap: Record<string, Record<string, FulfillmentItem[]>> = {}
+    // fbaRule[ruleName] = productTypeMap
+    let fulfillmentItems: IFulfillmentItem[] = []
     let currentProductTypeKey: string
     let currentProductTierKey: string
     $(e)
@@ -196,11 +355,12 @@ export function parseFba(content: string) {
         let firstWeightFee: number
         let firstWeightAmount: number
         let additionalUnitFee: number
+        
         if (rowIndex > 1) {
           $(tr)
             .find('td')
             .each((index, element) => {
-              // console.log('============== begin to parse fba cell, row: ', rowIndex, 'column', index)
+              console.log('============== begin to parse fba cell, row: ', rowIndex, 'column', index)
               let columnIndex = index
               if (index === 0) {
                 for (let i = 0; i < rowSpan.length; i++) {
@@ -231,9 +391,20 @@ export function parseFba(content: string) {
                 // console.log(' set rowColumnSkipFlag for column ', columnIndex, ' as 0')
                 // console.log('Now rowSpan :', rowSpan.toString())
                 // console.log('Now rowColumnSkipFlag :', rowColumnSkipFlag.toString())
+                // if (columnIndex === 0) {
+                //   // console.log('One productTierMap finished. reset it')
+                //   fbaRuleItem = {}
+                // }
                 if (columnIndex === 0) {
-                  // console.log('One productTierMap finished. reset it')
-                  productTierMap = {}
+                  console.log('One Product type finished. no need to reset')
+                } else if (columnIndex === 1 && fulfillmentItems.length > 0) {
+                  console.log('One tier finished. push this item ', currentProductTierKey, ' to a type.  reset it')
+                  // const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
+                  // fbaRuleItems.push({
+                  //   ...tierData,
+                  //   items: fulfillmentItems,
+                  // })
+                  // fulfillmentItems = []
                 }
               }
               // if (rowColumnSkipFlag.length >= index + 1) {
@@ -256,6 +427,15 @@ export function parseFba(content: string) {
                 // console.log('check rowColumnSkipFlag ', 'row', rowIndex, ' column', columnIndex, 'it is for  sizeTiers', rowColumnSkipFlag[columnIndex] === 0)
                 // console.log('Find Size Tier: ', $(element).text())
                 // sizeTiers.push($(element).text())
+                if (fulfillmentItems.length > 0) {
+                  console.log('&&&&&&&&&&&&&&&&&&&&&&Finished a tier, should insert here -------', currentProductTypeKey, ' , ', currentProductTierKey)
+                  const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
+                  fbaRuleItems.push({
+                    ...tierData,
+                    items: fulfillmentItems,
+                  })
+                }
+                fulfillmentItems = []
                 currentProductTierKey = $(element).text()
               } else if (columnIndex === 2) {
                 // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
@@ -277,12 +457,12 @@ export function parseFba(content: string) {
                 additionalUnitFee = result[2]
               }
             })
-          // console.log(' Finished a row: ')
-          // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
-          // console.log('                 currentProductTierKey = ', currentProductTierKey)
-          // console.log('                 shippingWeight = ', shippingWeight)
-          // console.log('                 fulfillmentFee = ', fulfillmentFee)
-          const fulfillmentItem: FulfillmentItem = {
+          console.log(' Finished a row: ')
+          console.log('                 currentProductTypeKey = ', currentProductTypeKey)
+          console.log('                 currentProductTierKey = ', currentProductTierKey)
+          console.log('                 shippingWeight = ', shippingWeight)
+          console.log('                 fulfillmentFee = ', fulfillmentFee)
+          const fulfillmentItem: IFulfillmentItem = {
             shippingWeight: shippingWeight,
             fee: fulfillmentFee,
             minimumShippingWeight,
@@ -291,27 +471,37 @@ export function parseFba(content: string) {
             firstWeightFee,
             additionalUnitFee,
           }
-          if (!productTierMap[currentProductTierKey]) {
-            const value: FulfillmentItem[] = []
-            productTierMap[currentProductTierKey] = value
-          }
-          // console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
-          productTierMap[currentProductTierKey].push(fulfillmentItem)
+          // if (!productTierMap[currentProductTierKey]) {
+          //   const value: FulfillmentItem[] = []
+          //   productTierMap[currentProductTierKey] = value
+          // }
+          
+          console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
+          fulfillmentItems.push(fulfillmentItem)
+          // productTierMap[currentProductTierKey].push(fulfillmentItem)
 
-          if (!productTypeMap[currentProductTypeKey]) {
-            // productTierMap = new Map()
-            productTypeMap[currentProductTypeKey] = []
-          }
-          // console.log(' push a productTierMap', productTierMap, ' to ', currentProductTypeKey)
-          productTypeMap[currentProductTypeKey] = productTierMap
+          // if (!productTypeMap[currentProductTypeKey]) {
+          //   // productTierMap = new Map()
+          //   productTypeMap[currentProductTypeKey] = []
+          // }
+          // // console.log(' push a productTierMap', productTierMap, ' to ', currentProductTypeKey)
+          // productTypeMap[currentProductTypeKey] = productTierMap
         }
       })
-    // console.log(productTypeMap)
+    // push the last element
+    console.log('last One tier finished. push this item ', currentProductTierKey, ' to a type.  reset it', currentProductTypeKey, ' , ', currentProductTierKey)
+                  const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
+                  fbaRuleItems.push({
+                    ...tierData,
+                    items: fulfillmentItems,
+                  })
+                  fulfillmentItems = []
+    console.log(fbaRuleItems)
   })
   // console.log(fbaRule)
   return {
-    standard: fbaRule.standard,
-    oversize: fbaRule.oversize,
+    // standard: fbaRule.standard,
+    // oversize: fbaRule.oversize,
   }
 }
 function parseShippingCell(content: string): ICalculateUnit[] {
@@ -341,10 +531,12 @@ function parseShippingCell(content: string): ICalculateUnit[] {
       {
         unit: unit,
         value: num[0],
+        operator: '>',
       },
       {
         unit: unit,
         value: num[1],
+        operator: '<=',
       },
     ]
   } else {

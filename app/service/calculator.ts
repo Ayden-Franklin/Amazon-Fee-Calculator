@@ -151,82 +151,78 @@ export function calculateShippingWeight({
     }
   }
   // TODO need return unit
-  return shippingWeightItem
+  const v = shippingWeightItem
     ? shippingWeightItem.useGreater
       ? Math.max(weight.value, dimensionalWeight)
       : weight.value
     : weight.value
+  return {
+    value: v,
+    unit: weight.unit,
+  }
 }
 
 interface FbaParameter {
   tierData: TierData
-  tierIndex: number
-  tierSize: number
+  tierName: string
   weightRule: number[]
 }
 export function calculateFbaFee(
-  tierIndex: number,
   tierName: string,
-  shippingWeight: number,
+  shippingWeight: IMeasureUnit,
   isApparel: boolean,
   isDangerous: boolean,
-  rules: any
+  rules: IFbaRuleItem[]
 ): number | Error {
-  // let tierItems: ProductTierItem[]
-  // let productTierItems: TierItem[]
-  // let tierItems: Record<string, Array<Record<string, Array<string>>>>
-  let productTierItems: Array<Record<string, Array<string>>>
-  let productTypekey: string
-  // TODO: Don't use index to determine the tier type
-  if (tierIndex <= 1) {
-    productTypekey = convertProductTypeKey('standard', isApparel, isDangerous)
-    productTierItems = rules.standard[productTypekey]
-  } else {
-    productTypekey = convertProductTypeKey('oversize', isApparel, isDangerous)
-    productTierItems = rules.oversize[productTypekey]
-  }
-
-  const cutIndex = tierName.indexOf('-size')
-  if (cutIndex > -1) {
-    tierName = tierName.substring(0, cutIndex)
-  }
-  const items = productTierItems[tierName]
-  let item
-  for (const element of items) {
-    let target = element.maximumShippingWeight.value
-    // TODO: handle unit conversion
-    if (element.maximumShippingWeight.unit === 'oz') {
-      target /= 16
-    }
-    if (shippingWeight > target) {
-      continue
-    } else {
-      item = element
+  let fbaRuleItem: IFbaRuleItem
+  for (const ruleItem of rules) {
+    if (tierName === ruleItem.tierName && (ruleItem.isApparel === NotAvailable || isApparel === ruleItem.isApparel) && isDangerous === ruleItem.isDangerous){
+      fbaRuleItem = ruleItem
       break
     }
   }
-  return item.firstWeightFee + (shippingWeight - 1) * item.additionalUnitFee
-}
-
-function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean) {
-  if (size === 'standard') {
-    if (isApparel) {
-      return 'Apparel'
-    } else if (isDangerous) {
-      return 'Dangerous goods'
-    } else {
-      return 'Most products (non-dangerous goods, non-apparel)'
+  if (fbaRuleItem) {
+    const items: IFulfillmentItem[] = fbaRuleItem.items
+    let item
+    for (const element of items) {
+      let target = element.maximumShippingWeight.value
+      // TODO: handle unit conversion
+      if (element.maximumShippingWeight.unit === 'oz') {
+        target /= 16
+      }
+      if (shippingWeight.value > target) {
+        continue
+      } else {
+        item = element
+        break
+      }
     }
-  } else if (size === 'oversize') {
-    if (isApparel || isDangerous) {
-      return 'Dangerous goods (both apparel and non-apparel)'
-    } else {
-      return 'Non-dangerous goods (both apparel and non-apparel)'
-    }
+    return item.firstWeightFee + (shippingWeight.value - 1) * item.additionalUnitFee
   } else {
-    return 'unknown'
+    // Not match any rule?
+    return NaN
   }
 }
+
+// function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean) {
+//   if (size === 'standard') {
+//     if (isApparel) {
+//       return 'Apparel'
+//     } else if (isDangerous) {
+//       return 'Dangerous goods'
+//     } else {
+//       return 'Most products (non-dangerous goods, non-apparel)'
+//     }
+//   } else if (size === 'oversize') {
+//     if (isApparel || isDangerous) {
+//       return 'Dangerous goods (both apparel and non-apparel)'
+//     } else {
+//       return 'Non-dangerous goods (both apparel and non-apparel)'
+//     }
+//   } else {
+//     return 'unknown'
+//   }
+// }
 
 // Temp interface , final use IProduct
 interface IProductCategory {

@@ -47,21 +47,20 @@ declare interface ITier {
   lengthGirth?: ICalculateUnit
 }
 
-declare interface FulfillmentItem {
+declare interface IFulfillmentItem {
   minimumShippingWeight: ICalculateUnit
   maximumShippingWeight: ICalculateUnit
   firstWeightAmount: number
   firstWeightFee: number
   additionalUnitFee: number
-  shippingWeight: string
+  shippingWeightText: string
   fee: string
 }
-declare interface TierItem {
-  [key: string]: FulfillmentItem[]
-}
-
-declare interface ProductTierItem {
-  [key: string]: TierItem[]
+declare interface IFbaRuleItem {
+  tierName: string
+  isApparel: boolean | 'n/a'
+  isDangerous: boolean | 'n/a'
+  items: IFulfillmentItem[]
 }
 
 declare interface IReferralRateFeeItem {
@@ -109,10 +108,7 @@ declare interface IRule {
   }
   packageRules?: any
   shippingWeightRules?: IShippingWeight[]
-  fbaRule?: {
-    standard: Record<string, Array<Record<string, Array<string>>>>
-    oversize: Record<string, Array<Record<string, Array<string>>>>
-  }
+  fbaRule?: FbaRuleItem[]
   referralRule?: IReferralFee[]
   closingRule?: {
     categories: string[]

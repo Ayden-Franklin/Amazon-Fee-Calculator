@@ -10,13 +10,14 @@ import {
   toProductTier,
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
+import { NotAvailable } from '@src/service/constants'
 import { sortByUnit } from '@src/service/utils'
 
 interface CalculatorState {
   productInput?: ProductInput
   loading: boolean
   tier: Nullable<ITier>
-  shippingWeight: number
+  shippingWeight: IMeasureUnit
   productFees: ProductFees
   status: StateStatus
   error?: string
@@ -24,7 +25,7 @@ interface CalculatorState {
 const initialState: CalculatorState = {
   loading: false,
   tier: null,
-  shippingWeight: 0,
+  shippingWeight: { value: 0, unit: NotAvailable },
   status: StateStatus.Idle,
   productInput: {
     width: 0,
@@ -72,7 +73,7 @@ export interface ProductFees {
  *   tierRules
  * }
  */
-function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, number]> {
+function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, IMeasureUnit]> {
   if (!input) return
   const country = rules.country
   const tierData: TierData = { ...input, country }
@@ -106,7 +107,6 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
 function startToEstimate(state, rules: any): Nullable<ProductFees> {
   if (!state.tier || !state.productInput || !state.productInput.categoryName || !state.shippingWeight) return null
   const fbaFee = calculateFbaFee(
-    state.tier.order,
     state.tier.name,
     state.shippingWeight,
     state.productInput.isApparel,
