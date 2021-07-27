@@ -1,11 +1,11 @@
-import { configureStore, applyMiddleware } from '@reduxjs/toolkit'
+import { configureStore } from '@reduxjs/toolkit'
 import countryReducer from '@src/store/countrySlice'
 import rulesReducer from '@src/store/rulesSlice'
 import calculatorReducer from '@src/store/calculatorSlice'
 function interceptor({ getState }) {
   return next => action => {
     // console.log('will dispatch', action)
-    if (action.type === 'calculator/calculate' || action.type === 'calculator/estimate') {
+    if (action.type === 'calculator/calculate') {
       const rules = getState().rules
       action.payload = {
         country: getState().country.code,

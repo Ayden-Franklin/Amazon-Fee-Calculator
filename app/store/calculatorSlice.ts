@@ -26,6 +26,16 @@ const initialState: CalculatorState = {
   tier: null,
   shippingWeight: 0,
   status: StateStatus.Idle,
+  productInput: {
+    width: 0,
+    height: 0,
+    length: 0,
+    weight: 0,
+    price: 0,
+    cost: 0,
+    isApparel: false,
+    isDangerous: false,
+  },
   productFees: {
     fbaFee: 0,
     referralFee: 0,
@@ -114,6 +124,13 @@ function startToEstimate(state, rules: any): Nullable<ProductFees> {
   }
 }
 
+function smoothFileds(obj: any, fileds: string[]) {
+  for (const key of fileds) {
+    obj[key] = obj[key] || 0
+  }
+  return obj
+}
+
 const calculatorSlice = createSlice({
   name: 'calculator',
   initialState,
@@ -129,21 +146,26 @@ const calculatorSlice = createSlice({
       state.productInput = { ...state.productInput, categoryCode: category, categoryName: category }
     },
     calculate: (state, action) => {
-      const result = calculateProductSize(state.productInput, action.payload)
-      if (result) {
-        const [tier, weight] = result
+      const productInput = smoothFileds(JSON.parse(JSON.stringify(state.productInput)), [
+        'width',
+        'length',
+        'height',
+        'weight',
+        'price',
+        'cost',
+      ])
+      const tierAndWeight = calculateProductSize(productInput, action.payload)
+      if (tierAndWeight) {
+        const [tier, weight] = tierAndWeight
         state.tier = tier
         state.shippingWeight = weight
       }
-    },
-    estimate: (state, action) => {
-      const result = startToEstimate(state, action.payload)
-      if (result) {
-        state.productFees = result
+      const fees = startToEstimate(state, action.payload)
+      if (fees) {
+        state.productFees = fees
       }
     },
   },
 })
-export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate, estimate } =
-  calculatorSlice.actions
+export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate } = calculatorSlice.actions
 export default calculatorSlice.reducer

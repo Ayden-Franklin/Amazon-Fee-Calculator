@@ -4,6 +4,10 @@ declare type Undefinedable<T> = T | undefined
 
 declare type Nilable<T> = T | undefined | null
 
+declare type StringRecord = Record<string, string>
+
+declare type Or<T, K> = T | K
+
 declare interface Country {
   code: string
   name: string
@@ -14,7 +18,7 @@ declare interface RuleContent {
   packaging: Nullable<string>
   shipping: string
   fba: string
-  referral: string
+  referral: Or<string, StringRecord>
   closing: Nullable<string>
 }
 

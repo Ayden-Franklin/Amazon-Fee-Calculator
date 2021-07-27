@@ -25,7 +25,6 @@ import {
   changeProductInput,
   changeProductCategory,
   calculate,
-  estimate,
 } from '@src/store/calculatorSlice'
 import { checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch, useAppSelector } from '@src/store/hooks'
@@ -71,7 +70,6 @@ function Calculator() {
   const error = useAppSelector((state) => state.rules.error)
   const [initialized, setInitialized] = useState(loadStatus === StateStatus.Succeeded)
   const calculatorStore = useSelector(selectCalculator)
-  const [readyForCalculation, setReadyForCalculation] = useState(false)
 
   const productInput = calculatorStore.productInput || {}
 
@@ -84,9 +82,20 @@ function Calculator() {
   const onChangeProductInput =
     (field: string, value?: (event: any) => any) => (event: React.ChangeEvent<HTMLInputElement>) => {
       event && event.preventDefault()
+
+      let resValue = null
+      if (typeof value === 'function') {
+        resValue = value(event)
+      }
+
+      if (typeof value === 'undefined') {
+        resValue = parseFloat(event.target.value)
+        resValue = isNaN(resValue) ? '' : resValue
+      }
+
       dispatch(
         changeProductInput({
-          productInput: { [field]: typeof value === 'function' ? value(event) : parseFloat(event.target.value) },
+          productInput: { [field]: resValue },
         })
       )
     }
@@ -104,9 +113,6 @@ function Calculator() {
       dispatch(changeLoadStatus({ status: false }))
     })
   }
-  const handleEstimate = () => {
-    dispatch(estimate({}))
-  }
 
   useEffect(() => {
     if (loadStatus === StateStatus.Succeeded) {
@@ -116,12 +122,8 @@ function Calculator() {
     }
   }, [loadStatus, dispatch])
   useEffect(() => {
-    const ready = checkProductInputReady()
-    setReadyForCalculation(ready)
-    if (ready) {
+    if (checkProductInputReady()) {
       dispatch(calculate({}))
-      // maybe estimate ???
-      dispatch(estimate({}))
     }
   }, [calculatorStore.productInput])
 
@@ -399,19 +401,6 @@ function Calculator() {
                     }}
                     variant="outlined"
                   />
-                </Grid>
-                <Grid item xs={5}>
-                  <Button
-                    type="button"
-                    variant="contained"
-                    color="primary"
-                    disabled={
-                      !(readyForCalculation && calculatorStore.productInput?.categoryName && productInput?.price > 0)
-                    }
-                    onClick={handleEstimate}
-                  >
-                    Estimate
-                  </Button>
                 </Grid>
               </Grid>
             </Grid>
