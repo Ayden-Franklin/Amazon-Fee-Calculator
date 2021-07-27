@@ -60,7 +60,7 @@ declare interface ProductTierItem {
   [key: string]: TierItem[]
 }
 
-declare interface ReferralRateFeeItem {
+declare interface IReferralRateFeeItem {
   rate: number
   minPrice: number
   maxPrice: number
@@ -72,7 +72,7 @@ declare interface IReferralFee {
   otherable: boolean
   excludingCategories: string[]
   includingCategories: string[]
-  rateItems: ReferralRateFeeItem[]
+  rateItems: IReferralRateFeeItem[]
   minimumFee: number
 }
 declare interface PackagingWeightItem {

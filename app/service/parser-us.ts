@@ -450,7 +450,7 @@ export function parseReferral(content: string) {
 
 function parseReferralSubItem(content: string) {
   const $ = cheerio.load(content)
-  const rateItems: ReferralRateFeeItem[] = []
+  const rateItems: IReferralRateFeeItem[] = []
   const onlyOneRate = $('ul').length === 0
 
   if (onlyOneRate) {

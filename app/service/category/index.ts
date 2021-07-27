@@ -1,4 +1,4 @@
-interface CategoryType {
+interface ICategoryType {
   name: string
   // breadcrumbTree eg: Electronics > xxx > 'Accessories & Supplies'
   require?: Array<string>
@@ -12,7 +12,7 @@ interface CategoryType {
  * "Categories requiring approval"
  * "Full-Size Appliances"
  */
-const CountryCategoryMapping: Record<string, Record<string, Array<CategoryType>>> = {
+const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>>> = {
   us: {
     amazondeviceaccessories: [{ name: 'Amazon Devices & Accessories', order: 1 }],
     babyproducts: [
