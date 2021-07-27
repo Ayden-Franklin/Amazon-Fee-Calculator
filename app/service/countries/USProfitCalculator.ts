@@ -17,7 +17,7 @@ import {
 } from '@src/service/parser-us'
 export class UsProfitCalculator implements IProfitCalculator {
   currentCountry: Country
-  content: RuleContent
+  content: IRuleContent
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for US',

@@ -8,7 +8,7 @@ declare interface Country {
   code: string
   name: string
 }
-declare interface RuleContent {
+declare interface IRuleContent {
   tier: string
   weight: string
   packaging: Nullable<string>
@@ -27,10 +27,10 @@ declare interface ICalculateUnit extends IMeasureUnit {
 }
 
 declare interface IProduct {
-  length: ICalculateUnit
-  width: ICalculateUnit
-  height: ICalculateUnit
-  weight: ICalculateUnit
+  length: IMeasureUnit
+  width: IMeasureUnit
+  height: IMeasureUnit
+  weight: IMeasureUnit
   category: Undefinedable<string>
   country: string
 }
@@ -75,27 +75,27 @@ declare interface IReferralFee {
   rateItems: IReferralRateFeeItem[]
   minimumFee: number
 }
-declare interface PackagingWeightItem {
+declare interface IPackagingWeightItem {
   packagingWeight: number
   minWeight: IMeasureUnit
   maxWeight: IMeasureUnit
   desc: string
 }
-declare interface PackagingWeight {
+declare interface IPackagingWeight {
   tierName: string
   standardTierNames: string[] // using this array to map to the standard tier names
-  useGreater: PackagingWeightItem[]
+  useGreater: IPackagingWeightItem[]
 }
 
-declare interface ShippingWeight {
+declare interface IShippingWeight {
   tierName: string
   standardTierNames: string[] // using this array to map to the standard tier names
-  weight: IMeasureUnit
+  weight: ICalculateUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
   roundingUp: IMeasureUnit
 }
 
-declare interface Rule {
+declare interface IRule {
   tierRules?: ITier[]
   dimensionalWeightRules?: {
     tierName: string
@@ -104,7 +104,7 @@ declare interface Rule {
     divisor: number
   }
   packageRules?: any
-  shippingWeightRules?: ShippingWeight[]
+  shippingWeightRules?: IShippingWeight[]
   fbaRule?: {
     standard: Record<string, Array<Record<string, Array<string>>>>
     oversize: Record<string, Array<Record<string, Array<string>>>>

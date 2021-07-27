@@ -7,7 +7,7 @@ import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfi
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { StateSlice } from '@src/types'
 interface RulesState extends StateSlice {
-  rule?: Rule
+  rule?: IRule
 }
 const initialState: RulesState = InitializedStateSlice
 

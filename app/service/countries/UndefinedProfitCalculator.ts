@@ -2,7 +2,7 @@ import { IProfitCalculator } from '@src/service/IProfitCalculator'
 
 export class UndefinedProfitCalculator implements IProfitCalculator {
   currentCountry: Country
-  content: RuleContent
+  content: IRuleContent
   constructor(country: Country) {
     this.content = {
       tier: 'This is content for undefined country',
