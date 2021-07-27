@@ -373,7 +373,7 @@ function parseFulfillmentFeePerUnit(content: string): number[] {
     return [1, 0, 0]
   }
 }
-export function parseReferral(content: string) {
+export function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
   let referralRule: IReferralFee[] = []
 
@@ -426,6 +426,40 @@ export function parseReferral(content: string) {
       rateItems: parseReferralSubItem($(rateEle).toString()),
       minimumFee: parseFloat($(miniFeeEle).text().substring(1)) || 0,
     })
+  })
+
+  const specialReferralNames = ['Full-Size Appliances']
+  const specialReferralRules = referralRule.filter((r) => specialReferralNames.includes(r.category))
+
+  specialReferralRules.forEach((r) => {
+    // handle special referral
+    const mifyKey = r.category.replace(/-|\s/g, '').toLowerCase()
+    if (!mifyKey || !subContent || !subContent[mifyKey]) return
+    const parseSubContent = subContent[mifyKey]
+    // special TODO
+    if (mifyKey === 'fullsizeappliances') {
+      const $sub = cheerio.load(parseSubContent)
+      const [inc, exc] = $sub('tbody').toArray()
+
+      $sub(exc)
+        .find('tr')
+        .each((_1, tr) => {
+          const [_2, productTypeEle] = $(tr).find('td')
+          r.excludingCategories.push(
+            ...$sub(productTypeEle)
+              .text()
+              .split(',')
+              .map((ct) => ct?.trim())
+          )
+        })
+
+      $sub(inc)
+        .find('tr')
+        .each((_1, tr) => {
+          const [productTypeEle] = $(tr).find('td')
+          r.includingCategories.push($sub(productTypeEle).text())
+        })
+    }
   })
   return referralRule
 }

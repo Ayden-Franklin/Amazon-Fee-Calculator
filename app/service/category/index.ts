@@ -57,7 +57,6 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     // Video Game -> Controllers
     videogameconsoles: [{ name: 'Controllers', require: ['Video Games'], order: 2 }],
     // Categories requiring approval TODO
-    // Full-Size Appliances TODO
     '3dprintedproducts': [
       { name: 'Additive Manufacturing Products', order: 1 },
       { name: '3D Printers', order: 2 },
@@ -89,6 +88,8 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     sportscollectibles: [{ name: 'Sports Collectibles', order: 2 }],
     // demo: B08J5LPB6G or B08FWKGKC2 ??
     watches: [{ name: 'Watches', order: 1 } /** , 'Smartwatches' */],
+    // Full-Size Appliances -> laundryappliances & refrigerationappliances & dishwashers & cookingappliances
+    refrigerationappliances: [{ name: 'Refrigerators', order: 2 }],
   },
 }
 

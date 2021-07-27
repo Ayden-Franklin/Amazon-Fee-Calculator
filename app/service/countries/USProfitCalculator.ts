@@ -48,9 +48,11 @@ export class UsProfitCalculator implements IProfitCalculator {
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
     const fbaRules = parseFba(this.content.fba)
     // referral maybe string or object
-    const referralRuleContext =
-      typeof this.content.referral === 'string' ? this.content.referral : this.content.referral.rule ?? ''
-    const referralRules = parseReferral(referralRuleContext)
+    const { referral } = this.content
+    const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
+    const referralSubRule = typeof referral === 'object' ? referral : {}
+    const referralRules = parseReferral(referralRuleContext, referralSubRule)
+
     const closingRules = this.content.closing && parseClosing(this.content.closing)
     return {
       tierRules,
