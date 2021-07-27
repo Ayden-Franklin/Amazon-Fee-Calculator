@@ -1,6 +1,7 @@
 import store from '@src/store'
 import { sortByUnit, compareWithUnit, minify } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
+import { NotAvailable } from '@src/renderer/constants'
 export interface TierData {
   length: number
   width: number
@@ -37,7 +38,11 @@ export function checkProductInputReady(): boolean {
     : false
 }
 
-function calcLengthGirth(longest: ICalculateUnit, median: ICalculateUnit, short: ICalculateUnit): Nullable<ICalculateUnit> {
+function calcLengthGirth(
+  longest: ICalculateUnit,
+  median: ICalculateUnit,
+  short: ICalculateUnit
+): Nullable<ICalculateUnit> {
   if (longest.unit === median.unit && median.unit === short.unit) {
     return {
       value: longest.value + (median.value + short.value) * 2,
@@ -51,20 +56,19 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
   let total = tiers.length
   let targetTier: Nullable<ITier> = null
   // default tiers order ASCE
-  // sort
-  const [short, median, longest] = sortByUnit(product.length, product.width, product.height)
-  const lengthGirth = calcLengthGirth(longest, median, short)
+  // sort --- Changed: sorting them before call calculation functions
+  // const [short, median, longest] = sortByUnit(product.length, product.width, product.height)
+  const lengthGirth = calcLengthGirth(product.length, product.width, product.height)
   // weight
   while (cI < total) {
     const tI = tiers[cI]
     if (
       compareWithUnit(product.weight, tI.weight) &&
-      compareWithUnit(longest, tI.volumes[0]) &&
-      compareWithUnit(median, tI.volumes[1]) &&
-      compareWithUnit(short, tI.volumes[2]) &&
-      lengthGirth &&
-      tI.lengthGirth &&
-      compareWithUnit(lengthGirth, tI.lengthGirth)
+      compareWithUnit(product.length, tI.volumes[0]) &&
+      compareWithUnit(product.width, tI.volumes[1]) &&
+      compareWithUnit(product.height, tI.volumes[2]) &&
+      (!tI.lengthGirth || lengthGirth &&
+      compareWithUnit(lengthGirth, tI.lengthGirth))
     ) {
       targetTier = tI
       break
@@ -73,10 +77,10 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
     // The last tier grade  has a different logic: any matched condition should confirm this tier grad
     if (
       (cI === total && compareWithUnit(product.weight, tI.weight)) ||
-      compareWithUnit(longest, tI.volumes[0]) ||
-      compareWithUnit(median, tI.volumes[1]) ||
-      compareWithUnit(short, tI.volumes[2]) ||
-      (lengthGirth && tI.lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth))
+      compareWithUnit(product.length, tI.volumes[0]) ||
+      compareWithUnit(product.width, tI.volumes[1]) ||
+      compareWithUnit(product.height, tI.volumes[2]) ||
+      (!tI.lengthGirth || lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth))
     ) {
       targetTier = tI
     }
@@ -84,42 +88,80 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
   return targetTier
 }
 
-function calculateDimensionalWeight({
-  tierData,
-  tierIndex,
-  tierSize,
+export function calculateDimensionalWeight({
+  product,
+  tier,
+  tierName,
   minimumMeasureUnit,
   divisor,
-}: DimensionalWeightParameter) {
-  let { length, width, height, weight } = tierData
-  // TODO : check the minimumMeasureUnit if (width)
-  let dimensionalWeight = (length * width * height) / divisor
+}: {
+  product: IProduct
+  tier: ITier
+  tierName: string
+  minimumMeasureUnit: ICalculateUnit
+  divisor: number
+}) {
+  let { length, width, height } = product
+  let lengthValue = length.value
+  let widthValue = width.value
+  let heightValue = height.value
+  // TODO: if the units are not matched, they should be converted.
+  if (
+    tier.name.includes(tierName) &&
+    width.unit === minimumMeasureUnit.unit &&
+    height.unit === minimumMeasureUnit.unit
+  ) {
+    if (!compareWithUnit(product.width, minimumMeasureUnit)) {
+      widthValue = 2
+    }
+    if (!compareWithUnit(product.height, minimumMeasureUnit)) {
+      heightValue = 2
+    }
+  }
+  let dimensionalWeight = (lengthValue * widthValue * heightValue) / divisor
   return dimensionalWeight
 }
-interface DimensionalWeightParameter {
-  tierData: TierData
-  tierIndex: number
-  tierSize: number
-  minimumMeasureUnit: IMeasureUnit
-  divisor: number
-}
 export function calculateShippingWeight({
-  tierData,
-  tierIndex,
-  tierSize,
-  minimumMeasureUnit,
-  divisor,
-}: DimensionalWeightParameter) {
-  const dimensionalWeight = calculateDimensionalWeight({ tierData, tierIndex, tierSize, minimumMeasureUnit, divisor })
-  const { weight } = tierData
-  let shippingWeight = 0
+  tierName,
+  weight,
+  dimensionalWeight,
+  shippingWeights,
+}: {
+  tierName: string
+  weight: ICalculateUnit
+  dimensionalWeight: number
+  shippingWeights: ShippingWeight[]
+}) {
   // TODO: Shipping weight in the small standard and large standard size tiers means tier index less or equals to 1(We should get this from parsing)
   // if ((weight < minimumWeight && tierIndex <= 1) || tierIndex === tierSize - 1) {
   //   shippingWeight = weight
   // } else {
   //   shippingWeight = Math.max(weight, dimensionalWeight)
   // }
-  return shippingWeight
+  // TODO need a function to convert the name
+  let shippingWeightItem: ShippingWeight
+  for (const shippingWeight of shippingWeights) {
+    if (tierName.includes(shippingWeight.tierName)) {
+      if (shippingWeight.weight.unit === NotAvailable) {
+        shippingWeightItem = shippingWeight
+        break
+      } else {
+        if (compareWithUnit(shippingWeight.weight, weight)) {
+          shippingWeightItem = shippingWeight
+          break
+        } else {
+          shippingWeightItem = shippingWeight
+          break
+        }
+      }
+    }
+  }
+  // TODO need return unit
+  return shippingWeightItem
+    ? shippingWeightItem.useGreater
+      ? Math.max(weight.value, dimensionalWeight)
+      : weight.value
+    : weight.value
 }
 
 interface FbaParameter {

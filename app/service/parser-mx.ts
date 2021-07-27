@@ -1,36 +1,5 @@
 import cheerio from 'cheerio'
-import { NotAvailable } from '@src/renderer/constants'
-export function parseTiers_old(content: string) {
-  const $ = cheerio.load(content)
-  let names: string[] = []
-  let weightRule: number[] = []
-  let volumeRule: number[][] = []
-  let lengthGirthRule: number[] = []
-  $('tbody tr').each((rowIndex, element) => {
-    volumeRule.push([])
-    $(element)
-      .find('td')
-      .each((index, element) => {
-        if (index === 0) {
-          names.push($(element).find('strong').text().trim())
-        } else if (index === 1) {
-          weightRule.push(parseFloat($(element).text()))
-        } else if (index === 5) {
-          lengthGirthRule.push(parseFloat($(element).text()))
-        } else {
-          volumeRule[rowIndex][index - 2] = parseFloat($(element).text())
-        }
-      })
-  })
-  return {
-    tierNames: names,
-    weightRule: weightRule,
-    volumeRule: volumeRule,
-    lengthGirthRule: lengthGirthRule,
-    dimensionUnit: 'cm',
-    weightUnit: 'lb',
-  }
-}
+import { NotAvailable } from '@src/service/constants'
 
 export function parseTier(content: string) {
   const empty = { value: NaN, unit: NotAvailable }

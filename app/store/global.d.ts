@@ -83,11 +83,13 @@ declare interface PackagingWeightItem {
 }
 declare interface PackagingWeight {
   tierName: string
+  standardTierNames: string[] // using this array to map to the standard tier names
   useGreater: PackagingWeightItem[]
 }
 
 declare interface ShippingWeight {
   tierName: string
+  standardTierNames: string[] // using this array to map to the standard tier names
   weight: IMeasureUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
   roundingUp: IMeasureUnit
@@ -95,13 +97,13 @@ declare interface ShippingWeight {
 
 declare interface Rule {
   tierRules?: ITier[]
-  dimensionalWeightRule?: {
+  dimensionalWeightRules?: {
     tierName: string
-    minimumWeight: IMeasureUnit
+    minimumMeasureUnit: ICalculateUnit
     divisor: number
   }
-  packageRule?: any
-  shippingWeightRule?: ShippingWeight[]
+  packageRules?: any
+  shippingWeightRules?: ShippingWeight[]
   fbaRule?: {
     standard: Record<string, Array<Record<string, Array<string>>>>
     oversize: Record<string, Array<Record<string, Array<string>>>>

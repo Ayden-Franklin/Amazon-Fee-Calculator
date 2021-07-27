@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
   TierData,
   determineTierByUnit,
+  calculateDimensionalWeight,
   calculateShippingWeight,
   calculateFbaFee,
   calculateReferralFee,
@@ -9,6 +10,7 @@ import {
   toProductTier,
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
+import { sortByUnit } from '@src/service/utils'
 
 interface CalculatorState {
   productInput?: ProductInput
@@ -66,38 +68,41 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
   const tierData: TierData = { ...input, country }
   const tierRules: Array<ITier> = rules.tierRules
 
-  const productSize = toProductTier(tierData)
+  const initialProductSize = toProductTier(tierData)
+  let { length, width, height } = { ...initialProductSize }
+  const [shortest, median, longest] = sortByUnit(length, width, height)
+  const productSize = { ...initialProductSize, length: longest, width: median, height: shortest }
   const productTier = determineTierByUnit(productSize, tierRules)
 
   if (productTier) {
     const tierIndex = productTier.order
-
-    const weight = calculateShippingWeight({
-      tierData: tierData,
-      tierIndex: tierIndex,
-      tierSize: tierRules.length,
-      minimumWeight: rules.dimensionalWeightRule.minimumWeight,
-      divisor: rules.dimensionalWeightRule.divisor,
+    const { tierName, minimumMeasureUnit, divisor } = { ...rules.dimensionalWeightRules }
+    const dimensionalWeight = calculateDimensionalWeight({
+      product: productSize,
+      tier: productTier,
+      tierName,
+      minimumMeasureUnit,
+      divisor,
     })
-    console.log('calc shippingWeight', weight)
+    const weight = calculateShippingWeight({
+      tierName: productTier.name,
+      wieght: productSize.weight,
+      dimensionalWeight: dimensionalWeight,
+      shippingWeights: rules.shippingWeightRules,
+    })
     return [productTier, weight]
   }
 }
 function startToEstimate(state, rules: any): Nullable<ProductFees> {
-  if (!state.tier || !state.productInput || !state.productInput.categoryName) return null
-  let fbaFee = 0
-  if (state.shippingWeight) {
-    const filFbaFee = calculateFbaFee(
-      state.tier.order,
-      state.tier.name,
-      state.shippingWeight,
-      state.productInput.isApparel,
-      state.productInput.isDangerous,
-      rules.fbaRules
-    )
-    fbaFee = typeof filFbaFee === 'number' ? filFbaFee : fbaFee
-    console.log('calc FbaFee', fbaFee)
-  }
+  if (!state.tier || !state.productInput || !state.productInput.categoryName || !state.shippingWeight) return null
+  const fbaFee = calculateFbaFee(
+    state.tier.order,
+    state.tier.name,
+    state.shippingWeight,
+    state.productInput.isApparel,
+    state.productInput.isDangerous,
+    rules.fbaRules
+  )
   const referralFee = calculateReferralFee(JSON.parse(JSON.stringify(state.productInput)), rules.referralRules)
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {

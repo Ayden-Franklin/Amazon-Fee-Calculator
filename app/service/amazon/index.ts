@@ -44,11 +44,11 @@ export function loadTierTable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'tier')
 }
 
-export function loadWeightRule(countryCode: string): Promise<string> {
+export function loadDimensionalWeightRule(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'weight')
 }
 
-export function loadShippingRule(countryCode: string): Promise<string> {
+export function loadShippingWeightRule(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'shipping')
 }
 

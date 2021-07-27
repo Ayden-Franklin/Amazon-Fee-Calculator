@@ -1,7 +1,7 @@
 import {
   loadTierTable,
-  loadWeightRule,
-  loadShippingRule,
+  loadDimensionalWeightRule,
+  loadShippingWeightRule,
   loadPackagingRule,
   loadFBATable,
   loadReferralTable,
@@ -27,8 +27,8 @@ export class MxProfitCalculator implements IProfitCalculator {
   }
   async fetchRuleContent() {
     const tier = await loadTierTable(this.currentCountry.code)
-    const weight = await loadWeightRule(this.currentCountry.code)
-    const shipping = await loadShippingRule(this.currentCountry.code)
+    const weight = await loadDimensionalWeightRule(this.currentCountry.code)
+    const shipping = await loadShippingWeightRule(this.currentCountry.code)
     const packaging = 'TODO'
     const fba = await loadFBATable(this.currentCountry.code)
     const referral = await loadReferralTable(this.currentCountry.code)

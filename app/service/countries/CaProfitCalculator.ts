@@ -1,4 +1,4 @@
-import { loadTierTable, loadWeightRule, loadFBATable, loadReferralTable, loadClosingFee } from '@src/service/amazon'
+import { loadTierTable, loadDimensionalWeightRule, loadFBATable, loadReferralTable, loadClosingFee } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { parseTier, parseWeight, parseFba, parseReferral, parseClosing } from '@src/service/parser-ca'
 
@@ -19,7 +19,7 @@ export class CaProfitCalculator implements IProfitCalculator {
   }
   async fetchRuleContent() {
     const tier = await loadTierTable(this.currentCountry.code)
-    const weight = await loadWeightRule(this.currentCountry.code)
+    const weight = await loadDimensionalWeightRule(this.currentCountry.code)
 
     const shipping = 'TODO'
     const fba = await loadFBATable(this.currentCountry.code)
