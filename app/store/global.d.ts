@@ -99,6 +99,7 @@ declare interface Rule {
   tierRules?: ITier[]
   dimensionalWeightRules?: {
     tierName: string
+    standardTierNames: string[] // using this array to map to the standard tier names
     minimumMeasureUnit: ICalculateUnit
     divisor: number
   }

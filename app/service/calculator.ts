@@ -67,8 +67,7 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
       compareWithUnit(product.length, tI.volumes[0]) &&
       compareWithUnit(product.width, tI.volumes[1]) &&
       compareWithUnit(product.height, tI.volumes[2]) &&
-      (!tI.lengthGirth || lengthGirth &&
-      compareWithUnit(lengthGirth, tI.lengthGirth))
+      (typeof tI.lengthGirth === 'undefined' || (lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth)))
     ) {
       targetTier = tI
       break
@@ -76,11 +75,13 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
     cI++
     // The last tier grade  has a different logic: any matched condition should confirm this tier grad
     if (
-      (cI === total && compareWithUnit(product.weight, tI.weight)) ||
-      compareWithUnit(product.length, tI.volumes[0]) ||
-      compareWithUnit(product.width, tI.volumes[1]) ||
-      compareWithUnit(product.height, tI.volumes[2]) ||
-      (!tI.lengthGirth || lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth))
+      cI === total &&
+      (compareWithUnit(product.weight, tI.weight) ||
+        compareWithUnit(product.length, tI.volumes[0]) ||
+        compareWithUnit(product.width, tI.volumes[1]) ||
+        compareWithUnit(product.height, tI.volumes[2]) ||
+        typeof tI.lengthGirth === 'undefined' ||
+        (lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth)))
     ) {
       targetTier = tI
     }
@@ -91,13 +92,13 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
 export function calculateDimensionalWeight({
   product,
   tier,
-  tierName,
+  standardTierNames,
   minimumMeasureUnit,
   divisor,
 }: {
   product: IProduct
   tier: ITier
-  tierName: string
+  standardTierNames: string[]
   minimumMeasureUnit: ICalculateUnit
   divisor: number
 }) {
@@ -107,7 +108,7 @@ export function calculateDimensionalWeight({
   let heightValue = height.value
   // TODO: if the units are not matched, they should be converted.
   if (
-    tier.name.includes(tierName) &&
+    standardTierNames.includes(tier.name) &&
     width.unit === minimumMeasureUnit.unit &&
     height.unit === minimumMeasureUnit.unit
   ) {
@@ -141,7 +142,7 @@ export function calculateShippingWeight({
   // TODO need a function to convert the name
   let shippingWeightItem: ShippingWeight
   for (const shippingWeight of shippingWeights) {
-    if (tierName.includes(shippingWeight.tierName)) {
+    if (shippingWeight.standardTierNames.includes(tierName)) {
       if (shippingWeight.weight.unit === NotAvailable) {
         shippingWeightItem = shippingWeight
         break

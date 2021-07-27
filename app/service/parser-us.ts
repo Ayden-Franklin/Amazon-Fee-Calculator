@@ -44,17 +44,21 @@ export function parseTier(content: string) {
 
   return tiers
 }
-
+const dimensionalTiersMap: Record<string, Array<string>> = {
+  oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
+}
 export function parseDimensionalWeight(content: string) {
   const $ = cheerio.load(content)
   const divisorText = content.match(/divided by \d+(\.\d+)?/)
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
   const minimumWeightText = content.match(/\d+(\.\d*)? (inches|cm)/)
   const minimumWeightArray = minimumWeightText && minimumWeightText.length > 0 && minimumWeightText[0].split(' ')
-  const minimumWeightValue = minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
+  const minimumWeightValue =
+    minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
   const minimumWeightUnit = minimumWeightArray && minimumWeightArray.length === 2 ? minimumWeightArray[1] : 'inches'
   return {
     tierName: 'oversize', // TODO: parse this name
+    standardTierNames: dimensionalTiersMap.oversize,
     minimumMeasureUnit: {
       value: minimumWeightValue,
       unit: minimumWeightUnit,
@@ -62,6 +66,11 @@ export function parseDimensionalWeight(content: string) {
     },
     divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2]) : 1,
   }
+}
+const shippingTiersMap: Record<string, Array<string>> = {
+  'Standard size': ['Small standard-size', 'Large standard-size'],
+  Oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
+  'Special oversize': ['Special oversize'],
 }
 export function parseShippingWeight(content: string): ShippingWeight[] {
   const empty = { value: NaN, unit: NotAvailable }
@@ -94,26 +103,25 @@ export function parseShippingWeight(content: string): ShippingWeight[] {
     }
     return { value, operator, unit }
   }
-  const convertTierName = (name: string) => {
-    if (name === 'Standard size') {
-      return 'Standard-size'
-    } else {
-      return name
-    }
-  }
-  const parseExpression = (text: string): { tierName: string; weight: ICalculateUnit } => {
+
+  const parseExpression = (text: string): { tierName: string; standardTierNames: string[]; weight: ICalculateUnit } => {
     const leftIndex = text.indexOf('(')
     if (leftIndex > -1) {
-      const tierName = convertTierName(text.substring(0, leftIndex).trim()).toLowerCase()
+      const tierName = text.substring(0, leftIndex).trim()
+      const standardTierNames = shippingTiersMap[tierName]
       const weightExpression = text.substring(leftIndex + 1, text.length - 1)
       const weight = parseTierAndWeight(weightExpression)
       return {
         tierName,
+        standardTierNames,
         weight,
       }
     } else {
+      const tierName = text.trim()
+      const standardTierNames = shippingTiersMap[tierName]
       return {
-        tierName: text.toLowerCase(),
+        tierName: tierName,
+        standardTierNames,
         weight: {
           value: NaN,
           unit: NotAvailable,
@@ -121,22 +129,23 @@ export function parseShippingWeight(content: string): ShippingWeight[] {
       }
     }
   }
+  // TODO this should be an array
   let roundingUp = empty
   $('tbody tr').each((rowIndex, element) => {
     if (rowIndex === 0) {
-      // TODO this should be an array
       roundingUp = {
         unit: 'lb',
         value: 1,
       }
     } else {
       const [tierElement, shippingWeightElement] = $(element).find('td')
-      const { tierName, weight } = parseExpression($(tierElement).text())
+      const { tierName, standardTierNames, weight } = parseExpression($(tierElement).text())
       const shippingWeight = $($(shippingWeightElement).contents().get(0)).text()
       const useGreater = shippingWeight !== 'Unit weight'
       const roundingUp = {}
       items.push({
         tierName,
+        standardTierNames,
         weight,
         useGreater,
         roundingUp,

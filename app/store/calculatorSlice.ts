@@ -76,17 +76,17 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
 
   if (productTier) {
     const tierIndex = productTier.order
-    const { tierName, minimumMeasureUnit, divisor } = { ...rules.dimensionalWeightRules }
+    const { standardTierNames, minimumMeasureUnit, divisor } = { ...rules.dimensionalWeightRules }
     const dimensionalWeight = calculateDimensionalWeight({
       product: productSize,
       tier: productTier,
-      tierName,
+      standardTierNames,
       minimumMeasureUnit,
       divisor,
     })
     const weight = calculateShippingWeight({
       tierName: productTier.name,
-      wieght: productSize.weight,
+      weight: productSize.weight,
       dimensionalWeight: dimensionalWeight,
       shippingWeights: rules.shippingWeightRules,
     })
