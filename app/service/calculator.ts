@@ -86,40 +86,67 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
       targetTier = tI
     }
   }
+  console.log('determineTier. rule -> ', targetTier)
   return targetTier
 }
 
-export function calculateDimensionalWeight({
-  product,
-  tier,
-  standardTierNames,
-  minimumMeasureUnit,
-  divisor,
-}: {
-  product: IProduct
-  tier: ITier
-  standardTierNames: string[]
-  minimumMeasureUnit: ICalculateUnit
-  divisor: number
-}) {
-  let { length, width, height } = product
+export function calculateDimensionalWeight(
+  product: IProduct,
+  tier: ITier,
+  dimensionalWeightRule: IDimensionalWeightRule
+) {
+  let { length, width, height, weight } = product
   let lengthValue = length.value
   let widthValue = width.value
   let heightValue = height.value
-  // TODO: if the units are not matched, they should be converted.
-  if (
-    standardTierNames.includes(tier.name) &&
-    width.unit === minimumMeasureUnit.unit &&
-    height.unit === minimumMeasureUnit.unit
-  ) {
-    if (!compareWithUnit(product.width, minimumMeasureUnit)) {
-      widthValue = 2
+  let weightValue = weight.value
+  const { volumeConstraints, weightConstraints, divisor } = dimensionalWeightRule
+  if (volumeConstraints)
+    for (const item of volumeConstraints) {
+      if (item.standardTierNames.includes(tier.name)) {
+        if (!compareWithUnit(product.width, item.roundingUpUnit)) {
+          // TODO: if the units are not matched, they should be converted.
+          widthValue = item.roundingUpUnit.value
+          console.log(
+            'calculateDimensionalWeight. rule -> adjust width to ',
+            item.roundingUpUnit.value,
+            ' ',
+            item.roundingUpUnit.unit
+          )
+        }
+        if (!compareWithUnit(product.height, item.roundingUpUnit)) {
+          // TODO: if the units are not matched, they should be converted.
+          heightValue = item.roundingUpUnit.value
+          console.log(
+            'calculateDimensionalWeight. rule -> adjust height to ',
+            item.roundingUpUnit.value,
+            ' ',
+            item.roundingUpUnit.unit
+          )
+        }
+        // It should be matched with only one rule item
+        break
+      }
     }
-    if (!compareWithUnit(product.height, minimumMeasureUnit)) {
-      heightValue = 2
+  if (weightConstraints)
+    for (const item of weightConstraints) {
+      if (item.standardTierNames.includes(tier.name)) {
+        if (!compareWithUnit(product.weight, item.roundingUpUnit)) {
+          // TODO: if the units are not matched, they should be converted.
+          weightValue = item.roundingUpUnit.value
+          console.log(
+            'calculateDimensionalWeight. rule -> adjust weight to ',
+            item.roundingUpUnit.value,
+            ' ',
+            item.roundingUpUnit.unit
+          )
+        }
+        // It should be matched with only one rule item
+        break
+      }
     }
-  }
   let dimensionalWeight = (lengthValue * widthValue * heightValue) / divisor
+  console.log('calculateDimensionalWeight. rule -> divided by ', divisor)
   return dimensionalWeight
 }
 export function calculateShippingWeight({
@@ -150,6 +177,7 @@ export function calculateShippingWeight({
       }
     }
   }
+  console.log('calculateShippingWeight. rule -> ', shippingWeightItem)
   // TODO need return unit
   const v = shippingWeightItem
     ? shippingWeightItem.useGreater
@@ -317,8 +345,6 @@ function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable
 }
 
 export function calculateReferralFee(product: IProductCategory, rules: IReferralFee[]) {
-  // temp handle category
-  product.category = product.categoryName || product.category || ''
   const { price } = product
   let filRule = null
   let refRules = []
@@ -345,7 +371,7 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
     }
   }
   filRule = refRules?.length ? maxOrderRule : otherRule
-  console.log('calculateReferralFee calc rule -> ', refRules, filRule)
+  console.log('ReferralFee -> ', refRules, filRule)
 
   if (filRule === null) {
     return NaN
@@ -369,14 +395,12 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
 }
 
 export function calculateClosingFee(product: IProductCategory, rules?: IClosingRule[]) {
-  // temp handle category
-  product.category = product.categoryName || product.category || ''
   if (!rules) return 0
 
   for (const r of rules) {
     const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null)
     if (calcRes?.length > 0) {
-      console.log('calculateClosingFee calc rule -> ', r, calcRes)
+      console.log('ClosingFee -> ', r, calcRes)
       return r.fee
     }
   }

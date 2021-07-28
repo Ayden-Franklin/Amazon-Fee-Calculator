@@ -27,6 +27,33 @@ export default {
       return output && output === '' ? response : output
     },
   },
+  packaging: {
+    url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
+    extractOriginalContent: (response: string) => {
+      const $ = cheerio.load(response)
+      console.log(cheerio.html($('div.help-content div').find('p:eq(6)')))
+      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
+      return output && output === '' ? response : output
+    },
+    extractContent: (response: string) => {
+      const $ = cheerio.load(response)
+      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
+      return output && output === '' ? response : output
+    },
+  },
+  shipping: {
+    url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
+    extractOriginalContent: (response: string) => {
+      const $ = cheerio.load(response)
+      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
+      return output && output === '' ? response : output
+    },
+    extractContent: (response: string) => {
+      const $ = cheerio.load(response)
+      let output = $('div.help-content div').find('p:last-child').html()
+      return output && output === '' ? response : output
+    },
+  },
   fba: {
     url: 'https://sellercentral.amazon.ca/gp/help/external/201112670',
     extractOriginalContent: (response: string) => {

@@ -86,14 +86,8 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
   const productTier = determineTierByUnit(productSize, tierRules)
 
   if (productTier) {
-    const { standardTierNames, minimumMeasureUnit, divisor } = { ...rules.dimensionalWeightRules }
-    const dimensionalWeight = calculateDimensionalWeight({
-      product: productSize,
-      tier: productTier,
-      standardTierNames,
-      minimumMeasureUnit,
-      divisor,
-    })
+    const dimensionalWeightRule = rules.dimensionalWeightRules
+    const dimensionalWeight = calculateDimensionalWeight(productSize, productTier, dimensionalWeightRule)
     const weight = calculateShippingWeight({
       tierName: productTier.name,
       weight: productSize.weight,
@@ -116,6 +110,8 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
     return null
   }
   const productInput = JSON.parse(JSON.stringify(state.productInput))
+  // temp full category/categoryName
+  productInput.category = productInput.categoryName || productInput.category || ''
 
   const safeNumber = (v: number | Error) => {
     if (typeof v === 'number') {

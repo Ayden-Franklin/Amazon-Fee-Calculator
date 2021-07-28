@@ -27,6 +27,32 @@ export default {
       return cheerio.html(div.find('p:last-child'))
     },
   },
+  packaging: {
+    url: 'https://sellercentral.amazon.com.mx/gp/help/external/201411300?language=en_MX',
+    extractOriginalContent: (response: string) => {
+      const $ = cheerio.load(response)
+      const paragraph = $('.help-content:eq(0)').find('div').find('p:last-child')
+      return cheerio.html(paragraph)
+    },
+    extractContent: (response: string) => {
+      const $ = cheerio.load(response)
+      const paragraph = $('.help-content:eq(0)').find('div').find('p:last-child')
+      return cheerio.html(paragraph)
+    },
+  },
+  shipping: {
+    url: 'https://sellercentral.amazon.com.mx/gp/help/external/201411300?language=en_MX',
+    extractOriginalContent: (response: string) => {
+      const $ = cheerio.load(response)
+      const paragraphs = $('.help-content:eq(0)').find('div').find('p')
+      return cheerio.html(paragraphs.slice(paragraphs.length - 3, paragraphs.length - 1))
+    },
+    extractContent: (response: string) => {
+      const $ = cheerio.load(response)
+      const paragraphs = $('.help-content:eq(0)').find('div').find('p')
+      return cheerio.html(paragraphs.slice(paragraphs.length - 3))
+    },
+  },
   fba: {
     url: 'https://sellercentral.amazon.com.mx/gp/help/external/201411300?language=en_MX',
     extractOriginalContent: (response: string) => {

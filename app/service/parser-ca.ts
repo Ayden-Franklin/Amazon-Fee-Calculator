@@ -133,7 +133,26 @@ export function parseTier(content: string) {
   return tiers
 }
 
-export function parseWeight() {}
+export function parseDimensionalWeight(content: string) {
+  const $ = cheerio.load(content)
+  const divisorText = content.match(/divided by \d+(\.\d+)?/)
+  const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
+  const roundingUpText = content.match(/\d+(\.\d*)? (g|kg) for \S+/)
+  const roundingUpArray = roundingUpText && roundingUpText.length > 0 && roundingUpText[0].split(' ')
+  const minimumWeightValue =
+    minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
+  const minimumWeightUnit = minimumWeightArray && minimumWeightArray.length === 2 ? minimumWeightArray[1] : 'inches'
+  return {
+    tierName: 'oversize', // TODO: parse this name
+    standardTierNames: dimensionalTiersMap.oversize,
+    minimumMeasureUnit: {
+      value: minimumWeightValue,
+      unit: minimumWeightUnit,
+      operator: '>=',
+    },
+    divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2]) : 1,
+  }
+}
 
 export function parseFba() {}
 

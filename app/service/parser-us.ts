@@ -57,13 +57,17 @@ export function parseDimensionalWeight(content: string) {
     minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
   const minimumWeightUnit = minimumWeightArray && minimumWeightArray.length === 2 ? minimumWeightArray[1] : 'inches'
   return {
-    tierName: 'oversize', // TODO: parse this name
-    standardTierNames: dimensionalTiersMap.oversize,
-    minimumMeasureUnit: {
-      value: minimumWeightValue,
-      unit: minimumWeightUnit,
-      operator: '>=',
-    },
+    volumeConstraints: [
+      {
+        tierName: 'oversize', // TODO: parse this name
+        standardTierNames: dimensionalTiersMap.oversize,
+        roundingUpUnit: {
+          value: minimumWeightValue,
+          unit: minimumWeightUnit,
+          operator: '>=',
+        },
+      },
+    ],
     divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2]) : 1,
   }
 }

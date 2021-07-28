@@ -29,7 +29,7 @@ export class MxProfitCalculator implements IProfitCalculator {
     const tier = await loadTierTable(this.currentCountry.code)
     const weight = await loadDimensionalWeightRule(this.currentCountry.code)
     const shipping = await loadShippingWeightRule(this.currentCountry.code)
-    const packaging = 'TODO'
+    const packaging = await loadPackagingRule(this.currentCountry.code)
     const fba = await loadFBATable(this.currentCountry.code)
     const referral = await loadReferralTable(this.currentCountry.code)
     this.content = { tier, weight, packaging, shipping, fba, referral, closing: null }
