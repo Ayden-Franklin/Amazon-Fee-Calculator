@@ -294,7 +294,7 @@ function calcReferralCategory(product: IProductCategory, rule: IReferralFee): Nu
   }
 
   let results: ICalcCategoryResult[] = []
-  let excludingCategories = [rule.category, ...rule.excludingCategories]
+  let excludingCategories = [...rule.excludingCategories]
   excludingCategories.forEach((c) => {
     const res = calcCategory(c)
     if (res) {

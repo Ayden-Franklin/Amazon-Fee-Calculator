@@ -35,7 +35,7 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     homegarden: [{ name: 'Patio, Lawn & Garden', order: 1 }],
     kitchen: [{ name: 'Kitchen & Dining', order: 1 }],
     compactappliances: [
-      { name: 'Small Appliances', order: 1 },
+      { name: 'Small Appliances', order: 2 },
       { name: 'Compact Appliances', order: 1 },
     ],
     mattresses: [{ name: 'Mattresses', order: 2 }],
@@ -90,6 +90,7 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     watches: [{ name: 'Watches', order: 1 } /** , 'Smartwatches' */],
     // Full-Size Appliances -> laundryappliances & refrigerationappliances & dishwashers & cookingappliances
     refrigerationappliances: [{ name: 'Refrigerators', order: 2 }],
+    cookingappliances: [{ name: 'Ranges, Ovens & Cooktops', order: 1 }],
   },
 }
 
