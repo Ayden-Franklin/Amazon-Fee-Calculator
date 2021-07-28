@@ -14,7 +14,7 @@ declare interface Country {
 }
 declare interface IRuleContent {
   tier: string
-  weight: string
+  dimensionalWeight: string
   packaging: Nullable<string>
   shipping: string
   fba: string

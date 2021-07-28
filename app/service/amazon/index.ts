@@ -52,7 +52,7 @@ export function loadTierTable(countryCode: string): Promise<string> {
 }
 
 export function loadDimensionalWeightRule(countryCode: string): Promise<string> {
-  return loadContent(countryCode, 'weight')
+  return loadContent(countryCode, 'dimensionalWeight')
 }
 
 export function loadShippingWeightRule(countryCode: string): Promise<string> {

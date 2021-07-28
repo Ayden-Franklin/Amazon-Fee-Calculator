@@ -14,7 +14,7 @@ export default {
       return result
     },
   },
-  weight: {
+  dimensionalWeight: {
     url: 'https://sellercentral.amazon.ca/gp/help/external/G201112650',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
@@ -31,7 +31,6 @@ export default {
     url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
-      console.log(cheerio.html($('div.help-content div').find('p:eq(6)')))
       let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
       return output && output === '' ? response : output
     },

@@ -14,7 +14,7 @@ export default {
       return cheerio.html(div.children().splice(0, 9))
     },
   },
-  weight: {
+  dimensionalWeight: {
     url: 'https://sellercentral.amazon.com.mx/gp/help/external/201411300?language=en_MX',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)

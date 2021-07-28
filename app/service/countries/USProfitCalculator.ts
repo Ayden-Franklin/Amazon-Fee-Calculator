@@ -22,7 +22,7 @@ export class UsProfitCalculator implements IProfitCalculator {
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for US',
-      weight: 'Loading tier content for US',
+      dimensionalWeight: 'Loading tier content for US',
       packaging: 'Loading package content for US',
       shipping: 'Loading shipping content for US',
       fba: 'Loading tier content for US',
@@ -33,18 +33,18 @@ export class UsProfitCalculator implements IProfitCalculator {
   }
   async fetchRuleContent() {
     const tier = await loadTierTable(this.currentCountry.code)
-    const weight = await loadDimensionalWeightRule(this.currentCountry.code)
+    const dimensionalWeight = await loadDimensionalWeightRule(this.currentCountry.code)
     const shipping = await loadShippingWeightRule(this.currentCountry.code)
     const fba = await loadFBATable(this.currentCountry.code)
     const referralRule = await loadReferralTable(this.currentCountry.code)
     const referralSub = await loadReferralSubRule(this.currentCountry.code)
     const referral = referralSub !== null ? { rule: referralRule, ...referralSub } : referralRule
     const closing = await loadClosingFee(this.currentCountry.code)
-    this.content = { tier, weight, packaging: null, shipping, fba, referral, closing }
+    this.content = { tier, dimensionalWeight, packaging: null, shipping, fba, referral, closing }
   }
   parseRule() {
     const tierRules = parseTier(this.content.tier)
-    const dimensionalWeightRules = parseDimensionalWeight(this.content.weight)
+    const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
     const fbaRules = parseFba(this.content.fba)
     // referral maybe string or object
@@ -57,7 +57,6 @@ export class UsProfitCalculator implements IProfitCalculator {
     return {
       tierRules,
       dimensionalWeightRules,
-      packageRules: null,
       shippingWeightRules,
       fbaRules,
       referralRules,

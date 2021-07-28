@@ -6,7 +6,7 @@ export class UkProfitCalculator implements IProfitCalculator {
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for United Kingdom',
-      weight: 'Loading weight content for United Kingdom',
+      dimensionalWeight: 'Loading weight content for United Kingdom',
       packaging: 'Loading package content for United Kingdom',
       shipping: 'Loading shipping content for United Kingdom',
       fba: 'Loading fba content for United Kingdom',

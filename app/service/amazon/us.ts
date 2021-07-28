@@ -14,7 +14,7 @@ export default {
       return result
     },
   },
-  weight: {
+  dimensionalWeight: {
     url: 'https://sellercentral.amazon.com/gp/help/external/G53Z9EKF8VVZVH29',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)

@@ -11,7 +11,7 @@ import Calculator from '@src/renderer/components/calculator'
 import RuleTypePage from '@src/renderer/components/rule-type-page'
 const SECTIONS = [
   { title: 'Tiers', url: 'tier' },
-  { title: 'Dimensional weight', url: 'weight' },
+  { title: 'Dimensional weight', url: 'dimensionalWeight' },
   { title: 'Packaging weight', url: 'packaging' },
   { title: 'Shipping weight', url: 'shipping' },
   { title: 'FBA Fee', url: 'fba' },

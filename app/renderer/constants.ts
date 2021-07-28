@@ -289,7 +289,7 @@ export enum StateStatus {
 export const InitializedStateSlice = {
   content: {
     tier: 'Content has not been initialized',
-    weight: 'Content has not been initialized',
+    dimensionalWeight: 'Content has not been initialized',
     packaging: 'Content has not been initialized',
     shipping: 'Content has not been initialized',
     fba: 'Content has not been initialized',

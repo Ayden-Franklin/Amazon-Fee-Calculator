@@ -47,7 +47,7 @@ export function parseTier(content: string) {
 const dimensionalTiersMap: Record<string, Array<string>> = {
   oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
 }
-export function parseDimensionalWeight(content: string) {
+export function parseDimensionalWeight(content: string): IDimensionalWeightRule {
   const $ = cheerio.load(content)
   const divisorText = content.match(/divided by \d+(\.\d+)?/)
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
@@ -500,12 +500,12 @@ function parseReferralSubItem(content: string) {
     .find('li')
     .each((_, element) => {
       const desc = $(element).find('span').text()
-      const array = desc.match(/(\d+(,\d+)?(\.\d*)?)/g)
+      const array = desc.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
       if (array && array?.length > 1) {
         let rate = parseInt(array[0], 10) / 100
-        let priceV1 = parseFloat(array[1].replace(',', ''))
-        let priceV2 = parseFloat(array[2]?.replace(',', ''))
+        let priceV1 = parseFloat(array[1].replaceAll(',', ''))
+        let priceV2 = parseFloat(array[2]?.replaceAll(',', ''))
         // console.log('array', array, priceV1, priceV2)
 
         const lastRate = rateItems.length && rateItems[rateItems.length - 1]

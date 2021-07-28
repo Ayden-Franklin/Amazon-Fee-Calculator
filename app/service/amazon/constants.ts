@@ -9,7 +9,7 @@ interface CountryItemValue {
   extractContent: (response: string) => string | null
 }
 
-export type CountryItemKey = 'tier' | 'weight' | 'shipping' | 'packaging' | 'fba' | 'referral' | 'closing'
+export type CountryItemKey = 'tier' | 'dimensionalWeight' | 'shipping' | 'packaging' | 'fba' | 'referral' | 'closing'
 
 export type Country = Record<CountryItemKey, CountryItemValue>
 

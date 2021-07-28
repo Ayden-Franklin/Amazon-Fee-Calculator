@@ -1,36 +1,5 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
-export function parseTiers_old(content: string) {
-  const $ = cheerio.load(content)
-  let names: string[] = []
-  let weightRule: number[] = []
-  let volumeRule: number[][] = []
-  let lengthGirthRule: number[] = []
-  $('tbody tr').each((rowIndex, element) => {
-    volumeRule.push([])
-    $(element)
-      .find('td')
-      .each((index, element) => {
-        if (index === 0) {
-          names.push($(element).find('strong').text().trim())
-        } else if (index === 1) {
-          weightRule.push(parseFloat($(element).text()))
-        } else if (index === 5) {
-          lengthGirthRule.push(parseFloat($(element).text()))
-        } else {
-          volumeRule[rowIndex][index - 2] = parseFloat($(element).text())
-        }
-      })
-  })
-  return {
-    tierNames: names,
-    weightRule: weightRule,
-    volumeRule: volumeRule,
-    lengthGirthRule: lengthGirthRule,
-    dimensionUnit: 'cm',
-    weightUnit: 'lb',
-  }
-}
 
 export function parseTier(content: string) {
   const empty = { value: NaN, unit: NotAvailable }
@@ -132,25 +101,37 @@ export function parseTier(content: string) {
   }
   return tiers
 }
-
+const dimensionalWeightTiersMap: Record<string, Array<string>> = {
+  Envelope: ['Envelope'],
+  Standard: ['Standard-Size'],
+}
 export function parseDimensionalWeight(content: string) {
-  const $ = cheerio.load(content)
-  const divisorText = content.match(/divided by \d+(\.\d+)?/)
+  const empty = { value: NaN, unit: NotAvailable }
+  const parseExpression = (text: string): { tierName: string; roundingUpUnit: ICalculateUnit } | undefined => {
+    const values = text.split(' ')
+    if (values.length < 4) return
+    const value = parseFloat(values[0])
+    const unit = values[1]
+    const operator = '>='
+    return { tierName: values[3] as string, roundingUpUnit: { value, operator, unit } }
+  }
+  const weightConstraints: IDimensionalWeightConstraint[] = []
+  const divisorText = content.match(/divided by \d+(,\d+)*(\.\d+)?/)
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
-  const roundingUpText = content.match(/\d+(\.\d*)? (g|kg) for \S+/)
-  const roundingUpArray = roundingUpText && roundingUpText.length > 0 && roundingUpText[0].split(' ')
-  const minimumWeightValue =
-    minimumWeightArray && minimumWeightArray.length === 2 ? parseFloat(minimumWeightArray[0]) : 0
-  const minimumWeightUnit = minimumWeightArray && minimumWeightArray.length === 2 ? minimumWeightArray[1] : 'inches'
+  const roundingUpArray = content.match(/\d+(\.\d*)? (g|kg) for \S+/g)
+  if (roundingUpArray && roundingUpArray.length > 0) {
+    for (const text of roundingUpArray) {
+      const item = parseExpression(text)
+      if (item) {
+        const tierName = item.tierName
+        const standardTierNames = dimensionalWeightTiersMap[tierName]
+        weightConstraints.push({ tierName, standardTierNames, roundingUpUnit: item.roundingUpUnit })
+      }
+    }
+  }
   return {
-    tierName: 'oversize', // TODO: parse this name
-    standardTierNames: dimensionalTiersMap.oversize,
-    minimumMeasureUnit: {
-      value: minimumWeightValue,
-      unit: minimumWeightUnit,
-      operator: '>=',
-    },
-    divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2]) : 1,
+    weightConstraints,
+    divisor: divisorArray && divisorArray.length === 3 ? parseFloat(divisorArray[2].replaceAll(',', '')) : 1,
   }
 }
 
