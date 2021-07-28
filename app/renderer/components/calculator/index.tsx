@@ -404,10 +404,10 @@ function Calculator() {
                 </Grid>
                 <Grid item xs={5} />
               </Grid>
-              {productInput.imageurl && productInput.asin && (
+              {productInput.imageUrl && productInput.asin && (
                 <Grid container item spacing={4} xs={5} className={classes.root} justify="center">
                   <Grid item xs={6}>
-                    <img src={productInput.imageurl} width="100%" />
+                    <img src={productInput.imageUrl} width="100%" />
                   </Grid>
                   <Grid item xs={6}>
                     <TextField name="asin" fullWidth id="asin" disabled value={productInput.asin} label="ASIN" />

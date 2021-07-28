@@ -55,7 +55,7 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     toysgames: [{ name: 'Toys & Games', order: 0 }],
     videodvd: [{ name: 'Movies & TV', order: 1 }],
     // Video Game -> Controllers
-    videogameconsoles: [{ name: 'Controllers', require: ['Video Games'], order: 2 }],
+    videogameconsoles: [{ name: 'Consoles', require: ['Video Games'], order: 2 }],
     // Categories requiring approval TODO
     '3dprintedproducts': [
       { name: 'Additive Manufacturing Products', order: 1 },

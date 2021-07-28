@@ -98,7 +98,13 @@ declare interface IShippingWeight {
   roundingUp: IMeasureUnit
 }
 
-declare interface IRule {
+declare interface IClosingRule {
+  categories: string[]
+  fee: number
+  desc?: string
+}
+
+declare interface IRuleCollection {
   tierRules?: ITier[]
   dimensionalWeightRules?: {
     tierName: string
@@ -108,10 +114,7 @@ declare interface IRule {
   }
   packageRules?: any
   shippingWeightRules?: IShippingWeight[]
-  fbaRule?: FbaRuleItem[]
-  referralRule?: IReferralFee[]
-  closingRule?: {
-    categories: string[]
-    fee: number
-  }
+  fbaRules?: IFbaRuleItem[]
+  referralRules?: IReferralFee[]
+  closingRules?: IClosingRule[]
 }
