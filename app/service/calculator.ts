@@ -407,3 +407,24 @@ export function calculateClosingFee(product: IProductCategory, rules?: IClosingR
 
   return 0
 }
+export function calcApparelByCategory(product: IProductCategory, rules?: IApparelRule[]): boolean {
+  if (!rules || !product) return false
+  if (product?.breadcrumbTree) {
+    const compValues = rules.map((c) => ({
+      name: minify(c.matchCategory),
+      require: c.requireParent?.map((rc) => minify(rc)),
+    }))
+    const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
+    const fitByCategory = compValues.filter((c) => {
+      if (c.require) {
+        return c.require.every((rc) => mifyCategories.includes(rc)) && mifyCategories.includes(c.name)
+      }
+      return mifyCategories.includes(c.name)
+    })
+    if (fitByCategory.length) {
+      console.log('ApparelByCategory -> ', fitByCategory)
+      return true
+    }
+  }
+  return false
+}

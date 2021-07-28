@@ -7,6 +7,7 @@ import {
   calculateFbaFee,
   calculateReferralFee,
   calculateClosingFee,
+  calcApparelByCategory,
   toProductTier,
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
@@ -144,6 +145,14 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
     net: numberFix2(state.productInput.price - (state.productInput.cost ?? 0) - fbaFee - referralFee - closingFee),
   }
 }
+function calcApparelCategory(productInput: Undefinedable<ProductInput>, ruleCollection: IRuleCollection): boolean {
+  if (!productInput) return false
+  // temp full category/categoryName
+  const product = productInput ? JSON.parse(JSON.stringify(productInput)) : {}
+  product.category = product.categoryName || product.category || ''
+
+  return calcApparelByCategory(product, ruleCollection.apparelRules)
+}
 
 function smoothFileds(obj: any, fileds: string[]) {
   for (const key of fileds) {
@@ -175,13 +184,17 @@ const calculatorSlice = createSlice({
         'price',
         'cost',
       ])
-      const tierAndWeight = calculateProductSize(productInput, action.payload)
+      const rules = action.payload
+      const tierAndWeight = calculateProductSize(productInput, rules)
       if (tierAndWeight) {
         const [tier, weight] = tierAndWeight
         state.tier = tier
         state.shippingWeight = weight
       }
-      const fees = startToEstimate(state, action.payload)
+      if (state.productInput) {
+        state.productInput.isApparel = calcApparelCategory(productInput, rules)
+      }
+      const fees = startToEstimate(state, rules)
       if (fees) {
         state.productFees = fees
       }

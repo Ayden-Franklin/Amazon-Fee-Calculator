@@ -44,6 +44,16 @@ export default {
   },
   fba: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP',
+    sub: {
+      apparel: {
+        url: 'https://sellercentral.amazon.com/gp/help/external/G2FXDS3YCWLFY4TK',
+        extractOriginalContent: (response: string) => {
+          const $ = cheerio.load(response)
+          let output = $('div.help-content').find('ul').html()
+          return output
+        },
+      },
+    },
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
       let result = ''

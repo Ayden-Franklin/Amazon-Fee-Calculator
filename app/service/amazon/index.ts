@@ -70,13 +70,13 @@ export function loadReferralTable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'referral')
 }
 
-export function loadReferralSubRule(countryCode: string): Promise<Nullable<Record<string, string>>> {
+export function loadSubRule(countryCode: string, field: CountryItemKey): Promise<Nullable<Record<string, string>>> {
   if (!countryCode || !Constants[countryCode]) {
     return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
 
-  const rq = Constants[countryCode].referral
-  const sub = rq.sub
+  const rq = Constants[countryCode]?.[field]
+  const sub = rq?.sub
 
   if (!sub) return Promise.resolve(null)
 

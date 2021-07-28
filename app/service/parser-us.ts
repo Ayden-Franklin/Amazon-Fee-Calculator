@@ -547,3 +547,27 @@ export function parseClosing(content: Nullable<string>): IClosingRule[] {
     },
   ]
 }
+
+export function parseApparel(content: Nullable<string>): IApparelRule[] {
+  if (!content) return []
+  /**
+   * TODO
+    <li>
+      <span class="a-list-item">Wearable clothing items and accessories such as belts, ties, socks, hats, scarfs, ear muffs, and gloves </span>
+    </li>
+    <li>
+      <span class="a-list-item">Adult and children’s costumes and accessories such as masks and ear coverings </span>
+    </li>
+    <li>
+      <span class="a-list-item">Baby apparel </span>
+    </li>
+    <li>
+      <span class="a-list-item">Sports activewear such as running socks, yoga pants, and sports uniforms</span>
+    </li>
+   * 
+   */
+  return [
+    { matchCategory: 'Clothing', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Clothing', requireParent: ['Sports & Outdoors'] },
+  ]
+}

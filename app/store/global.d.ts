@@ -17,7 +17,7 @@ declare interface IRuleContent {
   dimensionalWeight: string
   packaging: Nullable<string>
   shipping: string
-  fba: string
+  fba: Or<string, StringRecord>
   referral: Or<string, StringRecord>
   closing: Nullable<string>
 }
@@ -110,6 +110,11 @@ declare interface IClosingRule {
   desc?: string
 }
 
+declare interface IApparelRule {
+  requireParent: Array<string>
+  matchCategory: string
+}
+
 declare interface IRuleCollection {
   tierRules?: ITier[]
   dimensionalWeightRules?: IDimensionalWeightRule
@@ -118,4 +123,5 @@ declare interface IRuleCollection {
   fbaRules?: IFbaRuleItem[]
   referralRules?: IReferralFee[]
   closingRules?: IClosingRule[]
+  apparelRules?: IApparelRule[]
 }

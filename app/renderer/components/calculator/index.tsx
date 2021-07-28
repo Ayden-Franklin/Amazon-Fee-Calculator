@@ -234,6 +234,7 @@ function Calculator() {
                   <FormControlLabel
                     control={
                       <Checkbox
+                        disabled
                         checked={productInput?.isApparel}
                         onChange={onChangeProductInput('isApparel', (event) => event.target.checked)}
                         name="checkedB"
