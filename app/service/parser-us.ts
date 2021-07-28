@@ -519,7 +519,9 @@ function parseReferralSubItem(content: string) {
 
   return rateItems
 }
-export function parseClosing(content: string) {
+export function parseClosing(content: Nullable<string>): IClosingRule[] {
+  if (!content) return []
+
   const $ = cheerio.load(content)
   const table = $('.help-content:eq(1)')
   const p = $(table).find('div p')
@@ -534,8 +536,10 @@ export function parseClosing(content: string) {
   if (names[names.length - 1].indexOf('and') > -1) {
     names[names.length - 1] = names[names.length - 1].substring(4)
   }
-  return {
-    categories: names,
-    fee: parseFloat(fee.substring(1)),
-  }
+  return [
+    {
+      categories: names,
+      fee: parseFloat(fee.substring(1)),
+    },
+  ]
 }
