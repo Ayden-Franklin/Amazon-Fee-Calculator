@@ -115,10 +115,7 @@ declare interface IRuleCollection {
   dimensionalWeightRules?: IDimensionalWeightRule
   packagingRules?: IPackagingWeight[]
   shippingWeightRules?: IShippingWeight[]
-  fbaRule?: IFbaRuleItem[]
-  referralRule?: IReferralFee[]
-  closingRule?: {
-    categories: string[]
-    fee: number
-  }
+  fbaRules?: IFbaRuleItem[]
+  referralRules?: IReferralFee[]
+  closingRules?: IClosingRule[]
 }
