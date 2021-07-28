@@ -163,45 +163,42 @@ export function calculateShippingWeight({
 }
 
 interface FbaParameter {
-  tierData: TierData
   tierName: string
-  weightRule: number[]
-}
-export function calculateFbaFee(
-  tierName: string,
-  shippingWeight: IMeasureUnit,
-  isApparel: boolean,
-  isDangerous: boolean,
+  shippingWeight: IMeasureUnit
+  isApparel: boolean
+  isDangerous: boolean
   rules: IFbaRuleItem[]
-): number | Error {
-  let fbaRuleItem: IFbaRuleItem
+}
+export function calculateFbaFee({
+  tierName,
+  shippingWeight,
+  isApparel,
+  isDangerous,
+  rules,
+}: FbaParameter): number | Error {
   for (const ruleItem of rules) {
-    if (tierName === ruleItem.tierName && (ruleItem.isApparel === NotAvailable || isApparel === ruleItem.isApparel) && isDangerous === ruleItem.isDangerous){
-      fbaRuleItem = ruleItem
-      break
-    }
-  }
-  if (fbaRuleItem) {
-    const items: IFulfillmentItem[] = fbaRuleItem.items
-    let item
-    for (const element of items) {
-      let target = element.maximumShippingWeight.value
-      // TODO: handle unit conversion
-      if (element.maximumShippingWeight.unit === 'oz') {
-        target /= 16
-      }
-      if (shippingWeight.value > target) {
-        continue
-      } else {
-        item = element
-        break
+    if (
+      tierName === ruleItem.tierName &&
+      (ruleItem.isApparel === NotAvailable || isApparel === ruleItem.isApparel) &&
+      isDangerous === ruleItem.isDangerous
+    ) {
+      const items: IFulfillmentItem[] = ruleItem.items
+      for (const element of items) {
+        let target = element.maximumShippingWeight.value
+        // TODO: handle unit conversion
+        if (element.maximumShippingWeight.unit === 'oz') {
+          target /= 16
+        }
+        if (shippingWeight.value > target) {
+          continue
+        } else {
+          return element.firstWeightFee + (shippingWeight.value - 1) * element.additionalUnitFee
+        }
       }
     }
-    return item.firstWeightFee + (shippingWeight.value - 1) * item.additionalUnitFee
-  } else {
-    // Not match any rule?
-    return NaN
   }
+  // Not match any rule?
+  return NaN
 }
 
 // function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean) {

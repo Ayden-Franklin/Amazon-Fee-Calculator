@@ -154,7 +154,10 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
   })
   return items
 }
-const fbaProductTiersMap: Record<string, Record<string, { tierName: string, isApparel: boolean | NotAvailable, isDangerous: boolean}>> = {
+const fbaProductTiersMap: Record<
+  string,
+  Record<string, { tierName: string; isApparel: boolean | typeof NotAvailable; isDangerous: boolean }>
+> = {
   'Most products (non-dangerous goods, non-apparel)': {
     'Small standard': {
       tierName: 'Small standard-size',
@@ -248,22 +251,12 @@ export function parseFba(content: string) {
   let currentProductTierKey: string
   const rows = $('.help-table tbody tr')
   rows.each((rowIndex, tr) => {
-    console.log('handle row: ', rowIndex)
     const cells = $(tr)
       .find('td')
       .map((_, cell): string => $(cell).text())
-    // console.log('row ', rowIndex, ' cells = ', cells)
-    let firstWeightFee: number
-    let firstWeightAmount: number
-    let additionalUnitFee: number
     const [column1, column2, column3, column4] = cells
-    // console.log('column 1 = ', column1)
-    // console.log('column 2 = ', column2)
-    // console.log('column 3 = ', column3)
-    // console.log('column 4 = ', column4)
     if (column1 !== 'Product type') {
       if (column3 && currentProductTypeKey && currentProductTierKey) {
-        console.log('One Product type finished. need to push')
         const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
         fbaRuleItems.push({
           ...tierData,
@@ -319,190 +312,6 @@ export function parseFba(content: string) {
     }
   })
   return fbaRuleItems
-}
-export function parseFba_old(content: string) {
-  const determineTier = (productType: string, sizeTierName: string) => {
-    return fbaProductTiersMap[productType][sizeTierName]
-  }
-  const $ = cheerio.load(content)
-
-  let fbaRuleItems: IFbaRuleItem[] = []
-  $('.help-table').each((tableIndex, e) => {
-    let rowSpan: number[] = []
-    let rowColumnSkipFlag: number[] = []
-
-    // if (tableIndex === 0) {
-    //   ruleName = 'standard'
-    // } else if (tableIndex === 1) {
-    //   ruleName = 'oversize'
-    // }
-    // let productTierMap: {
-    //   [key: string]: ProductTierItem[]
-    // }
-    // let productTypeMap: Record<string, Record<string, FulfillmentItem[]>> = {}
-    // fbaRule[ruleName] = productTypeMap
-    let fulfillmentItems: IFulfillmentItem[] = []
-    let currentProductTypeKey: string
-    let currentProductTierKey: string
-    $(e)
-      .find('tr')
-      .each((rowIndex, tr) => {
-        let offset = 0
-        let shippingWeight: string
-        let fulfillmentFee: string
-        let minimumShippingWeight: ICalculateUnit
-        let maximumShippingWeight: ICalculateUnit
-        let firstWeightFee: number
-        let firstWeightAmount: number
-        let additionalUnitFee: number
-        
-        if (rowIndex > 1) {
-          $(tr)
-            .find('td')
-            .each((index, element) => {
-              console.log('============== begin to parse fba cell, row: ', rowIndex, 'column', index)
-              let columnIndex = index
-              if (index === 0) {
-                for (let i = 0; i < rowSpan.length; i++) {
-                  if (rowColumnSkipFlag[i] !== rowSpan[i] - 1) {
-                    offset++
-                    columnIndex++
-                    // console.log('Adjust the offset and column index to ', columnIndex)
-                  }
-                }
-              } else if (offset > 0) {
-                for (let i = 0; i < offset; i++) {
-                  columnIndex++
-                  // console.log('Adjust the column index to ', columnIndex)
-                }
-              }
-              // if (rowColumnSkipFlag[columnIndex] < rowSpan[columnIndex]) {
-              //   columnIndex++
-              //   console.log('Adjust the column index to ', columnIndex)
-              // }
-              if (element.attribs['rowspan']) {
-                // console.log('Important ---------, original column ', index, ' rowColumnSkipFlag[columnIndex] < rowSpan[columnIndex]', rowColumnSkipFlag[columnIndex] < rowSpan[columnIndex])
-                // console.log('rowColumnSkipFlag current:', rowColumnSkipFlag.toString())
-                // console.log('rowSpan current:', rowSpan.toString())
-                // console.log('row', rowIndex, ' column', columnIndex, ' Has row span', parseInt(element.attribs['rowspan'], 10))
-                rowSpan[columnIndex] = parseInt(element.attribs['rowspan'], 10)
-                // console.log(' set rowSpan for column ', columnIndex, ' as ', rowSpan[columnIndex])
-                rowColumnSkipFlag[columnIndex] = 0
-                // console.log(' set rowColumnSkipFlag for column ', columnIndex, ' as 0')
-                // console.log('Now rowSpan :', rowSpan.toString())
-                // console.log('Now rowColumnSkipFlag :', rowColumnSkipFlag.toString())
-                // if (columnIndex === 0) {
-                //   // console.log('One productTierMap finished. reset it')
-                //   fbaRuleItem = {}
-                // }
-                if (columnIndex === 0) {
-                  console.log('One Product type finished. no need to reset')
-                } else if (columnIndex === 1 && fulfillmentItems.length > 0) {
-                  console.log('One tier finished. push this item ', currentProductTierKey, ' to a type.  reset it')
-                  // const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
-                  // fbaRuleItems.push({
-                  //   ...tierData,
-                  //   items: fulfillmentItems,
-                  // })
-                  // fulfillmentItems = []
-                }
-              }
-              // if (rowColumnSkipFlag.length >= index + 1) {
-              if (index === 0) {
-                for (let i = 0; i < columnIndex - index; i++) {
-                  // console.log(' rowColumnSkipFlag for column ', columnIndex - index, ' increase. The result is', rowColumnSkipFlag.toString())
-                  rowColumnSkipFlag[i]++
-                  // console.log(' rowColumnSkipFlag for column ', i, ' increase. The result is', rowColumnSkipFlag.toString())
-                }
-                // console.log(' rowColumnSkipFlag for column ', index, ' increase as', rowColumnSkipFlag.toString())
-              }
-              if (columnIndex === 0) {
-                // console.log('check rowColumnSkipFlag === 0 for row', rowIndex, ' column ', columnIndex, 'it is for  productType', rowColumnSkipFlag[columnIndex] === 0)
-                if (rowColumnSkipFlag[columnIndex] === 0) {
-                  // console.log('Find Product Type: ', $(element).find('strong').text())
-                  // names.push($(element).find('strong').text())
-                  currentProductTypeKey = $(element).find('strong').text()
-                }
-              } else if (columnIndex === 1) {
-                // console.log('check rowColumnSkipFlag ', 'row', rowIndex, ' column', columnIndex, 'it is for  sizeTiers', rowColumnSkipFlag[columnIndex] === 0)
-                // console.log('Find Size Tier: ', $(element).text())
-                // sizeTiers.push($(element).text())
-                if (fulfillmentItems.length > 0) {
-                  console.log('&&&&&&&&&&&&&&&&&&&&&&Finished a tier, should insert here -------', currentProductTypeKey, ' , ', currentProductTierKey)
-                  const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
-                  fbaRuleItems.push({
-                    ...tierData,
-                    items: fulfillmentItems,
-                  })
-                }
-                fulfillmentItems = []
-                currentProductTierKey = $(element).text()
-              } else if (columnIndex === 2) {
-                // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
-                // shippingWeight.push($(element).text())
-                shippingWeight = $(element).text()
-                const result = parseShippingCell(shippingWeight)
-                // [minimumShippingWeight, maximumShippingWeight] = result
-                minimumShippingWeight = result[0]
-                maximumShippingWeight = result[1]
-              } else if (columnIndex === 3) {
-                // console.log('get the text at ', 'row', rowIndex, ' column', columnIndex, '=============== value', $(element).text())
-                // fulfillmentFee.push($(element).text())
-                fulfillmentFee = $(element).text()
-                const result = parseFulfillmentFeePerUnit(fulfillmentFee)
-                // volumeRule[rowIndex][index - 2] = parseFloat($(element).text())
-                // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
-                firstWeightAmount = result[0]
-                firstWeightFee = result[1]
-                additionalUnitFee = result[2]
-              }
-            })
-          console.log(' Finished a row: ')
-          console.log('                 currentProductTypeKey = ', currentProductTypeKey)
-          console.log('                 currentProductTierKey = ', currentProductTierKey)
-          console.log('                 shippingWeight = ', shippingWeight)
-          console.log('                 fulfillmentFee = ', fulfillmentFee)
-          const fulfillmentItem: IFulfillmentItem = {
-            shippingWeight: shippingWeight,
-            fee: fulfillmentFee,
-            minimumShippingWeight,
-            maximumShippingWeight,
-            firstWeightAmount,
-            firstWeightFee,
-            additionalUnitFee,
-          }
-          // if (!productTierMap[currentProductTierKey]) {
-          //   const value: FulfillmentItem[] = []
-          //   productTierMap[currentProductTierKey] = value
-          // }
-          
-          console.log(' push an item', fulfillmentItem, ' to ', currentProductTierKey)
-          fulfillmentItems.push(fulfillmentItem)
-          // productTierMap[currentProductTierKey].push(fulfillmentItem)
-
-          // if (!productTypeMap[currentProductTypeKey]) {
-          //   // productTierMap = new Map()
-          //   productTypeMap[currentProductTypeKey] = []
-          // }
-          // // console.log(' push a productTierMap', productTierMap, ' to ', currentProductTypeKey)
-          // productTypeMap[currentProductTypeKey] = productTierMap
-        }
-      })
-    // push the last element
-    console.log('last One tier finished. push this item ', currentProductTierKey, ' to a type.  reset it', currentProductTypeKey, ' , ', currentProductTierKey)
-                  const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
-                  fbaRuleItems.push({
-                    ...tierData,
-                    items: fulfillmentItems,
-                  })
-                  fulfillmentItems = []
-    console.log(fbaRuleItems)
-  })
-  // console.log(fbaRule)
-  return {
-    // standard: fbaRule.standard,
-    // oversize: fbaRule.oversize,
-  }
 }
 function parseShippingCell(content: string): ICalculateUnit[] {
   const array = content.match(/\d+|oz|lb/g)

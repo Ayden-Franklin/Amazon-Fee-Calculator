@@ -86,7 +86,6 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
   const productTier = determineTierByUnit(productSize, tierRules)
 
   if (productTier) {
-    const tierIndex = productTier.order
     const { standardTierNames, minimumMeasureUnit, divisor } = { ...rules.dimensionalWeightRules }
     const dimensionalWeight = calculateDimensionalWeight({
       product: productSize,
@@ -106,13 +105,13 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
 }
 function startToEstimate(state, rules: any): Nullable<ProductFees> {
   if (!state.tier || !state.productInput || !state.productInput.categoryName || !state.shippingWeight) return null
-  const fbaFee = calculateFbaFee(
-    state.tier.name,
-    state.shippingWeight,
-    state.productInput.isApparel,
-    state.productInput.isDangerous,
-    rules.fbaRules
-  )
+  const fbaFee = calculateFbaFee({
+    tierName: state.tier.name,
+    shippingWeight: state.shippingWeight,
+    isApparel: state.productInput.isApparel,
+    isDangerous: state.productInput.isDangerous,
+    rules: rules.fbaRules
+  })
   const referralFee = calculateReferralFee(JSON.parse(JSON.stringify(state.productInput)), rules.referralRules)
   const closingFee = calculateClosingFee(state.productInput.categoryName, rules.closingRules)
   return {
