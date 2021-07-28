@@ -18,7 +18,7 @@ import Container from '@material-ui/core/Container'
 import { useSelector } from 'react-redux'
 import { StateStatus } from '@src/renderer/constants'
 import { getCategoryByCountryCode } from '@src/renderer/constants'
-import { fetchRuleContent } from '@src/store/rulesSlice'
+import { fetchRuleContent } from '@src/store/assetSlice'
 import {
   selectCalculator,
   changeLoadStatus,
@@ -66,8 +66,8 @@ function Calculator() {
   const dispatch = useAppDispatch()
   const country = useAppSelector((state) => state.country)
   // const [initialized, setInitialized] = useState(false)
-  const loadStatus = useAppSelector((state) => state.rules.status)
-  const error = useAppSelector((state) => state.rules.error)
+  const loadStatus = useAppSelector((state) => state.asset.status)
+  const error = useAppSelector((state) => state.asset.error)
   const [initialized, setInitialized] = useState(loadStatus === StateStatus.Succeeded)
   const calculatorStore = useSelector(selectCalculator)
 

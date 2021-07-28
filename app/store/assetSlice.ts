@@ -7,7 +7,7 @@ import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfi
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { StateSlice } from '@src/types'
 interface RulesState extends StateSlice {
-  rule?: IRule
+  ruleCollection?: IRule
 }
 const initialState: RulesState = InitializedStateSlice
 
@@ -23,7 +23,7 @@ export const fetchRuleContent = createAsyncThunk('rules/fetchRuleContent', async
 })
 
 const rulesSlice = createSlice({
-  name: 'rules',
+  name: 'asset',
   initialState,
   reducers: {
     setCountry: (state, action: PayloadAction<Country>) => {
@@ -31,7 +31,7 @@ const rulesSlice = createSlice({
       state.status = StateStatus.Idle
       state.content = InitializedStateSlice.content
       delete state.error
-      delete state.rule
+      delete state.ruleCollection
       switch (state.currentCountry.code) {
         case 'ca':
           profitCalculator = new CaProfitCalculator({ ...state.currentCountry })
@@ -55,7 +55,7 @@ const rulesSlice = createSlice({
       .addCase(fetchRuleContent.fulfilled, (state, action) => {
         state.status = StateStatus.Succeeded
         state.content = action.payload
-        state.rule = profitCalculator.parseRule()
+        state.ruleCollection = profitCalculator.parseRule()
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
         state.status = StateStatus.Failed

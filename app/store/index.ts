@@ -1,15 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 import countryReducer from '@src/store/countrySlice'
-import rulesReducer from '@src/store/rulesSlice'
+import assetReducer from '@src/store/assetSlice'
 import calculatorReducer from '@src/store/calculatorSlice'
 function interceptor({ getState }) {
   return next => action => {
     // console.log('will dispatch', action)
     if (action.type === 'calculator/calculate') {
-      const rules = getState().rules
       action.payload = {
         country: getState().country.code,
-        ...rules.rule,
+        ...getState().asset.ruleCollection,
       }
     }
     // Call the next dispatch method in the middleware chain.
@@ -25,7 +24,7 @@ function interceptor({ getState }) {
 const store = configureStore({
   reducer: {
     country: countryReducer,
-    rules: rulesReducer,
+    asset: assetReducer,
     calculator: calculatorReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(interceptor),

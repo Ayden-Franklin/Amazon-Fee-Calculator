@@ -17,7 +17,7 @@ import { useHistory } from 'react-router-dom'
 import { changeCountry } from '@src/store/countrySlice'
 import { useAppSelector, useAppDispatch } from '@src/store/hooks'
 import { countryMenuItems } from '@src/renderer/constants'
-import { setCountry } from '@src/store/rulesSlice'
+import { setCountry } from '@src/store/assetSlice'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
