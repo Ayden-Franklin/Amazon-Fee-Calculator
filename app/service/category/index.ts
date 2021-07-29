@@ -30,7 +30,10 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
       { name: 'Cell Phones & Accessories', order: 0 },
     ],
     consumerelectronics: [{ name: 'Electronics', order: 0 }],
-    electronicsaccessories: [{ name: 'Accessories & Supplies', require: ['Electronics'], order: 1 }],
+    electronicsaccessories: [
+      { name: 'Accessories & Supplies', require: ['Electronics'], order: 1 },
+      { name: 'Smartwatches', require: ['Electronics'], order: 2 },
+    ],
     furniture: [{ name: 'Furniture', order: 0 }],
     homegarden: [{ name: 'Patio, Lawn & Garden', order: 1 }],
     kitchen: [{ name: 'Kitchen & Dining', order: 1 }],
@@ -55,7 +58,10 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
     toysgames: [{ name: 'Toys & Games', order: 0 }],
     videodvd: [{ name: 'Movies & TV', order: 1 }],
     // Video Game -> Controllers
-    videogameconsoles: [{ name: 'Consoles', require: ['Video Games'], order: 2 }],
+    videogameconsoles: [
+      { name: 'Consoles', require: ['Video Games'], order: 2 },
+      { name: 'Accessories', require: ['Video Games'], order: 2 },
+    ],
     // Categories requiring approval TODO
     '3dprintedproducts': [
       { name: 'Additive Manufacturing Products', order: 1 },
