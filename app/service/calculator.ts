@@ -269,16 +269,16 @@ interface ICalcCategoryResult {
  * by product.category or rowCategory or breadcrumbTree
  * by matchCategory or matchCategoryMapping
  */
-const calcCategory = (product: IProductCategory, matchCategory: string): Nullable<Array<ICalcCategoryResult>> => {
+const calcCategory = (product: IProductCategory, matchCategory: string): Array<ICalcCategoryResult> => {
   const minifyCategory = minify(matchCategory)
+  const result = []
   if (product?.category && minify(product?.category) === minifyCategory) {
-    return [{ order: -1, by: 'category' }]
+    result.push({ order: -1, by: 'category' })
   }
-  // if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
-  //   return [{ order: -1, by: 'rawCategory' }]
-  // }
-  // get country map category
-  // TODO
+  if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
+    result.push({ order: -1, by: 'rawCategory' })
+  }
+  // get country map category  // TODO
   const categoryMapping = getCategoryMappingByCountryCode('us')
   const mappingCategories = categoryMapping[minifyCategory] || [{ name: matchCategory, order: -1 }]
 
@@ -293,17 +293,17 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
       const mifyCategory = minify(product?.category)
       const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
       if (fitByCategory.length) {
-        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' }))
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' })))
       }
     }
 
-    // if (product?.rawCategory) {
-    //   const mifyCategory = minify(product?.rawCategory)
-    //   const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
-    //   if (fitByCategory.length) {
-    //     return fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' }))
-    //   }
-    // }
+    if (product?.rawCategory) {
+      const mifyCategory = minify(product?.rawCategory)
+      const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
+      if (fitByCategory.length) {
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' })))
+      }
+    }
 
     if (product?.breadcrumbTree) {
       const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
@@ -314,12 +314,12 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
         return mifyCategories.includes(c.name)
       })
       if (fitByCategory.length) {
-        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> breadcrumbTree' }))
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> breadcrumbTree' })))
       }
     }
   }
 
-  return null
+  return result
 }
 
 function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable<Array<ICalcCategoryResult>> {
@@ -396,17 +396,16 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
 
 export function calculateClosingFee(product: IProductCategory, rules?: IClosingRule[]) {
   if (!rules) return 0
-
   for (const r of rules) {
-    const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null)
+    const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null && res?.length > 0)
     if (calcRes?.length > 0) {
       console.log('ClosingFee -> ', r, calcRes)
       return r.fee
     }
   }
-
   return 0
 }
+
 export function calcApparelByCategory(product: IProductCategory, rules?: IApparelRule[]): boolean {
   if (!rules || !product) return false
   if (product?.breadcrumbTree) {
