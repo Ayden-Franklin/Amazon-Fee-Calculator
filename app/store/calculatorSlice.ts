@@ -102,7 +102,6 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
   if (
     !state.tier ||
     !state.productInput ||
-    !state.productInput.categoryName ||
     !state.shippingWeight ||
     !rules.fbaRules ||
     !rules.referralRules ||
@@ -168,6 +167,15 @@ const calculatorSlice = createSlice({
     changeLoadStatus: (state, action: PayloadAction<{ status: boolean }>) => {
       state.loading = action.payload.status
     },
+    resetFee: (state) => {
+      state.productFees = {
+        fbaFee: 0,
+        referralFee: 0,
+        closingFee: 0,
+        totalFee: 0,
+        net: 0,
+      }
+    },
     changeProductInput: (state, action: PayloadAction<{ productInput: Partial<ProductInput> }>) => {
       state.productInput = { ...state.productInput, ...action.payload.productInput }
     },
@@ -201,5 +209,6 @@ const calculatorSlice = createSlice({
     },
   },
 })
-export const { changeLoadStatus, changeProductInput, changeProductCategory, calculate } = calculatorSlice.actions
+export const { changeLoadStatus, resetFee, changeProductInput, changeProductCategory, calculate } =
+  calculatorSlice.actions
 export default calculatorSlice.reducer
