@@ -75,7 +75,7 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
       { name: 'Clothing', order: 2 },
     ],
     collectiblecoins: [{ name: 'Collectible Currencies', order: 2 }],
-    entertainmentcollectibles: [{ name: 'Entertainment Collectibles', order: 2 }],
+    entertainmentcollectibles: [{ name: 'Entertainment', require: ['Collectibles & Fine Art'], order: 2 }],
     fineart: [{ name: 'Fine Art', order: 1 }],
     // Gift Cards by breadcrumbTree
     giftcards: [{ name: 'Gift Cards', order: 0 }],
@@ -90,8 +90,7 @@ const CountryCategoryMapping: Record<string, Record<string, Array<ICategoryType>
       { name: 'Handbags & Wallets', order: 2 },
       { name: 'Shoes & Wallets', order: 2 },
     ],
-    // Sports Collectibles = by rawCategory
-    sportscollectibles: [{ name: 'Sports Collectibles', order: 2 }],
+    sportscollectibles: [{ name: 'Sports', require: ['Collectibles & Fine Art'], order: 2 }],
     // demo: B08J5LPB6G or B08FWKGKC2 ??
     watches: [{ name: 'Watches', order: 1 } /** , 'Smartwatches' */],
     // Full-Size Appliances -> laundryappliances & refrigerationappliances & dishwashers & cookingappliances

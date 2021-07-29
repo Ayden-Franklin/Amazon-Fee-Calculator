@@ -274,9 +274,9 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
   if (product?.category && minify(product?.category) === minifyCategory) {
     return [{ order: -1, by: 'category' }]
   }
-  if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
-    return [{ order: -1, by: 'rawCategory' }]
-  }
+  // if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
+  //   return [{ order: -1, by: 'rawCategory' }]
+  // }
   // get country map category
   // TODO
   const categoryMapping = getCategoryMappingByCountryCode('us')
@@ -297,13 +297,13 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
       }
     }
 
-    if (product?.rawCategory) {
-      const mifyCategory = minify(product?.rawCategory)
-      const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
-      if (fitByCategory.length) {
-        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' }))
-      }
-    }
+    // if (product?.rawCategory) {
+    //   const mifyCategory = minify(product?.rawCategory)
+    //   const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
+    //   if (fitByCategory.length) {
+    //     return fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' }))
+    //   }
+    // }
 
     if (product?.breadcrumbTree) {
       const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
