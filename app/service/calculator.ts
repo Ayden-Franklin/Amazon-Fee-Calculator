@@ -103,7 +103,7 @@ export function calculateDimensionalWeight(
   const { volumeConstraints, weightConstraints, divisor } = dimensionalWeightRule
   if (volumeConstraints)
     for (const item of volumeConstraints) {
-      if (item.standardTierNames.includes(tier.name)) {
+      if (item.standardTierNames?.includes(tier.name) || item.tierName === tier.name) {
         if (!compareWithUnit(product.width, item.roundingUpUnit)) {
           // TODO: if the units are not matched, they should be converted.
           widthValue = item.roundingUpUnit.value
@@ -130,7 +130,7 @@ export function calculateDimensionalWeight(
     }
   if (weightConstraints)
     for (const item of weightConstraints) {
-      if (item.standardTierNames.includes(tier.name)) {
+      if (item.standardTierNames?.includes(tier.name) || item.tierName === tier.name) {
         if (!compareWithUnit(product.weight, item.roundingUpUnit)) {
           // TODO: if the units are not matched, they should be converted.
           weightValue = item.roundingUpUnit.value
@@ -162,12 +162,12 @@ export function calculateShippingWeight({
 }) {
   let shippingWeightItem: IShippingWeight
   for (const shippingWeight of shippingWeights) {
-    if (shippingWeight.standardTierNames.includes(tierName)) {
-      if (shippingWeight.weight.unit === NotAvailable) {
+    if (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) {
+      if (shippingWeight.weightConstraint?.unit === NotAvailable) {
         shippingWeightItem = shippingWeight
         break
       } else {
-        if (compareWithUnit(weight, shippingWeight.weight)) {
+        if (shippingWeight.weightConstraint && compareWithUnit(weight, shippingWeight.weightConstraint)) {
           shippingWeightItem = shippingWeight
           break
         } else {
@@ -200,7 +200,7 @@ interface FbaParameter {
 export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangerous, rules }: FbaParameter): IFeeUnit {
   for (const ruleItem of rules) {
     if (
-      (tierName === ruleItem.tierName || ruleItem.standardTierNames.includes(tierName)) &&
+      (ruleItem.standardTierNames?.includes(tierName) || ruleItem.tierName === tierName) &&
       (ruleItem.isApparel === NotAvailable || isApparel === ruleItem.isApparel) &&
       isDangerous === ruleItem.isDangerous
     ) {

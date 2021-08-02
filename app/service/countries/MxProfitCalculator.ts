@@ -8,7 +8,15 @@ import {
   loadClosingFee,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
-import { parseTier, parseWeight, parseFba, parseReferral, parseClosing } from '@src/service/parser-mx'
+import {
+  parseTier,
+  parseDimensionalWeight,
+  parsePackagingWeight,
+  parseShippingWeight,
+  parseFba,
+  parseReferral,
+  parseClosing,
+} from '@src/service/parser-mx'
 
 export class MxProfitCalculator implements IProfitCalculator {
   currentCountry: Country
@@ -37,11 +45,16 @@ export class MxProfitCalculator implements IProfitCalculator {
   parseRule() {
     const { referral, closing, tier } = this.content
     const tierRules = parseTier(tier)
-
+    const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
+    let packagingWeightRules = null
+    if (this.content.packaging) {
+      packagingWeightRules = parsePackagingWeight(this.content.packaging)
+    }
+    const shippingWeightRules = parseShippingWeight(this.content.shipping)
     const referralRules = parseReferral(referral)
 
     const closingRules = parseClosing(closing)
-    return { referralRules, closingRules }
+    return { tierRules, dimensionalWeightRules, packagingWeightRules, shippingWeightRules, referralRules, closingRules }
   }
   calculateFbaFee(): number | Error {
     return 0

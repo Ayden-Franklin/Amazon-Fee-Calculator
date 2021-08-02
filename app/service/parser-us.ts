@@ -108,17 +108,19 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
     return { value, operator, unit }
   }
 
-  const parseExpression = (text: string): { tierName: string; standardTierNames: string[]; weight: ICalculateUnit } => {
+  const parseExpression = (
+    text: string
+  ): { tierName: string; standardTierNames: string[]; weightConstraint: ICalculateUnit } => {
     const leftIndex = text.indexOf('(')
     if (leftIndex > -1) {
       const tierName = text.substring(0, leftIndex).trim()
       const standardTierNames = shippingTiersMap[tierName]
       const weightExpression = text.substring(leftIndex + 1, text.length - 1)
-      const weight = parseTierAndWeight(weightExpression)
+      const weightConstraint = parseTierAndWeight(weightExpression)
       return {
         tierName,
         standardTierNames,
-        weight,
+        weightConstraint,
       }
     } else {
       const tierName = text.trim()
@@ -126,7 +128,7 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
       return {
         tierName: tierName,
         standardTierNames,
-        weight: {
+        weightConstraint: {
           value: NaN,
           unit: NotAvailable,
         },
@@ -143,16 +145,14 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
       }
     } else {
       const [tierElement, shippingWeightElement] = $(element).find('td')
-      const { tierName, standardTierNames, weight } = parseExpression($(tierElement).text())
+      const { tierName, standardTierNames, weightConstraint } = parseExpression($(tierElement).text())
       const shippingWeight = $($(shippingWeightElement).contents().get(0)).text()
       const useGreater = shippingWeight !== 'Unit weight'
-      const roundingUp = {}
       items.push({
         tierName,
         standardTierNames,
-        weight,
+        weightConstraint,
         useGreater,
-        roundingUp,
       })
     }
   })
@@ -160,21 +160,16 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
 }
 const fbaProductTiersMap: Record<
   string,
-  Record<
-    string,
-    { tierName: string; standardTierNames: string[]; isApparel: boolean | typeof NotAvailable; isDangerous: boolean }
-  >
+  Record<string, { tierName: string; isApparel: boolean | typeof NotAvailable; isDangerous: boolean }>
 > = {
   'Most products (non-dangerous goods, non-apparel)': {
     'Small standard': {
       tierName: 'Small standard-size',
-      standardTierNames: ['Small standard-size'],
       isApparel: false,
       isDangerous: false,
     },
     'Large standard': {
       tierName: 'Large standard-size',
-      standardTierNames: ['Large standard-size'],
       isApparel: false,
       isDangerous: false,
     },
@@ -182,13 +177,11 @@ const fbaProductTiersMap: Record<
   Apparel: {
     'Small standard': {
       tierName: 'Small standard-size',
-      standardTierNames: ['Small standard-size'],
       isApparel: true,
       isDangerous: false,
     },
-    'Large standard':{
+    'Large standard': {
       tierName: 'Large standard-size',
-      standardTierNames: ['Large standard-size'],
       isApparel: true,
       isDangerous: false,
     },
@@ -196,13 +189,11 @@ const fbaProductTiersMap: Record<
   'Dangerous goods': {
     'Small standard': {
       tierName: 'Small standard-size',
-      standardTierNames: ['Small standard-size'],
       isApparel: false,
       isDangerous: true,
     },
     'Large standard':{
       tierName: 'Large standard-size',
-      standardTierNames: ['Large standard-size'],
       isApparel: false,
       isDangerous: true,
     },
@@ -210,25 +201,21 @@ const fbaProductTiersMap: Record<
   'Non-dangerous goods (both apparel and non-apparel)': {
     'Small oversize': {
       tierName: 'Small oversize',
-      standardTierNames: ['Small oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
     'Medium oversize': {
       tierName: 'Medium oversize',
-      standardTierNames: ['Medium oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
-    'Large oversize':{
+    'Large oversize': {
       tierName: 'Large oversize',
-      standardTierNames: ['Large oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
-    'Special oversize':{
+    'Special oversize': {
       tierName: 'Special oversize',
-      standardTierNames: ['Special oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
@@ -236,25 +223,21 @@ const fbaProductTiersMap: Record<
   'Dangerous goods (both apparel and non-apparel)': {
     'Small oversize': {
       tierName: 'Small oversize',
-      standardTierNames: ['Small oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
-    'Medium oversize':{
+    'Medium oversize': {
       tierName: 'Medium oversize',
-      standardTierNames: ['Medium oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
-    'Large oversize':{
+    'Large oversize': {
       tierName: 'Large oversize',
-      standardTierNames: ['Large oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
-    'Special oversize':{
+    'Special oversize': {
       tierName: 'Special oversize',
-      standardTierNames: ['Special oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
@@ -381,11 +364,9 @@ export function parseFba(content: string) {
         fixedUnitFees = []
       }
       const shippingWeightResult = parseShippingCell(shippingWeightText)
-      console.log('parseShippingCell result', shippingWeightResult)
       const minimumShippingWeight = shippingWeightResult[0]
       const maximumShippingWeight = shippingWeightResult[1]
       const fulfillmentFeeResult = parseFulfillmentFeePerUnit(fulfillmentFee)
-      console.log('parseFulfillmentFeePerUnit result', fulfillmentFeeResult)
       // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
       if (fulfillmentFeeResult.length === 1) {
         fixedUnitFees.push({
@@ -395,7 +376,6 @@ export function parseFba(content: string) {
           shippingWeightText,
         })
       } else if (fulfillmentFeeResult.length === 3) {
-        console.log(' !!!!!! here, parse $157.91 + $0.79/lb above first 90 lbs to = ', fulfillmentFeeResult)
         additionalUnitFee = fulfillmentFeeResult[1]
         // if fixedUnitFees has not any item, it is described by only one line  like `$87.93 + $0.79/lb above first 90 lbs`
         if (fixedUnitFees.length === 0) {
@@ -430,7 +410,6 @@ export function parseFba(content: string) {
     }
     if (rowIndex === rows.length - 1) {
       // push the last one item
-      console.log('push the last item for currentProductTierKey, ', currentProductTierKey, ' now the fixedUnitFees is ', fixedUnitFees, ' and the additionalUnitFee is ', additionalUnitFee)
       const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
       fbaRuleItems.push({
         ...tierData,

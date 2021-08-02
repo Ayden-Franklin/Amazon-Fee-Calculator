@@ -85,11 +85,11 @@ declare interface IReferralFee {
 }
 declare interface ITierStandardization {
   tierName: string
-  standardTierNames: string[] // using this array to map to the standard tier names
+  standardTierNames?: string[] // using this array to map to the standard tier names
 }
 declare interface IPackagingWeightItem {
   packagingWeight: IMeasureUnit
-  minimumWeightUnit: ICalculateUnit
+  weightConstraint: ICalculateUnit
   desc: string
 }
 declare interface IPackagingWeight extends ITierStandardization {
@@ -97,9 +97,9 @@ declare interface IPackagingWeight extends ITierStandardization {
 }
 
 declare interface IShippingWeight extends ITierStandardization {
-  weight?: ICalculateUnit
+  weightConstraint?: ICalculateUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
-  roundingUp: IMeasureUnit
+  roundingUp?: IMeasureUnit
 }
 declare interface IDimensionalWeightConstraint extends ITierStandardization {
   roundingUpUnit: ICalculateUnit

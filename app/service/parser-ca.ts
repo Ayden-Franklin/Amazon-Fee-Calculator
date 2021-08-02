@@ -152,7 +152,7 @@ export function parsePackagingWeight(content: string) {
     const unit = values[1]
     return {
       tierName: values[5] as string,
-      packagingWeightItem: { packagingWeight: { value, unit }, minimumWeightUnit: empty, desc: text },
+      packagingWeightItem: { packagingWeight: { value, unit }, weightConstraint: empty, desc: text },
     }
   }
   const parseUnit = (text: string): IMeasureUnit | undefined => {
@@ -190,11 +190,11 @@ export function parsePackagingWeight(content: string) {
       }
       if (values?.length === 2) {
         const packagingWeight = parseUnit(values[0])
-        const minimumWeightUnit = parseUnit(values[1])
-        if (packagingWeight && minimumWeightUnit)
+        const weightConstraint = parseUnit(values[1])
+        if (packagingWeight && weightConstraint)
           packagingWeightItems.push({
             packagingWeight,
-            minimumWeightUnit: { ...minimumWeightUnit, operator: isIntervalValue ? '>' : '<=' },
+            weightConstraint: { ...weightConstraint, operator: isIntervalValue ? '>' : '<=' },
             desc: text,
           })
       }
@@ -296,7 +296,6 @@ export function parseFba(content: string) {
     const [column1, column2, column3] = cells
     if (column1 !== 'Product size tier') {
       if (column3 && currentProductTierKey) {
-        console.log('push an item for currentProductTierKey, ', currentProductTierKey, ' now the ')
         const tierData = determineTier(currentProductTierKey)
         fbaRuleItems.push({
           ...tierData,
@@ -315,7 +314,6 @@ export function parseFba(content: string) {
         fixedUnitFees = []
       }
       const result = parseShippingAndFeeCell(shippingWeightText, fulfillmentFeeText)
-      console.log('parseShippingAndFeeCell result', result)
       if (result && result[1] === 'IFulfillmentFixedUnitFee') {
         fixedUnitFees.push(result[0])
       } else if (result && result[1] === 'IFulfillmentAdditionalUnitFee') {
@@ -324,7 +322,6 @@ export function parseFba(content: string) {
     }
     if (rowIndex === rows.length - 1) {
       // push the last one item
-      console.log('push the last item for currentProductTierKey, ', currentProductTierKey, ' now the fixedUnitFees is ', fixedUnitFees, ' and the additionalUnitFee is ', additionalUnitFee)
       const tierData = determineTier(currentProductTierKey)
       fbaRuleItems.push({
         ...tierData,

@@ -47,15 +47,24 @@ export class CaProfitCalculator implements IProfitCalculator {
     const { referral } = this.content
     const tierRules = parseTier(this.content.tier)
     const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
-    let packaging = null
+    let packagingWeightRules = null
     if (this.content.packaging) {
-      packaging = parsePackagingWeight(this.content.packaging)
+      packagingWeightRules = parsePackagingWeight(this.content.packaging)
     }
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
+    const fbaRules = parseFba(this.content.fba)
     const referralRules = parseReferral(referral)
     // closingFee
     const closingRules = parseClosing(this.content.closing)
-    return { tierRules, dimensionalWeightRules, packaging, shippingWeightRules, referralRules, closingRules }
+    return {
+      tierRules,
+      dimensionalWeightRules,
+      packagingWeightRules,
+      shippingWeightRules,
+      fbaRules,
+      referralRules,
+      closingRules,
+    }
   }
   calculateFbaFee(): number | Error {
     return 0
