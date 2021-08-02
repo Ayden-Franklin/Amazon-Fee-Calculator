@@ -8,7 +8,15 @@ import {
   loadClosingFee,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
-import { parseTier, parseDimensionalWeight, parseFba, parseReferral, parseClosing } from '@src/service/parser-ca'
+import {
+  parseTier,
+  parseDimensionalWeight,
+  parsePackagingWeight,
+  parseShippingWeight,
+  parseFba,
+  parseReferral,
+  parseClosing,
+} from '@src/service/parser-ca'
 
 export class CaProfitCalculator implements IProfitCalculator {
   currentCountry: Country
@@ -39,12 +47,17 @@ export class CaProfitCalculator implements IProfitCalculator {
     const { referral } = this.content
     const tierRules = parseTier(this.content.tier)
     const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
+    let packaging = null
+    if (this.content.packaging) {
+      packaging = parsePackagingWeight(this.content.packaging)
+    }
+    const shippingWeightRules = parseShippingWeight(this.content.shipping)
     // referral maybe string or object
     const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
     const referralRules = parseReferral(referralRuleContext)
     // closingFee
     const closingRules = parseClosing(this.content.closing)
-    return { tierRules, dimensionalWeightRules, referralRules, closingRules }
+    return { tierRules, dimensionalWeightRules, packaging, shippingWeightRules, referralRules, closingRules }
   }
   calculateFbaFee(): number | Error {
     return 0

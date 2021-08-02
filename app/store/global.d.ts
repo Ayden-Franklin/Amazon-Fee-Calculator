@@ -22,14 +22,17 @@ declare interface IRuleContent {
   closing: Nullable<string>
 }
 
-declare interface IMeasureUnit {
+declare interface IFeeUnit {
   value: number
-  unit: string
+  currency: string
 }
 declare interface ICalculateUnit extends IMeasureUnit {
   operator?: string
 }
-
+declare interface IMeasureUnit {
+  value: number
+  unit: string
+}
 declare interface IProduct {
   length: IMeasureUnit
   width: IMeasureUnit
@@ -46,21 +49,23 @@ declare interface ITier {
   volumes: Array<ICalculateUnit>
   lengthGirth?: ICalculateUnit
 }
-
-declare interface IFulfillmentItem {
+declare interface IFulfillmentFixedUnitFee {
   minimumShippingWeight: ICalculateUnit
   maximumShippingWeight: ICalculateUnit
-  firstWeightAmount: number
-  firstWeightFee: number
-  additionalUnitFee: number
+  fee: IFeeUnit
   shippingWeightText: string
-  fee: string
 }
-declare interface IFbaRuleItem {
-  tierName: string
+declare interface IFulfillmentAdditionalUnitFee {
+  shippingWeight: IMeasureUnit
+  fee: IFeeUnit
+  shippingWeightText: string
+}
+
+declare interface IFbaRuleItem extends ITierStandardization {
   isApparel: boolean | 'n/a'
   isDangerous: boolean | 'n/a'
-  items: IFulfillmentItem[]
+  fixedUnitFees: IFulfillmentFixedUnitFee[]
+  additionalUnitFee: IFulfillmentAdditionalUnitFee
 }
 
 declare interface IReferralRateFeeItem {
@@ -92,7 +97,7 @@ declare interface IPackagingWeight extends ITierStandardization {
 }
 
 declare interface IShippingWeight extends ITierStandardization {
-  weight: ICalculateUnit
+  weight?: ICalculateUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
   roundingUp: IMeasureUnit
 }

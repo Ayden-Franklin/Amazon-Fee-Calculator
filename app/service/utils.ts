@@ -41,6 +41,15 @@ export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit
     (reference.operator.includes('<') && r < 0)
   )
 }
+export function convertWeightUnit(operand: IMeasureUnit, targetUnit = 'lb') {
+  if (operand) {
+    if (operand.unit === targetUnit) {
+      return operand
+    } else {
+      return Qty(`${operand.value} ${operand.unit}`).to(targetUnit)
+    }
+  }
+}
 
 export function minify(s: string) {
   return typeof s === 'string' ? s.replace(/&|and|\s|,|\/|-/g, '').toLowerCase() : s

@@ -113,23 +113,13 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
   // temp full category/categoryName
   productInput.category = productInput.categoryName || productInput.category || ''
 
-  const safeNumber = (v: number | Error) => {
-    if (typeof v === 'number') {
-      return v
-    }
-    console.warn('calc something get error', v)
-    return NaN
-  }
-
-  const fbaFee = safeNumber(
-    calculateFbaFee({
-      tierName: state.tier.name,
-      shippingWeight: state.shippingWeight,
-      isApparel: productInput.isApparel,
-      isDangerous: productInput.isDangerous,
-      rules: rules.fbaRules,
-    })
-  )
+  const fbaFee = calculateFbaFee({
+    tierName: state.tier.name,
+    shippingWeight: state.shippingWeight,
+    isApparel: productInput.isApparel,
+    isDangerous: productInput.isDangerous,
+    rules: rules.fbaRules,
+  })
 
   const referralFee = calculateReferralFee(productInput, rules.referralRules)
   const closingFee = calculateClosingFee(productInput, rules.closingRules)
@@ -137,11 +127,13 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
 
   return {
-    fbaFee: numberFix2(fbaFee),
+    fbaFee: numberFix2(fbaFee.value),
     referralFee: numberFix2(referralFee),
     closingFee: numberFix2(closingFee),
-    totalFee: numberFix2(fbaFee + referralFee + closingFee),
-    net: numberFix2(state.productInput.price - (state.productInput.cost ?? 0) - fbaFee - referralFee - closingFee),
+    totalFee: numberFix2(fbaFee.value + referralFee + closingFee),
+    net: numberFix2(
+      state.productInput.price - (state.productInput.cost ?? 0) - fbaFee.value - referralFee - closingFee
+    ),
   }
 }
 function calcApparelCategory(productInput: Undefinedable<ProductInput>, ruleCollection: IRuleCollection): boolean {

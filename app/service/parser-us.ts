@@ -160,16 +160,21 @@ export function parseShippingWeight(content: string): IShippingWeight[] {
 }
 const fbaProductTiersMap: Record<
   string,
-  Record<string, { tierName: string; isApparel: boolean | typeof NotAvailable; isDangerous: boolean }>
+  Record<
+    string,
+    { tierName: string; standardTierNames: string[]; isApparel: boolean | typeof NotAvailable; isDangerous: boolean }
+  >
 > = {
   'Most products (non-dangerous goods, non-apparel)': {
     'Small standard': {
       tierName: 'Small standard-size',
+      standardTierNames: ['Small standard-size'],
       isApparel: false,
       isDangerous: false,
     },
     'Large standard': {
       tierName: 'Large standard-size',
+      standardTierNames: ['Large standard-size'],
       isApparel: false,
       isDangerous: false,
     },
@@ -177,11 +182,13 @@ const fbaProductTiersMap: Record<
   Apparel: {
     'Small standard': {
       tierName: 'Small standard-size',
+      standardTierNames: ['Small standard-size'],
       isApparel: true,
       isDangerous: false,
     },
     'Large standard':{
       tierName: 'Large standard-size',
+      standardTierNames: ['Large standard-size'],
       isApparel: true,
       isDangerous: false,
     },
@@ -189,11 +196,13 @@ const fbaProductTiersMap: Record<
   'Dangerous goods': {
     'Small standard': {
       tierName: 'Small standard-size',
+      standardTierNames: ['Small standard-size'],
       isApparel: false,
       isDangerous: true,
     },
     'Large standard':{
       tierName: 'Large standard-size',
+      standardTierNames: ['Large standard-size'],
       isApparel: false,
       isDangerous: true,
     },
@@ -201,21 +210,25 @@ const fbaProductTiersMap: Record<
   'Non-dangerous goods (both apparel and non-apparel)': {
     'Small oversize': {
       tierName: 'Small oversize',
+      standardTierNames: ['Small oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
     'Medium oversize': {
       tierName: 'Medium oversize',
+      standardTierNames: ['Medium oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
     'Large oversize':{
       tierName: 'Large oversize',
+      standardTierNames: ['Large oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
     'Special oversize':{
       tierName: 'Special oversize',
+      standardTierNames: ['Special oversize'],
       isApparel: NotAvailable,
       isDangerous: false,
     },
@@ -223,21 +236,25 @@ const fbaProductTiersMap: Record<
   'Dangerous goods (both apparel and non-apparel)': {
     'Small oversize': {
       tierName: 'Small oversize',
+      standardTierNames: ['Small oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
     'Medium oversize':{
       tierName: 'Medium oversize',
+      standardTierNames: ['Medium oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
     'Large oversize':{
       tierName: 'Large oversize',
+      standardTierNames: ['Large oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
     'Special oversize':{
       tierName: 'Special oversize',
+      standardTierNames: ['Special oversize'],
       isApparel: NotAvailable,
       isDangerous: true,
     },
@@ -248,9 +265,89 @@ export function parseFba(content: string) {
     return fbaProductTiersMap[productType][sizeTierName]
   }
 
+  const parseShippingCell = (content: string): ICalculateUnit[] => {
+    const array = content.match(/\d+|oz|lb/g)
+    let unit = 'lb' // TODO: Suppose the default unit is lb
+    let num: number[] = []
+    if (array && array?.length > 0) {
+      for (const element of array) {
+        if (element === 'oz' || element === 'lb') {
+          unit = element
+        } else {
+          let value = parseInt(element, 10)
+          num.push(value)
+        }
+      }
+    }
+    // There should be 1 or 2 numbers
+    if (num.length === 1) {
+      if (content.indexOf('less') > -1) {
+        num.unshift(0)
+      } else if (content.indexOf('over')) {
+        num.push(Number.MAX_SAFE_INTEGER)
+      }
+    }
+    if (num.length === 2) {
+      return [
+        {
+          unit: unit,
+          value: num[0],
+          operator: '>',
+        },
+        {
+          unit: unit,
+          value: num[1],
+          operator: '<=',
+        },
+      ]
+    } else {
+      return []
+    }
+  }
+  const parseAdditionalUnitFee = (text: string): [IMeasureUnit, IFeeUnit] | undefined => {
+    const array = text.split('/')
+    if (array.length === 2) {
+      return [
+        {
+          value: 1,
+          unit: array[1],
+        },
+        {
+          value: parseFloat(array[0]),
+          currency: '$',
+        },
+      ]
+    }
+  }
+  const parseFulfillmentFeePerUnit = (content: string): [IFeeUnit, IFulfillmentAdditionalUnitFee, number] | undefined => {
+    const array = content.match(/\d+(\.\d+)?(\/lb)?/g)
+    if (array && array.length > 0) {
+      let fixedUnitFee = { value: parseFloat(array[0]), currency: '$' }
+      let additionalUnitFee: IFulfillmentAdditionalUnitFee
+      // There should be 1 or 2 or 3 numbers
+      if (array.length === 1) {
+        return [fixedUnitFee]
+      } else {
+        let firstWeightAmount = 1
+        if (array.length === 3) {
+          firstWeightAmount = parseFloat(array[2])
+        }
+        const additionalUnitFeeResult = parseAdditionalUnitFee(array[1])
+        if (additionalUnitFeeResult && additionalUnitFeeResult.length === 2) {
+          additionalUnitFee = {
+            shippingWeight: additionalUnitFeeResult[0],
+            fee: additionalUnitFeeResult[1],
+            shippingWeightText: content,
+          }
+        }
+        return [fixedUnitFee, additionalUnitFee, firstWeightAmount]
+      }
+    }
+  }
   const fbaRuleItems: IFbaRuleItem[] = []
   const $ = cheerio.load(content)
-  let fulfillmentItems: IFulfillmentItem[] = []
+  let fixedUnitFees: IFulfillmentFixedUnitFee[] = []
+  let additionalUnitFee: IFulfillmentAdditionalUnitFee
   let currentProductTypeKey: string
   let currentProductTierKey: string
   const rows = $('.help-table tbody tr')
@@ -264,9 +361,10 @@ export function parseFba(content: string) {
         const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
         fbaRuleItems.push({
           ...tierData,
-          items: fulfillmentItems,
+          additionalUnitFee,
+          fixedUnitFees,
         })
-        fulfillmentItems = []
+        fixedUnitFees = []
       }
 
       let shippingWeightText = column1
@@ -280,104 +378,70 @@ export function parseFba(content: string) {
         currentProductTierKey = column1
         shippingWeightText = column2
         fulfillmentFee = column3
-        fulfillmentItems = []
+        fixedUnitFees = []
       }
       const shippingWeightResult = parseShippingCell(shippingWeightText)
+      console.log('parseShippingCell result', shippingWeightResult)
       const minimumShippingWeight = shippingWeightResult[0]
       const maximumShippingWeight = shippingWeightResult[1]
       const fulfillmentFeeResult = parseFulfillmentFeePerUnit(fulfillmentFee)
+      console.log('parseFulfillmentFeePerUnit result', fulfillmentFeeResult)
       // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
-      const firstWeightAmount = fulfillmentFeeResult[0]
-      const firstWeightFee = fulfillmentFeeResult[1]
-      const additionalUnitFee = fulfillmentFeeResult[2]
+      if (fulfillmentFeeResult.length === 1) {
+        fixedUnitFees.push({
+          minimumShippingWeight,
+          maximumShippingWeight,
+          fee: fulfillmentFeeResult[0],
+          shippingWeightText,
+        })
+      } else if (fulfillmentFeeResult.length === 3) {
+        console.log(' !!!!!! here, parse $157.91 + $0.79/lb above first 90 lbs to = ', fulfillmentFeeResult)
+        additionalUnitFee = fulfillmentFeeResult[1]
+        // if fixedUnitFees has not any item, it is described by only one line  like `$87.93 + $0.79/lb above first 90 lbs`
+        if (fixedUnitFees.length === 0) {
+          fixedUnitFees.push({
+            minimumShippingWeight: { unit: additionalUnitFee.shippingWeight.unit, value: 0, operator: '>' },
+            maximumShippingWeight: {
+              unit: additionalUnitFee.shippingWeight.unit,
+              value: fulfillmentFeeResult[2],
+              operator: '<=',
+            },
+            fee: fulfillmentFeeResult[0],
+            shippingWeightText
+          })
+        }
+        additionalUnitFee = fulfillmentFeeResult[1]
+      }
       // console.log(' Finished a row: ')
       // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
       // console.log('                 currentProductTierKey = ', currentProductTierKey)
       // console.log('                 shippingWeight = ', shippingWeight)
       // console.log('                 fulfillmentFee = ', fulfillmentFee)
-      const fulfillmentItem: IFulfillmentItem = {
-        shippingWeightText,
-        fee: fulfillmentFee,
-        minimumShippingWeight,
-        maximumShippingWeight,
-        firstWeightAmount,
-        firstWeightFee,
-        additionalUnitFee,
-      }
-      fulfillmentItems.push(fulfillmentItem)
+      // const fulfillmentItem: IFulfillmentItem = {
+      //   shippingWeightText,
+      //   fee: fulfillmentFee,
+      //   minimumShippingWeight,
+      //   maximumShippingWeight,
+      //   firstWeightAmount,
+      //   firstWeightFee,
+      //   additionalUnitFee,
+      // }
+      // fulfillmentItems.push(fulfillmentItem)
     }
     if (rowIndex === rows.length - 1) {
       // push the last one item
+      console.log('push the last item for currentProductTierKey, ', currentProductTierKey, ' now the fixedUnitFees is ', fixedUnitFees, ' and the additionalUnitFee is ', additionalUnitFee)
       const tierData = determineTier(currentProductTypeKey, currentProductTierKey)
       fbaRuleItems.push({
         ...tierData,
-        items: fulfillmentItems,
+        additionalUnitFee,
+        fixedUnitFees,
       })
     }
   })
   return fbaRuleItems
 }
-function parseShippingCell(content: string): ICalculateUnit[] {
-  const array = content.match(/\d+|oz|lb/g)
-  let unit = 'lb' // TODO: Suppose the default unit is lb
-  let num: number[] = []
-  if (array && array?.length > 0) {
-    for (const element of array) {
-      if (element === 'oz' || element === 'lb') {
-        unit = element
-      } else {
-        let value = parseInt(element, 10)
-        num.push(value)
-      }
-    }
-  }
-  // There should be 1 or 2 numbers
-  if (num.length === 1) {
-    if (content.indexOf('less') > -1) {
-      num.unshift(0)
-    } else if (content.indexOf('over')) {
-      num.push(Number.MAX_SAFE_INTEGER)
-    }
-  }
-  if (num.length === 2) {
-    return [
-      {
-        unit: unit,
-        value: num[0],
-        operator: '>',
-      },
-      {
-        unit: unit,
-        value: num[1],
-        operator: '<=',
-      },
-    ]
-  } else {
-    return []
-  }
-}
 
-function parseFulfillmentFeePerUnit(content: string): number[] {
-  const array = content.match(/\d+(\.\d*)?/g)
-  if (array && array.length > 0) {
-    let firstWeightAmount = 1
-    let firstWeightFee = 0
-    let additionalUnitFee = 0
-    // There should be 1 or 2 or 3 numbers
-    if (array.length > 0) {
-      firstWeightFee = parseFloat(array[0])
-    }
-    if (array.length > 1) {
-      additionalUnitFee = parseFloat(array[1])
-    }
-    if (array.length > 2) {
-      firstWeightAmount = parseInt(array[2], 10)
-    }
-    return [firstWeightAmount, firstWeightFee, additionalUnitFee]
-  } else {
-    return [1, 0, 0]
-  }
-}
 export function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
   let referralRule: IReferralFee[] = []

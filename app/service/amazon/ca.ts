@@ -31,13 +31,25 @@ export default {
     url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
-      return output && output === '' ? response : output
+      let output = $('div.help-content div').find('p:eq(6)').text()
+      if (output !== '') {
+        const index = output.indexOf('A packaging weight')
+        if (index > -1) {
+          return output.substring(index)
+        }
+      }
+      throw Error('Fail to extract effective paragraph for packaing!')
     },
     extractContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
-      return output && output === '' ? response : output
+      let output = $('div.help-content div').find('p:eq(6)').text()
+      if (output !== '') {
+        const index = output.indexOf('A packaging weight')
+        if (index > -1) {
+          return output.substring(index)
+        }
+      }
+      throw Error('Fail to extract effective paragraph for packaing!')
     },
   },
   shipping: {
@@ -45,12 +57,24 @@ export default {
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
       let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
-      return output && output === '' ? response : output
+      if (output !== '') {
+        const index = output.indexOf('A packaging weight')
+        if (index > -1) {
+          return output.substring(0, index - 1)
+        }
+      }
+      throw Error('Fail to extract effective paragraph for shipping!')
     },
     extractContent: (response: string) => {
       const $ = cheerio.load(response)
-      let output = $('div.help-content div').find('p:last-child').html()
-      return output && output === '' ? response : output
+      let output = cheerio.html($('div.help-content div').find('p:eq(6)'))
+      if (output !== '') {
+        const index = output.indexOf('A packaging weight')
+        if (index > -1) {
+          return output.substring(0, index - 1)
+        }
+      }
+      throw Error('Fail to extract effective paragraph for shipping!')
     },
   },
   fba: {

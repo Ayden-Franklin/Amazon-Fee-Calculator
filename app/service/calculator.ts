@@ -1,5 +1,5 @@
 import store from '@src/store'
-import { compareWithUnit, minify } from '@src/service/utils'
+import { compareWithUnit, convertWeightUnit, minify } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
 import { NotAvailable } from '@src/service/constants'
 export interface TierData {
@@ -177,13 +177,13 @@ export function calculateShippingWeight({
       }
     }
   }
-  console.log('calculateShippingWeight. rule -> ', shippingWeightItem)
   // TODO need return unit
   const v = shippingWeightItem
     ? shippingWeightItem.useGreater
       ? Math.max(weight.value, dimensionalWeight)
       : weight.value
     : weight.value
+  console.log('calculateShippingWeight. rule -> ', shippingWeightItem, ' result = ', v)
   return {
     value: v,
     unit: weight.unit,
@@ -197,57 +197,43 @@ interface FbaParameter {
   isDangerous: boolean
   rules: IFbaRuleItem[]
 }
-export function calculateFbaFee({
-  tierName,
-  shippingWeight,
-  isApparel,
-  isDangerous,
-  rules,
-}: FbaParameter): number | Error {
+export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangerous, rules }: FbaParameter): IFeeUnit {
   for (const ruleItem of rules) {
     if (
-      tierName === ruleItem.tierName &&
+      (tierName === ruleItem.tierName || ruleItem.standardTierNames.includes(tierName)) &&
       (ruleItem.isApparel === NotAvailable || isApparel === ruleItem.isApparel) &&
       isDangerous === ruleItem.isDangerous
     ) {
-      const items: IFulfillmentItem[] = ruleItem.items
-      for (const element of items) {
-        let target = element.maximumShippingWeight.value
-        // TODO: handle unit conversion
-        if (element.maximumShippingWeight.unit === 'oz') {
-          target /= 16
-        }
-        if (shippingWeight.value > target) {
+      const { fixedUnitFees, additionalUnitFee } = ruleItem
+      for (const fixedUnitFee of fixedUnitFees) {
+        let target = fixedUnitFee.maximumShippingWeight
+        if (!compareWithUnit(shippingWeight, target)) {
           continue
         } else {
-          return element.firstWeightFee + (shippingWeight.value - 1) * element.additionalUnitFee
+          console.log('calculateFbaFee. rule -> ', target)
+          return fixedUnitFee.fee
+        }
+      }
+      if (additionalUnitFee) {
+        console.log('calculateFbaFee. rule -> ', additionalUnitFee)
+        // calculate fee by weight
+        // first, convert the unit of weight to calculate
+        let shippingWeightValue = shippingWeight.value
+        if (shippingWeight.unit !== additionalUnitFee.shippingWeight.unit) {
+          shippingWeightValue = convertWeightUnit(shippingWeight, additionalUnitFee.shippingWeight.unit)
+        }
+        return {
+          value:
+            additionalUnitFee.fee.value +
+            (shippingWeightValue - additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value,
+          currency: additionalUnitFee.fee.currency,
         }
       }
     }
   }
   // Not match any rule?
-  return NaN
+  return { value: NaN, currency: '' }
 }
-
-// function convertProductTypeKey(size: string, isApparel: boolean, isDangerous: boolean) {
-//   if (size === 'standard') {
-//     if (isApparel) {
-//       return 'Apparel'
-//     } else if (isDangerous) {
-//       return 'Dangerous goods'
-//     } else {
-//       return 'Most products (non-dangerous goods, non-apparel)'
-//     }
-//   } else if (size === 'oversize') {
-//     if (isApparel || isDangerous) {
-//       return 'Dangerous goods (both apparel and non-apparel)'
-//     } else {
-//       return 'Non-dangerous goods (both apparel and non-apparel)'
-//     }
-//   } else {
-//     return 'unknown'
-//   }
-// }
 
 // Temp interface , final use IProduct
 interface IProductCategory {
@@ -269,16 +255,16 @@ interface ICalcCategoryResult {
  * by product.category or rowCategory or breadcrumbTree
  * by matchCategory or matchCategoryMapping
  */
-const calcCategory = (product: IProductCategory, matchCategory: string): Nullable<Array<ICalcCategoryResult>> => {
+const calcCategory = (product: IProductCategory, matchCategory: string): Array<ICalcCategoryResult> => {
   const minifyCategory = minify(matchCategory)
+  const result = []
   if (product?.category && minify(product?.category) === minifyCategory) {
-    return [{ order: -1, by: 'category' }]
+    result.push({ order: -1, by: 'category' })
   }
-  // if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
-  //   return [{ order: -1, by: 'rawCategory' }]
-  // }
-  // get country map category
-  // TODO
+  if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
+    result.push({ order: -1, by: 'rawCategory' })
+  }
+  // get country map category  // TODO
   const categoryMapping = getCategoryMappingByCountryCode('us')
   const mappingCategories = categoryMapping[minifyCategory] || [{ name: matchCategory, order: -1 }]
 
@@ -293,17 +279,17 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
       const mifyCategory = minify(product?.category)
       const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
       if (fitByCategory.length) {
-        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' }))
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' })))
       }
     }
 
-    // if (product?.rawCategory) {
-    //   const mifyCategory = minify(product?.rawCategory)
-    //   const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
-    //   if (fitByCategory.length) {
-    //     return fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' }))
-    //   }
-    // }
+    if (product?.rawCategory) {
+      const mifyCategory = minify(product?.rawCategory)
+      const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
+      if (fitByCategory.length) {
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> rawCategory' })))
+      }
+    }
 
     if (product?.breadcrumbTree) {
       const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
@@ -314,12 +300,12 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Nullabl
         return mifyCategories.includes(c.name)
       })
       if (fitByCategory.length) {
-        return fitByCategory.map((c) => ({ ...c, by: 'mapping -> breadcrumbTree' }))
+        result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> breadcrumbTree' })))
       }
     }
   }
 
-  return null
+  return result
 }
 
 function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable<Array<ICalcCategoryResult>> {
@@ -396,17 +382,16 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
 
 export function calculateClosingFee(product: IProductCategory, rules?: IClosingRule[]) {
   if (!rules) return 0
-
   for (const r of rules) {
-    const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null)
+    const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null && res?.length > 0)
     if (calcRes?.length > 0) {
       console.log('ClosingFee -> ', r, calcRes)
       return r.fee
     }
   }
-
   return 0
 }
+
 export function calcApparelByCategory(product: IProductCategory, rules?: IApparelRule[]): boolean {
   if (!rules || !product) return false
   if (product?.breadcrumbTree) {

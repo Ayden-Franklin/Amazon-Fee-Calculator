@@ -101,9 +101,10 @@ export function parseTier(content: string) {
   }
   return tiers
 }
-const dimensionalWeightTiersMap: Record<string, Array<string>> = {
+const standardTiersMap: Record<string, Array<string>> = {
   Envelope: ['Envelope'],
   Standard: ['Standard-Size'],
+  Oversize: ['Oversize', 'Oversize Special'],
 }
 export function parseDimensionalWeight(content: string) {
   const empty = { value: NaN, unit: NotAvailable }
@@ -120,14 +121,14 @@ export function parseDimensionalWeight(content: string) {
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
   const roundingUpArray = content.match(/\d+(\.\d*)? (g|kg) for \S+/g)
   if (roundingUpArray && roundingUpArray.length > 0) {
-    for (const text of roundingUpArray) {
+    roundingUpArray.forEach((text) => {
       const item = parseExpression(text)
       if (item) {
         const tierName = item.tierName
-        const standardTierNames = dimensionalWeightTiersMap[tierName]
+        const standardTierNames = standardTiersMap[tierName]
         weightConstraints.push({ tierName, standardTierNames, roundingUpUnit: item.roundingUpUnit })
       }
-    }
+    })
   }
   return {
     weightConstraints,
@@ -135,7 +136,205 @@ export function parseDimensionalWeight(content: string) {
   }
 }
 
-export function parseFba() {}
+const shippingWeightTiersMap: Record<string, Array<string>> = {
+  envelope: ['Envelope'],
+  standard: ['Standard-Size'],
+  oversize: ['Oversize', 'Oversize Special'],
+}
+export function parsePackagingWeight(content: string) {
+  const empty = { value: NaN, unit: NotAvailable }
+  const parseExpression = (
+    text: string
+  ): { tierName: string; packagingWeightItem: IPackagingWeightItem } | undefined => {
+    const values = text.split(' ')
+    if (values.length < 6) return
+    const value = parseFloat(values[0])
+    const unit = values[1]
+    return {
+      tierName: values[5] as string,
+      packagingWeightItem: { packagingWeight: { value, unit }, minimumWeightUnit: empty, desc: text },
+    }
+  }
+  const parseUnit = (text: string): IMeasureUnit | undefined => {
+    const values = text.split(' ')
+    if (values.length < 2) return
+    const value = parseFloat(values[0])
+    const unit = values.length < 2 ? NotAvailable : values[1]
+    return { value, unit }
+  }
+  const packagingItems: IPackagingWeight[] = []
+  const paragraphs = content.substring(0, content.length - 1).split('.')
+  // There sould be two centences. The first one is for envelope and oversize and the second one is for standard
+  if (paragraphs.length === 2) {
+    const first = paragraphs[0]
+    const expressions = first.match(/\d+(,\d+)*(\.\d+)? (g|kg) is used for \S*/g)
+    expressions?.forEach((expression) => {
+      const item = parseExpression(expression)
+      if (item) {
+        const tierName = item.tierName
+        const standardTierNames = shippingWeightTiersMap[tierName]
+        packagingItems.push({ tierName, standardTierNames, items: [item.packagingWeightItem] })
+      }
+    })
+    // `For standard shipments, a packaging weight of 40 g is used for items less than 250 g, 60 g for items between 250 and 500 g, and 125 g for packages over 500 g.`
+    const second = paragraphs[1]
+    const tierName = 'standard'
+    const standardTierNames = shippingWeightTiersMap[tierName]
+    const packagingWeightItems: IPackagingWeightItem[] = []
+    second.split(',').forEach((text) => {
+      const values = text.match(/\d+(,\d+)*(\.\d+)?( g|kg)?/g)
+      let isIntervalValue = text.includes('over')
+      // text `60 g for items between 250 and 500 g`, just use the first and the third
+      if (values?.length === 3) {
+        values.splice(1, 1)
+      }
+      if (values?.length === 2) {
+        const packagingWeight = parseUnit(values[0])
+        const minimumWeightUnit = parseUnit(values[1])
+        if (packagingWeight && minimumWeightUnit)
+          packagingWeightItems.push({
+            packagingWeight,
+            minimumWeightUnit: { ...minimumWeightUnit, operator: isIntervalValue ? '>' : '<=' },
+            desc: text,
+          })
+      }
+    })
+    packagingItems.push({ tierName, standardTierNames, items: packagingWeightItems })
+  }
+  return packagingItems
+}
+
+export function parseShippingWeight(content: string): IShippingWeight[] {
+  const empty = { value: NaN, unit: NotAvailable }
+  const expressions = content.match(/\d+(,\d+)*(\.\d+)?( g|kg) for \S+/g)
+  const items: IShippingWeight[] = []
+  const parseExpression = (text: string): { tierName: string; roundingUp: IMeasureUnit } | undefined => {
+    const values = text.split(' ')
+    if (values.length < 4) return
+    const value = parseFloat(values[0])
+    const unit = values[1]
+    const tierName = values[3]
+    return { tierName, roundingUp: { value, unit } }
+  }
+  expressions?.forEach((expression) => {
+    const item = parseExpression(expression)
+    if (item) {
+      const tierName = item.tierName
+      const standardTierNames = shippingWeightTiersMap[tierName]
+      items.push({ ...item, standardTierNames, useGreater: true })
+    }
+  })
+  return items
+}
+export function parseFba(content: string) {
+  const determineTier = (sizeTierName: string) => {
+    const tierName = sizeTierName
+    return {
+      tierName,
+      isApparel: false,
+      isDangerous: false,
+      standardTierNames: standardTiersMap[tierName],
+    }
+  }
+
+  const parseShippingAndFeeCell = (
+    shippingWeightContent: string,
+    fulfillmentFeeContent: string
+  ): [IFulfillmentFixedUnitFee | IFulfillmentAdditionalUnitFee, string] | undefined => {
+    const fees = fulfillmentFeeContent.match(/CAD \$|\d+(,\d+)?(\.\d+)?/g)
+    const fee =
+      fees && fees.length === 2 ? { value: parseFloat(fees[0]), currency: fees[1] } : { value: NaN, currency: '' }
+    const array = shippingWeightContent.match(/\d+(,\d+)?(\.\d+)?|(g|kg)/g)
+    if (array && array?.length > 1) {
+      const v1 = parseFloat(array[0])
+      const unit = array.length === 2 ? array[1] : array[2]
+      if (array.length === 2) {
+        if (shippingWeightContent.includes('Each')) {
+          return [
+            {
+              shippingWeight: { value: v1, unit },
+              fee,
+              shippingWeightText: shippingWeightContent,
+            },
+            'IFulfillmentAdditionalUnitFee',
+          ]
+        } else if (shippingWeightContent.includes('First')) {
+          return [
+            {
+              minimumShippingWeight: { value: 0, unit },
+              maximumShippingWeight: { value: v1, unit },
+              fee,
+              shippingWeightText: shippingWeightContent,
+            },
+            'IFulfillmentFixedUnitFee',
+          ]
+        }
+      } else if (array.length === 3) {
+        const v2 = parseFloat(array[1])
+        return [
+          {
+            minimumShippingWeight: { value: v1, unit },
+            maximumShippingWeight: { value: v2, unit },
+            fee,
+            shippingWeightText: shippingWeightContent,
+          },
+          'IFulfillmentFixedUnitFee',
+        ]
+      }
+    }
+  }
+  const fbaRuleItems: IFbaRuleItem[] = []
+  const $ = cheerio.load(content)
+  let fixedUnitFees: IFulfillmentFixedUnitFee[] = []
+  let additionalUnitFee: IFulfillmentAdditionalUnitFee
+  let currentProductTierKey: string
+  const rows = $('.help-table tbody tr')
+  rows.each((rowIndex, tr) => {
+    const cells = $(tr)
+      .find('td')
+      .map((_, cell): string => $(cell).text())
+    const [column1, column2, column3] = cells
+    if (column1 !== 'Product size tier') {
+      if (column3 && currentProductTierKey) {
+        console.log('push an item for currentProductTierKey, ', currentProductTierKey, ' now the ')
+        const tierData = determineTier(currentProductTierKey)
+        fbaRuleItems.push({
+          ...tierData,
+          additionalUnitFee,
+          fixedUnitFees,
+        })
+        fixedUnitFees = []
+      }
+
+      let shippingWeightText = column1
+      let fulfillmentFeeText = column2
+      if (column3) {
+        currentProductTierKey = column1
+        shippingWeightText = column2
+        fulfillmentFeeText = column3
+        fixedUnitFees = []
+      }
+      const result = parseShippingAndFeeCell(shippingWeightText, fulfillmentFeeText)
+      console.log('parseShippingAndFeeCell result', result)
+      if (result && result[1] === 'IFulfillmentFixedUnitFee') {
+        fixedUnitFees.push(result[0])
+      } else if (result && result[1] === 'IFulfillmentAdditionalUnitFee') {
+        additionalUnitFee = result[0]
+      }
+    }
+    if (rowIndex === rows.length - 1) {
+      // push the last one item
+      console.log('push the last item for currentProductTierKey, ', currentProductTierKey, ' now the fixedUnitFees is ', fixedUnitFees, ' and the additionalUnitFee is ', additionalUnitFee)
+      const tierData = determineTier(currentProductTierKey)
+      fbaRuleItems.push({
+        ...tierData,
+        additionalUnitFee,
+        fixedUnitFees,
+      })
+    }
+  })
+  return fbaRuleItems
+}
 
 export function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
@@ -180,13 +379,6 @@ export function parseReferral(content: string, subContent?: StringRecord) {
     const [nameEle, rateEle, miniFeeEle] = $(tr).find('td')
     const [category, excludingCategories, includingCategories] = parseCategory(
       $($(nameEle).contents().get(0)).text().trim() || $(nameEle).text()
-    )
-    console.log(
-      '$(miniFeeEle).text()',
-      $(miniFeeEle).text(),
-      $(miniFeeEle)
-        .text()
-        .replace(/(CAD)|$/g, '')
     )
     referralRule.push({
       category,
@@ -248,7 +440,6 @@ function parseReferralSubItem(content: string) {
 
   if (onlyOneRate) {
     const desc = $(content).text()
-    console.log('desc', desc, parseFloat(desc) / 100)
     rateItems.push({
       minPrice: 0,
       maxPrice: Number.MAX_VALUE,

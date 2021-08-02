@@ -23,7 +23,7 @@ export class UsProfitCalculator implements IProfitCalculator {
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for US',
-      dimensionalWeight: 'Loading tier content for US',
+      dimensionalWeight: 'Loading dimensional weight content for US',
       packaging: 'Loading package content for US',
       shipping: 'Loading shipping content for US',
       fba: 'Loading tier content for US',

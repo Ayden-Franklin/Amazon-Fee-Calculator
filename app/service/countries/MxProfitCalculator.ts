@@ -16,7 +16,7 @@ export class MxProfitCalculator implements IProfitCalculator {
   constructor(country: Country) {
     this.content = {
       tier: 'Loading tier content for Mexico',
-      dimensionalWeight: 'Loading weight content for Mexico',
+      dimensionalWeight: 'Loading dimensional weight content for Mexico',
       packaging: 'Loading package content for Mexico',
       shipping: 'Loading shipping content for Mexico',
       fba: 'Loading fba content for Mexico',
@@ -35,8 +35,15 @@ export class MxProfitCalculator implements IProfitCalculator {
     this.content = { tier, dimensionalWeight, packaging, shipping, fba, referral, closing: null }
   }
   parseRule() {
-    const tierRules = parseTier(this.content.tier)
-    return {}
+    const { referral, closing, tier } = this.content
+    const tierRules = parseTier(tier)
+
+    // referral maybe string or object
+    const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
+    const referralRules = parseReferral(referralRuleContext)
+
+    const closingRules = parseClosing(closing)
+    return { referralRules, closingRules }
   }
   calculateFbaFee(): number | Error {
     return 0
