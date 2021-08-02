@@ -52,9 +52,7 @@ export class CaProfitCalculator implements IProfitCalculator {
       packaging = parsePackagingWeight(this.content.packaging)
     }
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
-    // referral maybe string or object
-    const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
-    const referralRules = parseReferral(referralRuleContext)
+    const referralRules = parseReferral(referral)
     // closingFee
     const closingRules = parseClosing(this.content.closing)
     return { tierRules, dimensionalWeightRules, packaging, shippingWeightRules, referralRules, closingRules }

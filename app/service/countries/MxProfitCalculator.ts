@@ -38,9 +38,7 @@ export class MxProfitCalculator implements IProfitCalculator {
     const { referral, closing, tier } = this.content
     const tierRules = parseTier(tier)
 
-    // referral maybe string or object
-    const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
-    const referralRules = parseReferral(referralRuleContext)
+    const referralRules = parseReferral(referral)
 
     const closingRules = parseClosing(closing)
     return { referralRules, closingRules }

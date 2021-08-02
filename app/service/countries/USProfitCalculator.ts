@@ -36,13 +36,11 @@ export class UsProfitCalculator implements IProfitCalculator {
     const tier = await loadTierTable(this.currentCountry.code)
     const dimensionalWeight = await loadDimensionalWeightRule(this.currentCountry.code)
     const shipping = await loadShippingWeightRule(this.currentCountry.code)
-    const fbaRule = await loadFBATable(this.currentCountry.code)
-    const fbaSub = await await loadSubRule(this.currentCountry.code, 'fba')
-    const fba = fbaSub !== null ? { rule: fbaRule, ...fbaSub } : fbaRule
+    const fba = await loadFBATable(this.currentCountry.code)
+    this.fbaSub = await await loadSubRule(this.currentCountry.code, 'fba')
 
-    const referralRule = await loadReferralTable(this.currentCountry.code)
-    const referralSub = await loadSubRule(this.currentCountry.code, 'referral')
-    const referral = referralSub !== null ? { rule: referralRule, ...referralSub } : referralRule
+    const referral = await loadReferralTable(this.currentCountry.code)
+    this.referralSub = await loadSubRule(this.currentCountry.code, 'referral')
 
     const closing = await loadClosingFee(this.currentCountry.code)
     this.content = { tier, dimensionalWeight, packaging: null, shipping, fba, referral, closing }
@@ -51,17 +49,9 @@ export class UsProfitCalculator implements IProfitCalculator {
     const tierRules = parseTier(this.content.tier)
     const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
-
-    const { referral, fba } = this.content
-    // fba maybe string or object
-    const fbaRuleContext = typeof fba === 'string' ? fba : fba.rule
-    const fbaSubRule = typeof fba === 'object' ? fba : {}
-    const fbaRules = parseFba(fbaRuleContext)
-    const apparelRules = parseApparel(fbaSubRule?.apparel)
-    // referral maybe string or object
-    const referralRuleContext = typeof referral === 'string' ? referral : referral.rule
-    const referralSubRule = typeof referral === 'object' ? referral : {}
-    const referralRules = parseReferral(referralRuleContext, referralSubRule)
+    const fbaRules = parseFba(this.content.fba)
+    const apparelRules = parseApparel(this.fbaSub?.apparel)
+    const referralRules = parseReferral(this.content.referral, this.referralSub)
     // closingFee
     const closingRules = parseClosing(this.content.closing)
     return {

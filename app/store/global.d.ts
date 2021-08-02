@@ -17,8 +17,8 @@ declare interface IRuleContent {
   dimensionalWeight: string
   packaging: Nullable<string>
   shipping: string
-  fba: Or<string, StringRecord>
-  referral: Or<string, StringRecord>
+  fba: string
+  referral: string
   closing: Nullable<string>
 }
 
