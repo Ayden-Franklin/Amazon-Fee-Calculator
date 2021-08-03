@@ -243,10 +243,10 @@ export function parseFba(content: string) {
   ): [IFulfillmentFixedUnitFee | IFulfillmentAdditionalUnitFee, string] | undefined => {
     const fees = fulfillmentFeeContent.match(/CAD \$|\d+(,\d+)?(\.\d+)?/g)
     const fee =
-      fees && fees.length === 2 ? { value: parseFloat(fees[0]), currency: fees[1] } : { value: NaN, currency: '' }
+      fees && fees.length === 2 ? { value: parseFloat(fees[1]), currency: fees[0] } : { value: NaN, currency: '' }
     const array = shippingWeightContent.match(/\d+(,\d+)?(\.\d+)?|(g|kg)/g)
     if (array && array?.length > 1) {
-      const v1 = parseFloat(array[0])
+      const v1 = parseFloat(array[0].replace(',', ''))
       const unit = array.length === 2 ? array[1] : array[2]
       if (array.length === 2) {
         if (shippingWeightContent.includes('Each')) {
@@ -261,8 +261,8 @@ export function parseFba(content: string) {
         } else if (shippingWeightContent.includes('First')) {
           return [
             {
-              minimumShippingWeight: { value: 0, unit },
-              maximumShippingWeight: { value: v1, unit },
+              minimumShippingWeight: { value: 0, unit, operator: '>' },
+              maximumShippingWeight: { value: v1, unit, operator: '<=' },
               fee,
               shippingWeightText: shippingWeightContent,
             },
@@ -270,11 +270,11 @@ export function parseFba(content: string) {
           ]
         }
       } else if (array.length === 3) {
-        const v2 = parseFloat(array[1])
+        const v2 = parseFloat(array[1].replace(',', ''))
         return [
           {
-            minimumShippingWeight: { value: v1, unit },
-            maximumShippingWeight: { value: v2, unit },
+            minimumShippingWeight: { value: v1, unit, operator: '>' },
+            maximumShippingWeight: { value: v2, unit, operator: '<=' },
             fee,
             shippingWeightText: shippingWeightContent,
           },
@@ -290,11 +290,11 @@ export function parseFba(content: string) {
   let currentProductTierKey: string
   const rows = $('.help-table tbody tr')
   rows.each((rowIndex, tr) => {
-    const cells = $(tr)
-      .find('td')
-      .map((_, cell): string => $(cell).text())
-    const [column1, column2, column3] = cells
-    if (column1 !== 'Product size tier') {
+    if (rowIndex > 0) {
+      const cells = $(tr)
+        .find('td')
+        .map((_, cell): string => $(cell).text().trim())
+      const [column1, column2, column3] = cells
       if (column3 && currentProductTierKey) {
         const tierData = determineTier(currentProductTierKey)
         fbaRuleItems.push({
@@ -308,7 +308,7 @@ export function parseFba(content: string) {
       let shippingWeightText = column1
       let fulfillmentFeeText = column2
       if (column3) {
-        currentProductTierKey = column1
+        currentProductTierKey = column1.split(' ').shift() || 'unknown'
         shippingWeightText = column2
         fulfillmentFeeText = column3
         fixedUnitFees = []

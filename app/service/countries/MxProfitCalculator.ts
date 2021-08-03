@@ -51,10 +51,19 @@ export class MxProfitCalculator implements IProfitCalculator {
       packagingWeightRules = parsePackagingWeight(this.content.packaging)
     }
     const shippingWeightRules = parseShippingWeight(this.content.shipping)
+    const fbaRules = parseFba(this.content.fba)
     const referralRules = parseReferral(referral)
 
     const closingRules = parseClosing(closing)
-    return { tierRules, dimensionalWeightRules, packagingWeightRules, shippingWeightRules, referralRules, closingRules }
+    return {
+      tierRules,
+      dimensionalWeightRules,
+      packagingWeightRules,
+      shippingWeightRules,
+      fbaRules,
+      referralRules,
+      closingRules,
+    }
   }
   calculateFbaFee(): number | Error {
     return 0

@@ -39,7 +39,7 @@ const initialState: CalculatorState = {
     isDangerous: false,
   },
   productFees: {
-    fbaFee: 0,
+    fbaFee: { value: 0, currency: '' },
     referralFee: 0,
     closingFee: 0,
     totalFee: 0,
@@ -61,7 +61,7 @@ export interface ProductInput {
   isDangerous: boolean
 }
 export interface ProductFees {
-  fbaFee: number
+  fbaFee: IFeeUnit
   referralFee: number
   closingFee: number
   totalFee: number
@@ -127,7 +127,7 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
 
   return {
-    fbaFee: numberFix2(fbaFee.value),
+    fbaFee: { ...fbaFee, value: numberFix2(fbaFee.value) },
     referralFee: numberFix2(referralFee),
     closingFee: numberFix2(closingFee),
     totalFee: numberFix2(fbaFee.value + referralFee + closingFee),
@@ -161,7 +161,7 @@ const calculatorSlice = createSlice({
     },
     resetFee: (state) => {
       state.productFees = {
-        fbaFee: 0,
+        fbaFee: { value: 0, currency: '' },
         referralFee: 0,
         closingFee: 0,
         totalFee: 0,

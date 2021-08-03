@@ -335,7 +335,7 @@ function Calculator() {
                   <TextField
                     id="tier-value"
                     disabled
-                    value={`$${calculatorStore.productFees.fbaFee}`}
+                    value={`${calculatorStore.productFees.fbaFee.currency}${calculatorStore.productFees.fbaFee.value}`}
                     size="small"
                     InputProps={{
                       readOnly: true,

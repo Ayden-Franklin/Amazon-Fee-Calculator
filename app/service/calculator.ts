@@ -160,24 +160,21 @@ export function calculateShippingWeight({
   dimensionalWeight: number
   shippingWeights: IShippingWeight[]
 }) {
-  let shippingWeightItem: IShippingWeight
-  for (const shippingWeight of shippingWeights) {
+  const shippingWeightItem = shippingWeights.find((shippingWeight) => {
     if (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) {
       if (shippingWeight.weightConstraint?.unit === NotAvailable) {
-        shippingWeightItem = shippingWeight
-        break
+        return true
       } else {
         if (shippingWeight.weightConstraint && compareWithUnit(weight, shippingWeight.weightConstraint)) {
-          shippingWeightItem = shippingWeight
-          break
+          return true
         } else {
-          shippingWeightItem = shippingWeight
-          break
+          return true
         }
       }
+    } else {
+      return false
     }
-  }
-  // TODO need return unit
+  })
   const v = shippingWeightItem
     ? shippingWeightItem.useGreater
       ? Math.max(weight.value, dimensionalWeight)
@@ -205,12 +202,14 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
       isDangerous === ruleItem.isDangerous
     ) {
       const { fixedUnitFees, additionalUnitFee } = ruleItem
+      let firstFixedFeeItem: IFulfillmentFixedUnitFee
       for (const fixedUnitFee of fixedUnitFees) {
+        firstFixedFeeItem = fixedUnitFee
         let target = fixedUnitFee.maximumShippingWeight
         if (!compareWithUnit(shippingWeight, target)) {
           continue
         } else {
-          console.log('calculateFbaFee. rule -> ', target)
+          console.log('calculateFbaFee. rule -> ', fixedUnitFee)
           return fixedUnitFee.fee
         }
       }
@@ -222,10 +221,18 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
         if (shippingWeight.unit !== additionalUnitFee.shippingWeight.unit) {
           shippingWeightValue = convertWeightUnit(shippingWeight, additionalUnitFee.shippingWeight.unit)
         }
+        let fbaFee = 0
+        if (firstFixedFeeItem) {
+          fbaFee =
+            ((shippingWeightValue - firstFixedFeeItem.maximumShippingWeight.value) /
+              additionalUnitFee.shippingWeight.value) *
+              additionalUnitFee.fee.value +
+            firstFixedFeeItem.fee.value
+        } else {
+          fbaFee = (shippingWeightValue / additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value
+        }
         return {
-          value:
-            additionalUnitFee.fee.value +
-            (shippingWeightValue - additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value,
+          value: fbaFee,
           currency: additionalUnitFee.fee.currency,
         }
       }
