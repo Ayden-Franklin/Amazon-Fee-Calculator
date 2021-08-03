@@ -276,8 +276,8 @@ export function parseFba(content: string) {
         } else if (shippingWeightContent.includes('First')) {
           return [
             {
-              minimumShippingWeight: { value: 0, unit },
-              maximumShippingWeight: { value: v1, unit },
+              minimumShippingWeight: { value: 0, unit, operator: '>' },
+              maximumShippingWeight: { value: v1, unit, operator: '<=' },
               fee,
               shippingWeightText: shippingWeightContent,
             },
@@ -289,8 +289,8 @@ export function parseFba(content: string) {
         const unit2 = array.length === 3 ? unit : array[3]
         return [
           {
-            minimumShippingWeight: { value: v1, unit },
-            maximumShippingWeight: { value: v2, unit: unit2 },
+            minimumShippingWeight: { value: v1, unit, operator: '>' },
+            maximumShippingWeight: { value: v2, unit: unit2, operator: '<=' },
             fee,
             shippingWeightText: shippingWeightContent,
           },

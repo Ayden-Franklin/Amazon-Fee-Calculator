@@ -202,9 +202,9 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
       isDangerous === ruleItem.isDangerous
     ) {
       const { fixedUnitFees, additionalUnitFee } = ruleItem
-      let firstFixedFeeItem: IFulfillmentFixedUnitFee
+      let lastFixedFeeItem: IFulfillmentFixedUnitFee
       for (const fixedUnitFee of fixedUnitFees) {
-        firstFixedFeeItem = fixedUnitFee
+        lastFixedFeeItem = fixedUnitFee
         let target = fixedUnitFee.maximumShippingWeight
         if (!compareWithUnit(shippingWeight, target)) {
           continue
@@ -214,7 +214,12 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
         }
       }
       if (additionalUnitFee) {
-        console.log('calculateFbaFee. rule -> ', additionalUnitFee)
+        console.log(
+          'calculateFbaFee. rule -> fixedUnitFee =',
+          lastFixedFeeItem,
+          ' additionalUnitFee = ',
+          additionalUnitFee
+        )
         // calculate fee by weight
         // first, convert the unit of weight to calculate
         let shippingWeightValue = shippingWeight.value
@@ -222,12 +227,12 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
           shippingWeightValue = convertWeightUnit(shippingWeight, additionalUnitFee.shippingWeight.unit)
         }
         let fbaFee = 0
-        if (firstFixedFeeItem) {
+        if (lastFixedFeeItem) {
           fbaFee =
-            ((shippingWeightValue - firstFixedFeeItem.maximumShippingWeight.value) /
+            ((shippingWeightValue - lastFixedFeeItem.maximumShippingWeight.value) /
               additionalUnitFee.shippingWeight.value) *
               additionalUnitFee.fee.value +
-            firstFixedFeeItem.fee.value
+            lastFixedFeeItem.fee.value
         } else {
           fbaFee = (shippingWeightValue / additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value
         }
