@@ -462,7 +462,10 @@ export function parseReferral(content: string, subContent?: StringRecord) {
 
   $('tbody tr').each((_, tr) => {
     const [nameEle, rateEle, miniFeeEle] = $(tr).find('td')
-
+    // eg: ["$", "8.00"]
+    const [currency, feeValue] = $(miniFeeEle)
+      .text()
+      .split(/(\d+(.\d+)?)/)
     const [category, excludingCategories, includingCategories] = parseCategory($($(nameEle).contents().get(0)).text())
     referralRule.push({
       category,
@@ -472,7 +475,8 @@ export function parseReferral(content: string, subContent?: StringRecord) {
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
       rateItems: parseReferralSubItem($(rateEle).toString()),
-      minimumFee: parseFloat($(miniFeeEle).text().substring(1)) || 0,
+      minimumFee: parseFloat(feeValue) || 0,
+      currency: currency?.trim().replace('--', '') || NotAvailable,
     })
   })
 
@@ -566,7 +570,7 @@ function parseReferralSubItem(content: string) {
 
   return rateItems
 }
-export function parseClosing(content: Nullable<string>): IClosingRule[] {
+export function parseClosing(content: Nullable<string>): IClosing[] {
   if (!content) return []
 
   const $ = cheerio.load(content)
@@ -587,11 +591,12 @@ export function parseClosing(content: Nullable<string>): IClosingRule[] {
     {
       categories: names,
       fee: parseFloat(fee.substring(1)),
+      currency: fee.substring(0, 1),
     },
   ]
 }
 
-export function parseApparel(content: Nullable<string>): IApparelRule[] {
+export function parseApparel(content: Nullable<string>): IApparel[] {
   if (!content) return []
   /**
    * TODO

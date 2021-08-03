@@ -28,6 +28,7 @@ import {
 } from '@src/store/calculatorSlice'
 import { checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch, useAppSelector } from '@src/store/hooks'
+import { NotAvailable } from '@src/service/constants'
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -126,6 +127,8 @@ function Calculator() {
       dispatch(calculate({}))
     }
   }, [calculatorStore.productInput])
+
+  const displayFee = (fee: IFeeUnit) => `${fee.currency === NotAvailable ? '' : fee.currency}${fee.value}`
 
   return (
     <Container component="main" maxWidth="lg">
@@ -365,7 +368,7 @@ function Calculator() {
                   <TextField
                     id="referral-value"
                     disabled
-                    value={`$${calculatorStore.productFees.referralFee}`}
+                    value={displayFee(calculatorStore.productFees.referralFee)}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -395,7 +398,7 @@ function Calculator() {
                   <TextField
                     id="closing-value"
                     disabled
-                    value={`$${calculatorStore.productFees.closingFee}`}
+                    value={displayFee(calculatorStore.productFees.closingFee)}
                     size="small"
                     InputProps={{
                       readOnly: true,

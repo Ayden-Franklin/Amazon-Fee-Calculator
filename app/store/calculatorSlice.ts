@@ -23,6 +23,7 @@ interface CalculatorState {
   status: StateStatus
   error?: string
 }
+const initialFee = { value: 0, currency: '' }
 const initialState: CalculatorState = {
   loading: false,
   tier: null,
@@ -39,9 +40,9 @@ const initialState: CalculatorState = {
     isDangerous: false,
   },
   productFees: {
-    fbaFee: { value: 0, currency: '' },
-    referralFee: 0,
-    closingFee: 0,
+    fbaFee: initialFee,
+    referralFee: initialFee,
+    closingFee: initialFee,
     totalFee: 0,
     net: 0,
   },
@@ -62,8 +63,8 @@ export interface ProductInput {
 }
 export interface ProductFees {
   fbaFee: IFeeUnit
-  referralFee: number
-  closingFee: number
+  referralFee: IFeeUnit
+  closingFee: IFeeUnit
   totalFee: number
   net: number
 }
@@ -125,14 +126,15 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
   const closingFee = calculateClosingFee(productInput, rules.closingRules)
 
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
+  const eatValue = (o: IFeeUnit): IFeeUnit => ({ ...o, value: numberFix2(o.value) })
 
   return {
-    fbaFee: { ...fbaFee, value: numberFix2(fbaFee.value) },
-    referralFee: numberFix2(referralFee),
-    closingFee: numberFix2(closingFee),
-    totalFee: numberFix2(fbaFee.value + referralFee + closingFee),
+    fbaFee: eatValue(fbaFee),
+    referralFee: eatValue(referralFee),
+    closingFee: eatValue(closingFee),
+    totalFee: numberFix2(fbaFee.value + referralFee.value + closingFee.value),
     net: numberFix2(
-      state.productInput.price - (state.productInput.cost ?? 0) - fbaFee.value - referralFee - closingFee
+      state.productInput.price - (state.productInput.cost ?? 0) - fbaFee.value - referralFee.value - closingFee.value
     ),
   }
 }
@@ -161,9 +163,9 @@ const calculatorSlice = createSlice({
     },
     resetFee: (state) => {
       state.productFees = {
-        fbaFee: { value: 0, currency: '' },
-        referralFee: 0,
-        closingFee: 0,
+        fbaFee: initialFee,
+        referralFee: initialFee,
+        closingFee: initialFee,
         totalFee: 0,
         net: 0,
       }

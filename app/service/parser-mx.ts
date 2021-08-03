@@ -382,6 +382,8 @@ export function parseReferral(content: string, subContent?: StringRecord) {
     const [category, excludingCategories, includingCategories] = parseCategory(
       $($(nameEle).contents().get(0)).text().trim() || $(nameEle).text()
     )
+    // eg: ["MXN", "8.00"]
+    const [currency, feeValue] = $(miniFeeEle).text().trim().split(/\s/)
     referralRule.push({
       category,
       // TODO , need by country diff handle
@@ -390,12 +392,8 @@ export function parseReferral(content: string, subContent?: StringRecord) {
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
       rateItems: parseReferralSubItem($(rateEle).toString()),
-      minimumFee:
-        parseFloat(
-          $(miniFeeEle)
-            .text()
-            .replace(/MXN|\$/g, '')
-        ) || 0,
+      minimumFee: parseFloat(feeValue) || 0,
+      currency: currency || NotAvailable,
     })
   })
 
@@ -497,6 +495,6 @@ function parseReferralSubItem(content: string) {
   }
   return rateItems
 }
-export function parseClosing(content: Nullable<string>): IClosingRule[] {
+export function parseClosing(content: Nullable<string>): IClosing[] {
   return []
 }

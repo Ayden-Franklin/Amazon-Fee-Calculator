@@ -342,7 +342,7 @@ function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable
   return results.length <= 0 ? null : results
 }
 
-export function calculateReferralFee(product: IProductCategory, rules: IReferralFee[]) {
+export function calculateReferralFee(product: IProductCategory, rules: IReferralFee[]): IFeeUnit {
   const { price } = product
   let filRule = null
   let refRules = []
@@ -372,7 +372,7 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
   console.log('ReferralFee -> ', refRules, filRule)
 
   if (filRule === null) {
-    return NaN
+    return { value: NaN, currency: NotAvailable }
   }
 
   let totalFee = 0
@@ -389,22 +389,24 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
     }
   }
 
-  return Math.max(filRule.minimumFee, totalFee)
+  return { value: Math.max(filRule.minimumFee, totalFee), currency: filRule.currency }
 }
 
-export function calculateClosingFee(product: IProductCategory, rules?: IClosingRule[]) {
-  if (!rules) return 0
+export function calculateClosingFee(product: IProductCategory, rules?: IClosing[]): IFeeUnit {
+  const emptyFee = { value: 0, currency: NotAvailable }
+  if (!rules) return emptyFee
+  const closing2Fee = (r: IClosing): IFeeUnit => ({ value: r.fee, currency: r.currency })
   for (const r of rules) {
     const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null && res?.length > 0)
     if (calcRes?.length > 0) {
       console.log('ClosingFee -> ', r, calcRes)
-      return r.fee
+      return closing2Fee(r)
     }
   }
-  return 0
+  return emptyFee
 }
 
-export function calcApparelByCategory(product: IProductCategory, rules?: IApparelRule[]): boolean {
+export function calcApparelByCategory(product: IProductCategory, rules?: IApparel[]): boolean {
   if (!rules || !product) return false
   if (product?.breadcrumbTree) {
     const compValues = rules.map((c) => ({

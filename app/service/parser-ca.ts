@@ -377,6 +377,7 @@ export function parseReferral(content: string, subContent?: StringRecord) {
     const [category, excludingCategories, includingCategories] = parseCategory(
       $($(nameEle).contents().get(0)).text().trim() || $(nameEle).text()
     )
+    const [currency, feeValue] = $(miniFeeEle).text().split('$')
     referralRule.push({
       category,
       // TODO , need by country diff handle
@@ -385,12 +386,8 @@ export function parseReferral(content: string, subContent?: StringRecord) {
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
       rateItems: parseReferralSubItem($(rateEle).toString()),
-      minimumFee:
-        parseFloat(
-          $(miniFeeEle)
-            .text()
-            .replace(/CAD|\$/g, '')
-        ) || 0,
+      minimumFee: parseFloat(feeValue) || 0,
+      currency: currency?.trim().replace('--', '') || NotAvailable,
     })
   })
 
@@ -483,17 +480,14 @@ function parseReferralSubItem(content: string) {
 
   return rateItems
 }
-export function parseClosing(content: Nullable<string>): IClosingRule[] {
+export function parseClosing(content: Nullable<string>): IClosing[] {
   if (!content) return []
-
   const $ = cheerio.load(content)
-  const table = $('.help-content:eq(0)')
-  const p = $(table).find('div p')
-  const text = $(p).text()
-  const array = text.match(/\$\d+(\.\d*)?/)
-  const fee = array && array?.length > 0 ? array[0] : '$0'
+  const text = $($($('.help-content:eq(0)')).find('div p')).text()
+  const array = text.match(/CAD\s\$\d+(\.\d*)?/)
+  const fee = array && array?.length > 0 ? array[0].split('$') : ['CAD', '0']
 
-  // TODO
+  // TODO Text parsing comes with great difficulties
   const coreStringKey = 'categories are'
   const begin = text.indexOf(coreStringKey) + coreStringKey.length
   const categoryNames = text.substring(begin) + 1
@@ -504,7 +498,8 @@ export function parseClosing(content: Nullable<string>): IClosingRule[] {
   return [
     {
       categories: names,
-      fee: parseFloat(fee.substring(1)),
+      fee: parseFloat(fee[1]),
+      currency: fee[0].trim(),
     },
   ]
 }

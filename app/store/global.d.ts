@@ -21,7 +21,9 @@ declare interface IRuleContent {
   referral: string
   closing: Nullable<string>
 }
-
+declare interface ICurrency {
+  currency: string
+}
 declare interface IFeeUnit {
   value: number
   currency: string
@@ -74,7 +76,7 @@ declare interface IReferralRateFeeItem {
   maxPrice: number
   desc: string
 }
-declare interface IReferralFee {
+declare interface IReferralFee extends ICurrency {
   category: string
   // TODO for other category use referralRule
   otherable: boolean
@@ -109,13 +111,13 @@ declare interface IDimensionalWeightRule {
   weightConstraints?: IDimensionalWeightConstraint[]
   divisor: number
 }
-declare interface IClosingRule {
+declare interface IClosing extends ICurrency {
   categories: string[]
   fee: number
   desc?: string
 }
 
-declare interface IApparelRule {
+declare interface IApparel {
   requireParent: Array<string>
   matchCategory: string
 }
@@ -127,6 +129,6 @@ declare interface IRuleCollection {
   shippingWeightRules?: IShippingWeight[]
   fbaRules?: IFbaRuleItem[]
   referralRules?: IReferralFee[]
-  closingRules?: IClosingRule[]
-  apparelRules?: IApparelRule[]
+  closingRules?: IClosing[]
+  apparelRules?: IApparel[]
 }
