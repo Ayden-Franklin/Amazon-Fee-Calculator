@@ -277,7 +277,7 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Array<I
     result.push({ order: -1, by: 'rawCategory' })
   }
   // get country map category  // TODO
-  const categoryMapping = getCategoryMappingByCountryCode('us')
+  const categoryMapping = getCategoryMappingByCountryCode(product?.country || 'us')
   const mappingCategories = categoryMapping[minifyCategory] || [{ name: matchCategory, order: -1 }]
 
   if (mappingCategories) {

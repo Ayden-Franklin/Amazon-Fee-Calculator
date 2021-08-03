@@ -1,5 +1,6 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
+import { minify } from '@src/service/utils'
 
 export function parseTier(content: string) {
   const empty = { value: NaN, unit: NotAvailable }
@@ -387,7 +388,7 @@ export function parseReferral(content: string, subContent?: StringRecord) {
     referralRule.push({
       category,
       // TODO , need by country diff handle
-      otherable: ['Everything Else'].includes(category),
+      otherable: [minify('Everything else')].includes(minify(category)),
       excludingCategories,
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
