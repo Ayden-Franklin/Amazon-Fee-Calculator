@@ -1,11 +1,3 @@
-/**
- * import na from './na'
- * export default Object.assign({}, na, {
- *   // TODO
- *   // mx special categories
- * })
- */
-
 export default {
   babyproducts: [{ name: 'Bebé', order: 0 }],
   cameraphoto: [{ name: 'Cámaras y Fotografía', order: 1 }],

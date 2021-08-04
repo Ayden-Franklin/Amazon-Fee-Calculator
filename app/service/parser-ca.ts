@@ -425,6 +425,30 @@ export function parseReferral(content: string, subContent?: StringRecord) {
         })
     }
   })
+
+  const injectReferralNames = ['Sports Collectibles']
+  const injectReferralRules = referralRule.filter((r) => injectReferralNames.includes(r.category))
+  injectReferralRules.forEach((r) => {
+    // https://sellercentral.amazon.ca/gp/help/external/200800780?language=en_CA&ref=efph_200800780_cont_200336920
+    // For example, if the total sales price is $500, the referral fee is calculated as follows: $20 (for the first $100 of the total sales price) plus $40 (for the remaining $400 of the total sales price) for a total referral fee of $60.
+    r.rateItems =
+      {
+        'Sports Collectibles': [
+          {
+            minPrice: 0,
+            maxPrice: 100,
+            rate: 0.2,
+            desc: 'Category Requirements for referral fees',
+          },
+          {
+            minPrice: 100,
+            maxPrice: Number.MAX_VALUE,
+            rate: 0.4,
+            desc: 'Category Requirements for referral fees',
+          },
+        ],
+      }[r.category] || []
+  })
   return referralRule
 }
 

@@ -128,7 +128,7 @@ function Calculator() {
     }
   }, [calculatorStore.productInput])
 
-  const displayFee = (fee: IFeeUnit) => `${fee.currency === NotAvailable ? '' : fee.currency}${fee.value}`
+  const displayFee = (fee: IFeeUnit) => `${fee.currency === NotAvailable ? '' : fee.currency} ${fee.value}`
 
   return (
     <Container component="main" maxWidth="lg">
@@ -338,7 +338,7 @@ function Calculator() {
                   <TextField
                     id="tier-value"
                     disabled
-                    value={`${calculatorStore.productFees.fbaFee.currency}${calculatorStore.productFees.fbaFee.value}`}
+                    value={`${displayFee(calculatorStore.productFees.fbaFee)}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
