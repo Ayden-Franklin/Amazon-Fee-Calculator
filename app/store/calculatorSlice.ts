@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
   TierData,
-  determineTierByUnit,
+  determineTier,
   calculateDimensionalWeight,
   calculateShippingWeight,
   calculateFbaFee,
@@ -85,7 +85,7 @@ function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): U
   let { length, width, height } = { ...initialProductSize }
   const [shortest, median, longest] = sortByUnit(length, width, height)
   const productSize = { ...initialProductSize, length: longest, width: median, height: shortest }
-  const productTier = determineTierByUnit(productSize, tierRules)
+  const productTier = determineTier(productSize, tierRules)
 
   if (productTier) {
     const dimensionalWeightRule = rules.dimensionalWeightRules

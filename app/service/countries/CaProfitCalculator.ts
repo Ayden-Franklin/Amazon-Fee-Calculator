@@ -16,7 +16,7 @@ import {
   parseFba,
   parseReferral,
   parseClosing,
-} from '@src/service/parser-ca'
+} from '@src/service/parser/parser-ca'
 
 export class CaProfitCalculator implements IProfitCalculator {
   currentCountry: Country
@@ -25,8 +25,8 @@ export class CaProfitCalculator implements IProfitCalculator {
     this.content = {
       tier: 'Loading tier content for Canada',
       dimensionalWeight: 'Loading dimensional weight content for Canada',
-      packaging: 'Loading package content for Canada',
-      shipping: 'Loading shipping content for Canada',
+      packagingWeight: 'Loading package content for Canada',
+      shippingWeight: 'Loading shipping content for Canada',
       fba: 'Loading fba content for Canada',
       referral: 'Loading referral content for Canada',
       closing: 'Loading closing content for Canada',
@@ -36,22 +36,22 @@ export class CaProfitCalculator implements IProfitCalculator {
   async fetchRuleContent() {
     const tier = await loadTierTable(this.currentCountry.code)
     const dimensionalWeight = await loadDimensionalWeightRule(this.currentCountry.code)
-    const shipping = await loadShippingWeightRule(this.currentCountry.code)
-    const packaging = await loadPackagingRule(this.currentCountry.code)
+    const shippingWeight = await loadShippingWeightRule(this.currentCountry.code)
+    const packagingWeight = await loadPackagingRule(this.currentCountry.code)
     const fba = await loadFBATable(this.currentCountry.code)
     const referral = await loadReferralTable(this.currentCountry.code)
     const closing = await loadClosingFee(this.currentCountry.code)
-    this.content = { tier, dimensionalWeight, packaging, shipping, fba, referral, closing }
+    this.content = { tier, dimensionalWeight, packagingWeight, shippingWeight, fba, referral, closing }
   }
   parseRule() {
     const { referral } = this.content
     const tierRules = parseTier(this.content.tier)
     const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
     let packagingWeightRules = null
-    if (this.content.packaging) {
-      packagingWeightRules = parsePackagingWeight(this.content.packaging)
+    if (this.content.packagingWeight) {
+      packagingWeightRules = parsePackagingWeight(this.content.packagingWeight)
     }
-    const shippingWeightRules = parseShippingWeight(this.content.shipping)
+    const shippingWeightRules = parseShippingWeight(this.content.shippingWeight)
     const fbaRules = parseFba(this.content.fba)
     const referralRules = parseReferral(referral)
     // closingFee

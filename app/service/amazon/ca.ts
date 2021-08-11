@@ -27,7 +27,7 @@ export default {
       return output && output === '' ? response : output
     },
   },
-  packaging: {
+  packagingWeight: {
     url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
@@ -52,7 +52,7 @@ export default {
       throw Error('Fail to extract effective paragraph for packaing!')
     },
   },
-  shipping: {
+  shippingWeight: {
     url: 'https://sellercentral.amazon.ca/gp/help/external/G201112670',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)

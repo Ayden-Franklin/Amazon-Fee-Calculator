@@ -1,5 +1,5 @@
 import got from 'got'
-import Constants, { CountryItemKey } from './constants'
+import Constants, { FeeRuleContentKey } from './constants'
 
 const cacheStore = (function () {
   return {
@@ -19,8 +19,6 @@ function fetchWithCacheByCountryItemValue(rq: {
   url: string
   extractOriginalContent: (response: string) => string | null
 }): Promise<string> {
-  if (!rq) return Promise.reject(new Error(`fetchWithCacheByCountryItemValue rq null`))
-
   const rqUrl = rq.url
   const onRqBody = (body: string) => rq.extractOriginalContent(body) || 'Extract Unknown'
   // cache handle
@@ -38,13 +36,15 @@ function fetchWithCacheByCountryItemValue(rq: {
     })
 }
 
-function loadContent(countryCode: string, name: CountryItemKey): Promise<string> {
+function loadContent(countryCode: string, name: FeeRuleContentKey): Promise<string> {
   if (!countryCode || !Constants[countryCode]) {
     return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
-
   const rq = Constants[countryCode][name]
-
+  if (!rq)
+    return Promise.reject(
+      new Error(`${countryCode}.${name} probably not be defined in /service/amazon/${countryCode}.ts file`)
+    )
   return fetchWithCacheByCountryItemValue(rq)
 }
 export function loadTierTable(countryCode: string): Promise<string> {
@@ -56,11 +56,11 @@ export function loadDimensionalWeightRule(countryCode: string): Promise<string> 
 }
 
 export function loadShippingWeightRule(countryCode: string): Promise<string> {
-  return loadContent(countryCode, 'shipping')
+  return loadContent(countryCode, 'shippingWeight')
 }
 
 export function loadPackagingRule(countryCode: string): Promise<string> {
-  return loadContent(countryCode, 'packaging')
+  return loadContent(countryCode, 'packagingWeight')
 }
 export function loadFBATable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'fba')
@@ -70,13 +70,16 @@ export function loadReferralTable(countryCode: string): Promise<string> {
   return loadContent(countryCode, 'referral')
 }
 
-export function loadSubRule(countryCode: string, field: CountryItemKey): Promise<Nullable<Record<string, string>>> {
+export function loadExtraRule(
+  countryCode: string,
+  field: FeeRuleContentKey
+): Promise<Nullable<Record<string, string>>> {
   if (!countryCode || !Constants[countryCode]) {
     return Promise.reject(new Error(`This country[$country] is not supported!`))
   }
 
   const rq = Constants[countryCode]?.[field]
-  const sub = rq?.sub
+  const sub = rq?.extra
 
   if (!sub) return Promise.resolve(null)
 

@@ -2,18 +2,25 @@ import ca from './ca'
 import mx from './mx'
 import us from './us'
 
-interface CountryItemValue {
+interface FeeRuleContentValue {
   url: string
-  sub?: Record<string, CountryItemValue>
+  extra?: Record<string, FeeRuleContentValue>
   extractOriginalContent: (response: string) => string | null
   extractContent: (response: string) => string | null
 }
 
-export type CountryItemKey = 'tier' | 'dimensionalWeight' | 'shipping' | 'packaging' | 'fba' | 'referral' | 'closing'
+export type FeeRuleContentKey =
+  | 'tier'
+  | 'dimensionalWeight'
+  | 'shippingWeight'
+  | 'packagingWeight'
+  | 'fba'
+  | 'referral'
+  | 'closing'
 
-export type Country = Record<CountryItemKey, CountryItemValue>
+export type FeeRuleContent = Record<FeeRuleContentKey, FeeRuleContentValue>
 
-const Constants: Record<string, Country> = {
+const Constants: Record<string, FeeRuleContent> = {
   ca,
   mx,
   us,

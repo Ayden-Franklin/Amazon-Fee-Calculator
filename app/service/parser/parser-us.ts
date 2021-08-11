@@ -1,7 +1,7 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
 
-export function parseTier(content: string) {
+export function parseTier(content: string): ITier[] {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
@@ -47,7 +47,7 @@ export function parseTier(content: string) {
 const dimensionalTiersMap: Record<string, Array<string>> = {
   oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
 }
-export function parseDimensionalWeight(content: string): IDimensionalWeightRule {
+export function parseDimensionalWeight(content: string): IDimensionalWeight {
   const $ = cheerio.load(content)
   const divisorText = content.match(/divided by \d+(\.\d+)?/)
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
@@ -192,7 +192,7 @@ const fbaProductTiersMap: Record<
       isApparel: false,
       isDangerous: true,
     },
-    'Large standard':{
+    'Large standard': {
       tierName: 'Large standard-size',
       isApparel: false,
       isDangerous: true,
@@ -302,7 +302,9 @@ export function parseFba(content: string) {
       ]
     }
   }
-  const parseFulfillmentFeePerUnit = (content: string): [IFeeUnit, IFulfillmentAdditionalUnitFee, number] | undefined => {
+  const parseFulfillmentFeePerUnit = (
+    content: string
+  ): [IFeeUnit, IFulfillmentAdditionalUnitFee, number] | undefined => {
     const array = content.match(/\d+(\.\d+)?(\/lb)?/g)
     if (array && array.length > 0) {
       let fixedUnitFee = { value: parseFloat(array[0]), currency: '$' }
@@ -327,7 +329,7 @@ export function parseFba(content: string) {
       }
     }
   }
-  const fbaRuleItems: IFbaRuleItem[] = []
+  const fbaRuleItems: IFbaItem[] = []
   const $ = cheerio.load(content)
   let fixedUnitFees: IFulfillmentFixedUnitFee[] = []
   let additionalUnitFee: IFulfillmentAdditionalUnitFee
@@ -423,7 +425,7 @@ export function parseFba(content: string) {
 
 export function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
-  let referralRule: IReferralFee[] = []
+  let referralRule: IReferralItem[] = []
 
   // for handle Baby Products (excluding Baby Apparel)
   const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
@@ -518,15 +520,15 @@ export function parseReferral(content: string, subContent?: StringRecord) {
 
 function parseReferralSubItem(content: string) {
   const $ = cheerio.load(content)
-  const rateItems: IReferralRateFeeItem[] = []
+  const rateItems: IReferralRateFee[] = []
   const onlyOneRate = $('ul').length === 0
 
   if (onlyOneRate) {
     const desc = $(content).text()
 
     rateItems.push({
-      minPrice: 0,
-      maxPrice: Number.MAX_VALUE,
+      minimumPrice: 0,
+      maximumPrice: Number.MAX_VALUE,
       rate: parseFloat(desc) / 100,
       desc,
     })
@@ -556,12 +558,12 @@ function parseReferralSubItem(content: string) {
         // console.log('array', array, priceV1, priceV2)
 
         const lastRate = rateItems.length && rateItems[rateItems.length - 1]
-        const minPrice = lastRate ? lastRate?.maxPrice : 0
-        const maxPrice = priceV2 || (minPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
+        const minimumPrice = lastRate ? lastRate?.maximumPrice : 0
+        const maximumPrice = priceV2 || (minimumPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
 
         rateItems.push({
-          minPrice,
-          maxPrice,
+          minimumPrice,
+          maximumPrice,
           rate,
           desc,
         })

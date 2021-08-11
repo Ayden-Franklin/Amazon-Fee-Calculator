@@ -290,8 +290,8 @@ export const InitializedStateSlice = {
   content: {
     tier: 'Content has not been initialized',
     dimensionalWeight: 'Content has not been initialized',
-    packaging: 'Content has not been initialized',
-    shipping: 'Content has not been initialized',
+    packagingWeight: 'Content has not been initialized',
+    shippingWeight: 'Content has not been initialized',
     fba: 'Content has not been initialized',
     referral: 'Content has not been initialized',
     closing: 'Content has not been initialized',

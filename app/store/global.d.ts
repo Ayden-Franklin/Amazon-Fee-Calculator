@@ -15,8 +15,8 @@ declare interface Country {
 declare interface IRuleContent {
   tier: string
   dimensionalWeight: string
-  packaging: Nullable<string>
-  shipping: string
+  packagingWeight: Nullable<string>
+  shippingWeight: string
   fba: string
   referral: string
   closing: Nullable<string>
@@ -63,26 +63,26 @@ declare interface IFulfillmentAdditionalUnitFee {
   shippingWeightText: string
 }
 
-declare interface IFbaRuleItem extends ITierStandardization {
+declare interface IFbaItem extends ITierStandardization {
   isApparel: boolean | 'n/a'
   isDangerous: boolean | 'n/a'
   fixedUnitFees: IFulfillmentFixedUnitFee[]
   additionalUnitFee: IFulfillmentAdditionalUnitFee
 }
 
-declare interface IReferralRateFeeItem {
+declare interface IReferralRateFee {
   rate: number
-  minPrice: number
-  maxPrice: number
+  minimumPrice: number
+  maximumPrice: number
   desc: string
 }
-declare interface IReferralFee extends ICurrency {
+declare interface IReferralItem extends ICurrency {
   category: string
   // TODO for other category use referralRule
   otherable: boolean
   excludingCategories: string[]
   includingCategories: string[]
-  rateItems: IReferralRateFeeItem[]
+  rateItems: IReferralRateFee[]
   minimumFee: number
 }
 declare interface ITierStandardization {
@@ -106,7 +106,7 @@ declare interface IShippingWeight extends ITierStandardization {
 declare interface IDimensionalWeightConstraint extends ITierStandardization {
   roundingUpUnit: ICalculateUnit
 }
-declare interface IDimensionalWeightRule {
+declare interface IDimensionalWeight {
   volumeConstraints?: IDimensionalWeightConstraint[]
   weightConstraints?: IDimensionalWeightConstraint[]
   divisor: number
@@ -124,11 +124,11 @@ declare interface IApparel {
 
 declare interface IRuleCollection {
   tierRules?: ITier[]
-  dimensionalWeightRules?: IDimensionalWeightRule
+  dimensionalWeightRules?: IDimensionalWeight
   packagingRules?: IPackagingWeight[]
   shippingWeightRules?: IShippingWeight[]
-  fbaRules?: IFbaRuleItem[]
-  referralRules?: IReferralFee[]
+  fbaRules?: IFbaItem[]
+  referralRules?: IReferralItem[]
   closingRules?: IClosing[]
   apparelRules?: IApparel[]
 }

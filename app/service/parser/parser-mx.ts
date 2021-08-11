@@ -300,7 +300,7 @@ export function parseFba(content: string) {
       }
     }
   }
-  const fbaRuleItems: IFbaRuleItem[] = []
+  const fbaRuleItems: IFbaItem[] = []
   const $ = cheerio.load(content)
   $('.help-table').each((_, table) => {
     const currentProductTierKey =
@@ -335,7 +335,7 @@ export function parseFba(content: string) {
 
 export function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
-  let referralRule: IReferralFee[] = []
+  let referralRule: IReferralItem[] = []
 
   // for handle Baby Products (excluding Baby Apparel)
   const parseCategory = (fullCategory: string): [string, Array<string>, Array<string>] => {
@@ -436,14 +436,14 @@ export function parseReferral(content: string, subContent?: StringRecord) {
 
 function parseReferralSubItem(content: string) {
   const $ = cheerio.load(content)
-  const rateItems: IReferralRateFeeItem[] = []
+  const rateItems: IReferralRateFee[] = []
   const onlyOneRate = !($('ul').length > 0 || content.includes('and'))
 
   if (onlyOneRate) {
     const desc = $(content).text()
     rateItems.push({
-      minPrice: 0,
-      maxPrice: Number.MAX_VALUE,
+      minimumPrice: 0,
+      maximumPrice: Number.MAX_VALUE,
       rate: parseFloat(desc) / 100,
       desc,
     })
@@ -461,12 +461,12 @@ function parseReferralSubItem(content: string) {
       // console.log('array', array, priceV1, priceV2)
 
       const lastRate = rateItems.length && rateItems[rateItems.length - 1]
-      const minPrice = lastRate ? lastRate?.maxPrice : 0
-      const maxPrice = priceV2 || (minPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
+      const minimumPrice = lastRate ? lastRate?.maximumPrice : 0
+      const maximumPrice = priceV2 || (minimumPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
 
       rateItems.push({
-        minPrice,
-        maxPrice,
+        minimumPrice,
+        maximumPrice,
         rate,
         desc,
       })

@@ -27,7 +27,7 @@ export default {
       return output
     },
   },
-  shipping: {
+  shippingWeight: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GEVWP48HPBLEFJEY',
     extractOriginalContent: (response: string) => {
       const $ = cheerio.load(response)
@@ -44,7 +44,7 @@ export default {
   },
   fba: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GPDC3KPYAGDTVDJP',
-    sub: {
+    extra: {
       apparel: {
         url: 'https://sellercentral.amazon.com/gp/help/external/G2FXDS3YCWLFY4TK',
         extractOriginalContent: (response: string) => {
@@ -78,7 +78,7 @@ export default {
   },
   referral: {
     url: 'https://sellercentral.amazon.com/gp/help/external/GTG4BAWSY39Z98Z3',
-    sub: {
+    extra: {
       fullsizeappliances: {
         url: 'https://sellercentral.amazon.com/gp/help/external/GGH3QLLAE3N8PM83',
         extractOriginalContent: (response: string) => {

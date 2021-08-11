@@ -51,13 +51,10 @@ function calcLengthGirth(
   }
   return null
 }
-export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nullable<ITier> {
+export function determineTier(product: IProduct, tiers: Array<ITier>): Nullable<ITier> {
   let cI = 0
   let total = tiers.length
   let targetTier: Nullable<ITier> = null
-  // default tiers order ASCE
-  // sort --- Changed: sorting them before call calculation functions
-  // const [short, median, longest] = sortByUnit(product.length, product.width, product.height)
   const lengthGirth = calcLengthGirth(product.length, product.width, product.height)
   // weight
   while (cI < total) {
@@ -90,11 +87,7 @@ export function determineTierByUnit(product: IProduct, tiers: Array<ITier>): Nul
   return targetTier
 }
 
-export function calculateDimensionalWeight(
-  product: IProduct,
-  tier: ITier,
-  dimensionalWeightRule: IDimensionalWeightRule
-) {
+export function calculateDimensionalWeight(product: IProduct, tier: ITier, dimensionalWeightRule: IDimensionalWeight) {
   let { length, width, height, weight } = product
   let lengthValue = length.value
   let widthValue = width.value
@@ -160,21 +153,13 @@ export function calculateShippingWeight({
   dimensionalWeight: number
   shippingWeights: IShippingWeight[]
 }) {
-  const shippingWeightItem = shippingWeights.find((shippingWeight) => {
-    if (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) {
-      if (shippingWeight.weightConstraint?.unit === NotAvailable) {
-        return true
-      } else {
-        if (shippingWeight.weightConstraint && compareWithUnit(weight, shippingWeight.weightConstraint)) {
-          return true
-        } else {
-          return true
-        }
-      }
-    } else {
-      return false
-    }
-  })
+  const shippingWeightItem = shippingWeights.find(
+    (shippingWeight) =>
+      (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) &&
+      (!shippingWeight.weightConstraint ||
+        shippingWeight.weightConstraint?.unit === NotAvailable ||
+        compareWithUnit(weight, shippingWeight.weightConstraint))
+  )
   const v = shippingWeightItem
     ? shippingWeightItem.useGreater
       ? Math.max(weight.value, dimensionalWeight)
@@ -192,7 +177,7 @@ interface FbaParameter {
   shippingWeight: IMeasureUnit
   isApparel: boolean
   isDangerous: boolean
-  rules: IFbaRuleItem[]
+  rules: IFbaItem[]
 }
 export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangerous, rules }: FbaParameter): IFeeUnit {
   for (const ruleItem of rules) {
@@ -320,7 +305,7 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Array<I
   return result
 }
 
-function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable<Array<ICalcCategoryResult>> {
+function calcReferralCategory(p: IProductCategory, rule: IReferralItem): Nullable<Array<ICalcCategoryResult>> {
   let results: ICalcCategoryResult[] = []
   let excludingCategories = [...rule.excludingCategories]
   excludingCategories.forEach((c) => {
@@ -342,7 +327,7 @@ function calcReferralCategory(p: IProductCategory, rule: IReferralFee): Nullable
   return results.length <= 0 ? null : results
 }
 
-export function calculateReferralFee(product: IProductCategory, rules: IReferralFee[]): IFeeUnit {
+export function calculateReferralFee(product: IProductCategory, rules: IReferralItem[]): IFeeUnit {
   const { price } = product
   let filRule = null
   let refRules = []
@@ -381,8 +366,9 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
   for (const rateItem of filRule.rateItems) {
     // part calc fee
     totalFee +=
-      (price > rateItem.maxPrice ? rateItem.maxPrice - rateItem.minPrice : price - calculatedAmount) * rateItem.rate
-    calculatedAmount += rateItem.maxPrice
+      (price > rateItem.maximumPrice ? rateItem.maximumPrice - rateItem.minimumPrice : price - calculatedAmount) *
+      rateItem.rate
+    calculatedAmount += rateItem.maximumPrice
 
     if (calculatedAmount >= price) {
       break
