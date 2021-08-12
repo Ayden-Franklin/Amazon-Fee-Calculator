@@ -1,4 +1,4 @@
-import { parseTier } from '../../app/service/parser/parser-us'
+import Parser from '../../app/service/parser/parser-us'
 const content = `<table class="help-table">               
 <thead>
 <tr>                     
@@ -136,6 +136,6 @@ const content = `<table class="help-table">
                 
 </table>`
 test('Parse tier, there should be 6 items', () => {
-  const tiers: ITier[] = parseTier(content)
+  const tiers: ITier[] = Parser.parseTier(content)
   expect(tiers.length).toBe(6)
 })

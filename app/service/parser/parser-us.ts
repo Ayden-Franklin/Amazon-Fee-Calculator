@@ -1,7 +1,7 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
 
-export function parseTier(content: string): ITier[] {
+function parseTier(content: string): ITier[] {
   const $ = cheerio.load(content)
   const tiers: ITier[] = []
 
@@ -47,7 +47,7 @@ export function parseTier(content: string): ITier[] {
 const dimensionalTiersMap: Record<string, Array<string>> = {
   oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
 }
-export function parseDimensionalWeight(content: string): IDimensionalWeight {
+function parseDimensionalWeight(content: string): IDimensionalWeight {
   const $ = cheerio.load(content)
   const divisorText = content.match(/divided by \d+(\.\d+)?/)
   const divisorArray = divisorText && divisorText.length > 0 && divisorText[0].split(' ')
@@ -76,7 +76,7 @@ const shippingTiersMap: Record<string, Array<string>> = {
   Oversize: ['Small oversize', 'Medium oversize', 'Large oversize'],
   'Special oversize': ['Special oversize'],
 }
-export function parseShippingWeight(content: string): IShippingWeight[] {
+function parseShippingWeight(content: string): IShippingWeight[] {
   const empty = { value: NaN, unit: NotAvailable }
   const $ = cheerio.load(content)
   const items: IShippingWeight[] = []
@@ -243,7 +243,7 @@ const fbaProductTiersMap: Record<
     },
   },
 }
-export function parseFba(content: string) {
+function parseFba(content: string) {
   const determineTier = (productType: string, sizeTierName: string) => {
     return fbaProductTiersMap[productType][sizeTierName]
   }
@@ -423,7 +423,7 @@ export function parseFba(content: string) {
   return fbaRuleItems
 }
 
-export function parseReferral(content: string, subContent?: StringRecord) {
+function parseReferral(content: string, subContent?: StringRecord) {
   const $ = cheerio.load(content)
   let referralRule: IReferralItem[] = []
 
@@ -524,13 +524,13 @@ function parseReferralSubItem(content: string) {
   const onlyOneRate = $('ul').length === 0
 
   if (onlyOneRate) {
-    const desc = $(content).text()
+    const description = $(content).text()
 
     rateItems.push({
       minimumPrice: 0,
       maximumPrice: Number.MAX_VALUE,
-      rate: parseFloat(desc) / 100,
-      desc,
+      rate: parseFloat(description) / 100,
+      description,
     })
 
     return rateItems
@@ -548,8 +548,8 @@ function parseReferralSubItem(content: string) {
   $(content)
     .find('li')
     .each((_, element) => {
-      const desc = $(element).find('span').text()
-      const array = desc.match(/(\d+(,\d+)*(\.\d*)?)/g)
+      const description = $(element).find('span').text()
+      const array = description.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
       if (array && array?.length > 1) {
         let rate = parseInt(array[0], 10) / 100
@@ -565,14 +565,14 @@ function parseReferralSubItem(content: string) {
           minimumPrice,
           maximumPrice,
           rate,
-          desc,
+          description,
         })
       }
     })
 
   return rateItems
 }
-export function parseClosing(content: Nullable<string>): IClosing[] {
+function parseClosing(content: Nullable<string>): IClosing[] {
   if (!content) return []
 
   const $ = cheerio.load(content)
@@ -598,7 +598,7 @@ export function parseClosing(content: Nullable<string>): IClosing[] {
   ]
 }
 
-export function parseApparel(content: Nullable<string>): IApparel[] {
+function parseApparel(content: Nullable<string>): IApparel[] {
   if (!content) return []
   /**
    * TODO
@@ -620,4 +620,14 @@ export function parseApparel(content: Nullable<string>): IApparel[] {
     { matchCategory: 'Clothing', requireParent: ['Clothing, Shoes & Jewelry'] },
     { matchCategory: 'Clothing', requireParent: ['Sports & Outdoors'] },
   ]
+}
+
+export default {
+  parseTier,
+  parseDimensionalWeight,
+  parseShippingWeight,
+  parseFba,
+  parseReferral,
+  parseClosing,
+  parseApparel,
 }

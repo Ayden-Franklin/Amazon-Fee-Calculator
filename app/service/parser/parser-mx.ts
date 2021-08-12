@@ -126,7 +126,7 @@ export function parsePackagingWeight(content: string) {
   ): IPackagingWeightItem => {
     const packagingWeight = parseWeightExpression(packagingWeightText)
     const weightConstraint = parseCompareExpression(weightConstraintText)
-    return { packagingWeight, weightConstraint, desc: weightConstraintText }
+    return { packagingWeight, weightConstraint, description: weightConstraintText }
   }
   const packagingItems: IPackagingWeight[] = []
   const $ = cheerio.load(content)
@@ -440,19 +440,19 @@ function parseReferralSubItem(content: string) {
   const onlyOneRate = !($('ul').length > 0 || content.includes('and'))
 
   if (onlyOneRate) {
-    const desc = $(content).text()
+    const description = $(content).text()
     rateItems.push({
       minimumPrice: 0,
       maximumPrice: Number.MAX_VALUE,
-      rate: parseFloat(desc) / 100,
-      desc,
+      rate: parseFloat(description) / 100,
+      description,
     })
 
     return rateItems
   }
 
-  const createRateItem = (desc: string) => {
-    const array = desc.match(/(\d+(,\d+)*(\.\d*)?)/g)
+  const createRateItem = (description: string) => {
+    const array = description.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
     if (array && array?.length > 1) {
       let rate = parseInt(array[0], 10) / 100
@@ -468,7 +468,7 @@ function parseReferralSubItem(content: string) {
         minimumPrice,
         maximumPrice,
         rate,
-        desc,
+        description,
       })
     }
   }
@@ -492,7 +492,7 @@ function parseReferralSubItem(content: string) {
     $(content)
       .text()
       .split('and')
-      .forEach((desc) => createRateItem(desc))
+      .forEach((description) => createRateItem(description))
   }
   return rateItems
 }

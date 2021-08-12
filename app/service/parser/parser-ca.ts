@@ -153,7 +153,7 @@ export function parsePackagingWeight(content: string) {
     const unit = values[1]
     return {
       tierName: values[5] as string,
-      packagingWeightItem: { packagingWeight: { value, unit }, weightConstraint: empty, desc: text },
+      packagingWeightItem: { packagingWeight: { value, unit }, weightConstraint: empty, description: text },
     }
   }
   const parseUnit = (text: string): IMeasureUnit | undefined => {
@@ -196,7 +196,7 @@ export function parsePackagingWeight(content: string) {
           packagingWeightItems.push({
             packagingWeight,
             weightConstraint: { ...weightConstraint, operator: isIntervalValue ? '>' : '<=' },
-            desc: text,
+            description: text,
           })
       }
     })
@@ -438,13 +438,13 @@ export function parseReferral(content: string, subContent?: StringRecord) {
             minimumPrice: 0,
             maximumPrice: 100,
             rate: 0.2,
-            desc: 'Category Requirements for referral fees',
+            description: 'Category Requirements for referral fees',
           },
           {
             minimumPrice: 100,
             maximumPrice: Number.MAX_VALUE,
             rate: 0.4,
-            desc: 'Category Requirements for referral fees',
+            description: 'Category Requirements for referral fees',
           },
         ],
       }[r.category] || []
@@ -458,12 +458,12 @@ function parseReferralSubItem(content: string) {
   const onlyOneRate = $('ul').length === 0
 
   if (onlyOneRate) {
-    const desc = $(content).text()
+    const description = $(content).text()
     rateItems.push({
       minimumPrice: 0,
       maximumPrice: Number.MAX_VALUE,
-      rate: parseFloat(desc) / 100,
-      desc,
+      rate: parseFloat(description) / 100,
+      description,
     })
 
     return rateItems
@@ -481,8 +481,8 @@ function parseReferralSubItem(content: string) {
   $(content)
     .find('li')
     .each((_, element) => {
-      const desc = $(element).find('span').text()
-      const array = desc.match(/(\d+(,\d+)*(\.\d*)?)/g)
+      const description = $(element).find('span').text()
+      const array = description.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
       if (array && array?.length > 1) {
         let rate = parseInt(array[0], 10) / 100
@@ -492,13 +492,13 @@ function parseReferralSubItem(content: string) {
 
         const lastRate = rateItems.length && rateItems[rateItems.length - 1]
         const minimumPrice = lastRate ? lastRate?.maximumPrice : 0
-        const maxPrice = priceV2 || (minimumPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
+        const maximumPrice = priceV2 || (minimumPrice === priceV1 || !priceV1 ? Number.MAX_VALUE : priceV1)
 
         rateItems.push({
           minimumPrice,
           maximumPrice,
           rate,
-          desc,
+          description,
         })
       }
     })

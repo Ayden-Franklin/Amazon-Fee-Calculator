@@ -8,15 +8,7 @@ import {
   loadExtraRule,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
-import {
-  parseTier,
-  parseDimensionalWeight,
-  parseShippingWeight,
-  parseFba,
-  parseReferral,
-  parseClosing,
-  parseApparel,
-} from '@src/service/parser/parser-us'
+import Parser from '@src/service/parser/parser-us'
 export class UsProfitCalculator implements IProfitCalculator {
   currentCountry: Country
   content: IRuleContent
@@ -39,11 +31,8 @@ export class UsProfitCalculator implements IProfitCalculator {
   async fetchRuleContent() {
     const tier = await loadTierTable(this.currentCountry.code)
     const dimensionalWeight = await loadDimensionalWeightRule(this.currentCountry.code)
-    console.log('try to load shipping')
     const shippingWeight = await loadShippingWeightRule(this.currentCountry.code)
-    console.log('loaded shippingWeight successfully')
     const fba = await loadFBATable(this.currentCountry.code)
-    console.log('loaded fba')
     this.fbaExtra = await loadExtraRule(this.currentCountry.code, 'fba')
 
     const referral = await loadReferralTable(this.currentCountry.code)
@@ -53,14 +42,14 @@ export class UsProfitCalculator implements IProfitCalculator {
     this.content = { tier, dimensionalWeight, packagingWeight: null, shippingWeight, fba, referral, closing }
   }
   parseRule() {
-    const tierRules = parseTier(this.content.tier)
-    const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
-    const shippingWeightRules = parseShippingWeight(this.content.shippingWeight)
-    const fbaRules = parseFba(this.content.fba)
-    const apparelRules = parseApparel(this.fbaExtra?.apparel)
-    const referralRules = parseReferral(this.content.referral, this.referralExtra)
+    const tierRules = Parser.parseTier(this.content.tier)
+    const dimensionalWeightRules = Parser.parseDimensionalWeight(this.content.dimensionalWeight)
+    const shippingWeightRules = Parser.parseShippingWeight(this.content.shippingWeight)
+    const fbaRules = Parser.parseFba(this.content.fba)
+    const apparelRules = Parser.parseApparel(this.fbaExtra?.apparel)
+    const referralRules = Parser.parseReferral(this.content.referral, this.referralExtra)
     // closingFee
-    const closingRules = parseClosing(this.content.closing)
+    const closingRules = Parser.parseClosing(this.content.closing)
     return {
       tierRules,
       dimensionalWeightRules,
