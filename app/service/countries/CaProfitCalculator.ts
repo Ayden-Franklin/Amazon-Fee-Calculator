@@ -17,6 +17,8 @@ import {
   parseReferral,
   parseClosing,
 } from '@src/service/parser/parser-ca'
+import { Country } from '@src/types'
+import { IRuleContent } from '@src/types/rules'
 
 export class CaProfitCalculator implements IProfitCalculator {
   currentCountry: Country

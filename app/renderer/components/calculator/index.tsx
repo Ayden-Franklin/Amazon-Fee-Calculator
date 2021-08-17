@@ -29,6 +29,7 @@ import {
 import { checkProductInputReady } from '@src/service/calculator'
 import { useAppDispatch, useAppSelector } from '@src/store/hooks'
 import { NotAvailable } from '@src/service/constants'
+import { IFeeUnit } from '@src/types'
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -83,7 +84,6 @@ function Calculator() {
   const onChangeProductInput =
     (field: string, value?: (event: any) => any) => (event: React.ChangeEvent<HTMLInputElement>) => {
       event && event.preventDefault()
-
       let resValue = null
       if (typeof value === 'function') {
         resValue = value(event)
@@ -223,7 +223,7 @@ function Calculator() {
                     id="select"
                     labelId="category"
                     label="Product category:"
-                    value={calculatorStore.productInput?.categoryName ?? calculatorStore.productInput?.category ?? ''}
+                    value={calculatorStore.productInput?.category ?? ''}
                     onChange={handleCategoryChange}
                   >
                     {getCategoryByCountryCode(country.code).map((item) => (
@@ -240,7 +240,7 @@ function Calculator() {
                         disabled
                         checked={productInput?.isApparel}
                         onChange={onChangeProductInput('isApparel', (event) => event.target.checked)}
-                        name="checkedB"
+                        name="checkedApparel"
                         color="primary"
                       />
                     }
@@ -253,7 +253,7 @@ function Calculator() {
                       <Checkbox
                         checked={productInput?.isDangerous}
                         onChange={onChangeProductInput('isDangerous', (event) => event.target.checked)}
-                        name="checkedB"
+                        name="checkedDangerous"
                         color="primary"
                       />
                     }
@@ -338,7 +338,7 @@ function Calculator() {
                   <TextField
                     id="tier-value"
                     disabled
-                    value={`${displayFee(calculatorStore.productFees.fbaFee)}`}
+                    value={`${displayFee(calculatorStore.productFee.fbaFee)}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -353,7 +353,7 @@ function Calculator() {
                   <TextField
                     id="total-fee-value"
                     disabled
-                    value={`$${calculatorStore.productFees.totalFee}`}
+                    value={`$${calculatorStore.productFee.totalFee}`}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -368,7 +368,7 @@ function Calculator() {
                   <TextField
                     id="referral-value"
                     disabled
-                    value={displayFee(calculatorStore.productFees.referralFee)}
+                    value={displayFee(calculatorStore.productFee.referralFee)}
                     size="small"
                     InputProps={{
                       readOnly: true,
@@ -382,7 +382,7 @@ function Calculator() {
                 <Grid item xs={3}>
                   <TextField
                     id="net-value"
-                    value={`$${calculatorStore.productFees.net}`}
+                    value={`$${calculatorStore.productFee.net}`}
                     disabled
                     size="small"
                     InputProps={{
@@ -398,7 +398,7 @@ function Calculator() {
                   <TextField
                     id="closing-value"
                     disabled
-                    value={displayFee(calculatorStore.productFees.closingFee)}
+                    value={displayFee(calculatorStore.productFee.closingFee)}
                     size="small"
                     InputProps={{
                       readOnly: true,

@@ -17,6 +17,8 @@ import {
   parseReferral,
   parseClosing,
 } from '@src/service/parser/parser-mx'
+import { Country } from '@src/types'
+import { IRuleContent } from '@src/types/rules'
 
 export class MxProfitCalculator implements IProfitCalculator {
   currentCountry: Country

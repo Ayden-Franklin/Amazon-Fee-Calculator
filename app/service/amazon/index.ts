@@ -1,3 +1,4 @@
+import { Nullable } from '@src/types'
 import got from 'got'
 import Constants, { FeeRuleContentKey } from './constants'
 

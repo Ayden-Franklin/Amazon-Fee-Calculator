@@ -1,25 +1,6 @@
-declare type Nullable<T> = T | null
+import { IMeasureUnit, ICalculateUnit, IFeeUnit, ICurrency, Nullable } from '.'
 
-declare type StringRecord = Record<string, string>
-
-declare interface Country {
-  code: string
-  name: string
-}
-declare interface ICurrency {
-  currency: string
-}
-declare interface IFeeUnit extends ICurrency {
-  value: number
-}
-declare interface ICalculateUnit extends IMeasureUnit {
-  operator?: string
-}
-declare interface IMeasureUnit {
-  value: number
-  unit: string
-}
-declare interface IProduct {
+export interface IProductFeeData {
   length: IMeasureUnit
   width: IMeasureUnit
   height: IMeasureUnit
@@ -27,91 +8,88 @@ declare interface IProduct {
   category?: string
   country: string
 }
-
-declare interface ITier {
+export interface ITier {
   name: string
   order: number
   weight: ICalculateUnit
   volumes: Array<ICalculateUnit>
   lengthGirth?: ICalculateUnit
 }
-
-declare interface ITierStandardization {
+export interface ITierStandardization {
   tierName: string
   standardTierNames?: string[] // using this array to map to the standard tier names
 }
 
-declare interface IPackagingWeightItem {
+export interface IPackagingWeightItem {
   packagingWeight: IMeasureUnit
   weightConstraint: ICalculateUnit
   description: string
 }
-declare interface IPackagingWeight extends ITierStandardization {
+export interface IPackagingWeight extends ITierStandardization {
   items: IPackagingWeightItem[]
 }
 
-declare interface IShippingWeight extends ITierStandardization {
+export interface IShippingWeight extends ITierStandardization {
   weightConstraint?: ICalculateUnit
   useGreater: boolean // using the greater of the unit weight or the dimensional weight
   roundingUp?: IMeasureUnit
 }
-declare interface IDimensionalWeightConstraint extends ITierStandardization {
+export interface IDimensionalWeightConstraint extends ITierStandardization {
   roundingUpUnit: ICalculateUnit
 }
-declare interface IDimensionalWeight {
+export interface IDimensionalWeight {
   volumeConstraints?: IDimensionalWeightConstraint[]
   weightConstraints?: IDimensionalWeightConstraint[]
   divisor: number
 }
 
-declare interface IFulfillmentFixedUnitFee {
+export interface IFulfillmentFixedUnitFee {
   minimumShippingWeight: ICalculateUnit
   maximumShippingWeight: ICalculateUnit
   fee: IFeeUnit
   shippingWeightText: string
 }
-declare interface IFulfillmentAdditionalUnitFee {
+export interface IFulfillmentAdditionalUnitFee {
   shippingWeight: IMeasureUnit
   fee: IFeeUnit
   shippingWeightText: string
 }
 
-declare interface IFbaItem extends ITierStandardization {
+export interface IFbaItem extends ITierStandardization {
   isApparel: boolean | 'n/a'
   isDangerous: boolean | 'n/a'
   fixedUnitFees: IFulfillmentFixedUnitFee[]
   additionalUnitFee: IFulfillmentAdditionalUnitFee
 }
 
-declare interface IReferralItem extends ICurrency {
+export interface IReferralItem extends ICurrency {
   category: string
-  // TODO for other category use referralRule
-  otherable: boolean
+  isOther: boolean
   excludingCategories: string[]
   includingCategories: string[]
   rateItems: IReferralRateFee[]
   minimumFee: number
 }
 
-declare interface IReferralRateFee {
+export interface IReferralRateFee {
   rate: number
   minimumPrice: number
   maximumPrice: number
   description: string
 }
 
-declare interface IClosing extends ICurrency {
+export interface IClosing extends ICurrency {
   categories: string[]
   fee: number
   description?: string
 }
 
-declare interface IApparel {
+export interface IApparel {
   requireParent: Array<string>
   matchCategory: string
 }
 
-declare interface IRuleContent {
+export interface IRuleContent {
   tier: string
   dimensionalWeight: string
   packagingWeight: Nullable<string>
@@ -121,13 +99,13 @@ declare interface IRuleContent {
   closing: Nullable<string>
 }
 
-declare interface IRuleCollection {
-  tierRules?: ITier[]
-  dimensionalWeightRules?: IDimensionalWeight
+export interface IRuleCollection {
+  tierRules: ITier[]
+  dimensionalWeightRules: IDimensionalWeight
   packagingRules?: IPackagingWeight[]
-  shippingWeightRules?: IShippingWeight[]
-  fbaRules?: IFbaItem[]
-  referralRules?: IReferralItem[]
-  closingRules?: IClosing[]
+  shippingWeightRules: IShippingWeight[]
+  fbaRules: IFbaItem[]
+  referralRules: IReferralItem[]
+  closingRules: IClosing[] // Store as an array in order to fit more than one items as the price might not be same
   apparelRules?: IApparel[]
 }

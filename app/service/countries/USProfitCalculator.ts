@@ -9,6 +9,8 @@ import {
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import Parser from '@src/service/parser/parser-us'
+import { Country, Nullable } from '@src/types'
+import { IRuleContent } from '@src/types/rules'
 export class UsProfitCalculator implements IProfitCalculator {
   currentCountry: Country
   content: IRuleContent

@@ -1,6 +1,19 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
 import { minify } from '@src/service/utils'
+import { ICalculateUnit, IMeasureUnit, StringRecord, Nullable } from '@src/types'
+import {
+  ITier,
+  IPackagingWeightItem,
+  IPackagingWeight,
+  IShippingWeight,
+  IFulfillmentFixedUnitFee,
+  IFulfillmentAdditionalUnitFee,
+  IFbaItem,
+  IReferralItem,
+  IReferralRateFee,
+  IClosing,
+} from '@src/types/rules'
 
 export function parseTier(content: string) {
   const empty = { value: NaN, unit: NotAvailable }
@@ -388,7 +401,7 @@ export function parseReferral(content: string, subContent?: StringRecord) {
     referralRule.push({
       category,
       // TODO , need by country diff handle
-      otherable: [minify('Everything else')].includes(minify(category)),
+      isOther: [minify('Everything else')].includes(minify(category)),
       excludingCategories,
       includingCategories,
       // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],

@@ -1,4 +1,6 @@
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
+import { Country } from '@src/types'
+import { IRuleContent } from '@src/types/rules'
 
 export class UndefinedProfitCalculator implements IProfitCalculator {
   currentCountry: Country

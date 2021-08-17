@@ -5,11 +5,16 @@ import { CaProfitCalculator } from '@src/service/countries/CaProfitCalculator'
 import { MxProfitCalculator } from '@src/service/countries/MxProfitCalculator'
 import { UndefinedProfitCalculator } from '@src/service/countries/UndefinedProfitCalculator'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
-import { StateSlice } from '@src/types'
-interface RulesState extends StateSlice {
+import { IRuleCollection, IRuleContent } from '@src/types/rules'
+import { Country } from '@src/types'
+export interface StateSlice {
+  content: IRuleContent
+  status: StateStatus
+  error?: string
+  currentCountry: Country
   ruleCollection?: IRuleCollection
 }
-const initialState: RulesState = InitializedStateSlice
+const initialState: StateSlice = InitializedStateSlice
 
 let profitCalculator: IProfitCalculator
 

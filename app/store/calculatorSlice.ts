@@ -1,25 +1,28 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
-  TierData,
   determineTier,
   calculateDimensionalWeight,
   calculateShippingWeight,
   calculateFbaFee,
   calculateReferralFee,
   calculateClosingFee,
-  calcApparelByCategory,
-  toProductTier,
+  verifyApparelByCategory,
+  standardizeDimensions,
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
 import { NotAvailable } from '@src/service/constants'
 import { sortByUnit } from '@src/service/utils'
+import { IMeasureUnit, Nullable } from '@src/types/'
+import { IRuleCollection, ITier } from '@src/types/rules'
+import { IProductDimensionData, IProductInput, IProductFee } from '@src/types/fees'
+import { IFeeUnit } from '@src/types'
 
 interface CalculatorState {
-  productInput?: ProductInput
+  productInput?: IProductInput
   loading: boolean
   tier: Nullable<ITier>
   shippingWeight: IMeasureUnit
-  productFees: ProductFees
+  productFee: IProductFee
   status: StateStatus
   error?: string
 }
@@ -33,13 +36,15 @@ const initialState: CalculatorState = {
     width: 0,
     height: 0,
     length: 0,
+    dimensionUnit: 'inches',
     weight: 0,
+    weightUnit: 'pounds',
     price: 0,
     cost: 0,
     isApparel: false,
     isDangerous: false,
   },
-  productFees: {
+  productFee: {
     fbaFee: initialFee,
     referralFee: initialFee,
     closingFee: initialFee,
@@ -49,25 +54,7 @@ const initialState: CalculatorState = {
 }
 
 export const selectCalculator = (state) => state.calculator
-export interface ProductInput {
-  length: number
-  width: number
-  height: number
-  weight: number
-  price: number
-  cost: number
-  categoryCode?: string
-  categoryName?: string
-  isApparel: boolean
-  isDangerous: boolean
-}
-export interface ProductFees {
-  fbaFee: IFeeUnit
-  referralFee: IFeeUnit
-  closingFee: IFeeUnit
-  totalFee: number
-  net: number
-}
+
 /**
  * rules => {
  *   country
@@ -75,31 +62,28 @@ export interface ProductFees {
  *   tierRules
  * }
  */
-function calculateProductSize(input: Undefinedable<ProductInput>, rules: any): Undefinedable<[ITier, IMeasureUnit]> {
-  if (!input) return
-  const country = rules.country
-  const tierData: TierData = { ...input, country }
+function calculateProductSize(input: IProductDimensionData, rules: IRuleCollection): ITier {
+  if (!input) throw Error('Parameter is not provided to calculate!')
   const tierRules: Array<ITier> = rules.tierRules ?? []
-
-  const initialProductSize = toProductTier(tierData)
-  let { length, width, height } = { ...initialProductSize }
-  const [shortest, median, longest] = sortByUnit(length, width, height)
-  const productSize = { ...initialProductSize, length: longest, width: median, height: shortest }
-  const productTier = determineTier(productSize, tierRules)
-
+  const productTier = determineTier(input, tierRules)
   if (productTier) {
-    const dimensionalWeightRule = rules.dimensionalWeightRules
-    const dimensionalWeight = calculateDimensionalWeight(productSize, productTier, dimensionalWeightRule)
-    const weight = calculateShippingWeight({
-      tierName: productTier.name,
-      weight: productSize.weight,
-      dimensionalWeight: dimensionalWeight,
-      shippingWeights: rules.shippingWeightRules,
-    })
-    return [productTier, weight]
+    return productTier
   }
+  throw Error(`Fail to calculate tier with parameters ${input}`)
 }
-function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullable<ProductFees> {
+function calculateWeight(input: IProductDimensionData, productTier: ITier, rules: IRuleCollection): IMeasureUnit {
+  if (!input) throw Error('Parameter is not provided to calculate!')
+  const dimensionalWeightRule = rules.dimensionalWeightRules
+  const dimensionalWeight = calculateDimensionalWeight(input, productTier, dimensionalWeightRule)
+  const weight = calculateShippingWeight({
+    tierName: productTier.name,
+    weight: input.weight,
+    dimensionalWeight: dimensionalWeight,
+    shippingWeights: rules.shippingWeightRules,
+  })
+  return weight
+}
+function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullable<IProductFee> {
   if (
     !state.tier ||
     !state.productInput ||
@@ -111,8 +95,7 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
     return null
   }
   const productInput = JSON.parse(JSON.stringify(state.productInput))
-  // temp full category/categoryName
-  productInput.category = productInput.categoryName || productInput.category || ''
+  productInput.category = productInput.category || ''
 
   const fbaFee = calculateFbaFee({
     tierName: state.tier.name,
@@ -122,29 +105,28 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
     rules: rules.fbaRules,
   })
 
-  const referralFee = calculateReferralFee(productInput, rules.referralRules)
+  const referralFee = calculateReferralFee(productInput.category, productInput.price, 'us', rules.referralRules)
   const closingFee = calculateClosingFee(productInput, rules.closingRules)
 
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
-  const eatValue = (o: IFeeUnit): IFeeUnit => ({ ...o, value: numberFix2(o.value) })
+  const formatValue = (o: IFeeUnit): IFeeUnit => ({ ...o, value: numberFix2(o.value) })
 
   return {
-    fbaFee: eatValue(fbaFee),
-    referralFee: eatValue(referralFee),
-    closingFee: eatValue(closingFee),
+    fbaFee: formatValue(fbaFee),
+    referralFee: formatValue(referralFee),
+    closingFee: formatValue(closingFee),
     totalFee: numberFix2(fbaFee.value + referralFee.value + closingFee.value),
     net: numberFix2(
       state.productInput.price - (state.productInput.cost ?? 0) - fbaFee.value - referralFee.value - closingFee.value
     ),
   }
 }
-function calcApparelCategory(productInput: Undefinedable<ProductInput>, ruleCollection: IRuleCollection): boolean {
+function verifyApparelCategory(productInput: IProductInput, ruleCollection: IRuleCollection): boolean {
   if (!productInput) return false
-  // temp full category/categoryName
   const product = productInput ? JSON.parse(JSON.stringify(productInput)) : {}
-  product.category = product.categoryName || product.category || ''
+  product.category = product.category || ''
 
-  return calcApparelByCategory(product, ruleCollection.apparelRules)
+  return verifyApparelByCategory(product, ruleCollection.apparelRules)
 }
 
 function smoothFileds(obj: any, fileds: string[]) {
@@ -162,7 +144,7 @@ const calculatorSlice = createSlice({
       state.loading = action.payload.status
     },
     resetFee: (state) => {
-      state.productFees = {
+      state.productFee = {
         fbaFee: initialFee,
         referralFee: initialFee,
         closingFee: initialFee,
@@ -170,12 +152,12 @@ const calculatorSlice = createSlice({
         net: 0,
       }
     },
-    changeProductInput: (state, action: PayloadAction<{ productInput: Partial<ProductInput> }>) => {
+    changeProductInput: (state, action: PayloadAction<{ productInput: Partial<IProductInput> }>) => {
       state.productInput = { ...state.productInput, ...action.payload.productInput }
     },
     changeProductCategory: (state, action: PayloadAction<string>) => {
       const category = action.payload
-      state.productInput = { ...state.productInput, categoryCode: category, categoryName: category }
+      state.productInput = { ...state.productInput, category: category }
     },
     calculate: (state, action) => {
       const productInput = smoothFileds(JSON.parse(JSON.stringify(state.productInput)), [
@@ -187,18 +169,21 @@ const calculatorSlice = createSlice({
         'cost',
       ])
       const rules = action.payload
-      const tierAndWeight = calculateProductSize(productInput, rules)
-      if (tierAndWeight) {
-        const [tier, weight] = tierAndWeight
+      try {
+        const productDimenions = standardizeDimensions(productInput)
+        const tier = calculateProductSize(productDimenions, rules)
+        const weight = calculateWeight(productDimenions, tier, rules)
         state.tier = tier
         state.shippingWeight = weight
-      }
-      if (state.productInput) {
-        state.productInput.isApparel = calcApparelCategory(productInput, rules)
-      }
-      const fees = startToEstimate(state, rules)
-      if (fees) {
-        state.productFees = fees
+        if (state.productInput) {
+          state.productInput.isApparel = verifyApparelCategory(productInput, rules)
+        }
+        const fees = startToEstimate(state, rules)
+        if (fees) {
+          state.productFee = fees
+        }
+      } catch (error) {
+        state.error = error.meeeage
       }
     },
   },

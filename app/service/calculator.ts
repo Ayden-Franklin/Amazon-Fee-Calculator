@@ -1,48 +1,42 @@
 import store from '@src/store'
-import { compareWithUnit, convertWeightUnit, minify } from '@src/service/utils'
+import { compareWithUnit, convertWeightUnit, minify, sortDimensions } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
 import { NotAvailable } from '@src/service/constants'
-export interface TierData {
-  length: number
-  width: number
-  height: number
-  weight: number
-  category?: string
-  country: string
-}
-type TierKey = keyof TierData
-export function toProductTier(
-  td: TierData,
-  unit: any = { weight: 'lb', width: 'inches', length: 'inches', height: 'inches' }
-): IProduct {
-  // default unit = 'inches'
-  const defaultUnit = typeof unit === 'object' ? unit : typeof unit === 'string' ? unit : 'inches'
-  const getIn = (iN: TierKey) => ({ value: td[iN] as number, unit: defaultUnit?.[iN] || defaultUnit })
+import { IProductCategory, IProductDimensionData, IProductInput } from '@src/types/fees'
+import {
+  IApparel,
+  IClosing,
+  IDimensionalWeight,
+  IFbaItem,
+  IFulfillmentFixedUnitFee,
+  IReferralItem,
+  IShippingWeight,
+  ITier,
+} from '@src/types/rules'
+import { ICalculateUnit, IFeeUnit, IMeasureUnit, Nullable } from '@src/types'
+
+export function standardizeDimensions(input: IProductInput): IProductDimensionData {
+  const defaultLengthUnit = 'inches'
+  let { length, width, height } = { ...input }
+  // Sort the value because in our database there is only one field to store the unit of dimensions
+  const [shortest, median, longest] = sortDimensions(length, width, height)
+  const formatUnit = (value: number, unit: string) => ({ value, unit: unit || defaultLengthUnit })
   return {
-    ...td,
-    length: getIn('length'),
-    width: getIn('width'),
-    height: getIn('height'),
-    weight: getIn('weight'),
-    category: td.category,
-    country: td.country,
+    length: formatUnit(longest, input.dimensionUnit),
+    width: formatUnit(median, input.dimensionUnit),
+    height: formatUnit(shortest, input.dimensionUnit),
+    weight: { value: input.weight, unit: input.weightUnit || 'pounds' },
   }
 }
 
 export function checkProductInputReady(): boolean {
-  // console.log('checkProductInputReady', store.getState().calculator)
   const productInput = store.getState().calculator.productInput
-  // console.log('checkProductInputReady', productInput)
   return productInput
     ? [productInput.length, productInput.width, productInput.height, productInput.weight].every(Boolean)
     : false
 }
 
-function calcLengthGirth(
-  longest: ICalculateUnit,
-  median: ICalculateUnit,
-  short: ICalculateUnit
-): Nullable<ICalculateUnit> {
+function calcLengthGirth(longest: IMeasureUnit, median: IMeasureUnit, short: IMeasureUnit): Nullable<ICalculateUnit> {
   if (longest.unit === median.unit && median.unit === short.unit) {
     return {
       value: longest.value + (median.value + short.value) * 2,
@@ -51,19 +45,19 @@ function calcLengthGirth(
   }
   return null
 }
-export function determineTier(product: IProduct, tiers: Array<ITier>): Nullable<ITier> {
+export function determineTier(productDimension: IProductDimensionData, tiers: Array<ITier>): Nullable<ITier> {
   let cI = 0
   let total = tiers.length
   let targetTier: Nullable<ITier> = null
-  const lengthGirth = calcLengthGirth(product.length, product.width, product.height)
+  const lengthGirth = calcLengthGirth(productDimension.length, productDimension.width, productDimension.height)
   // weight
   while (cI < total) {
     const tI = tiers[cI]
     if (
-      compareWithUnit(product.weight, tI.weight) &&
-      compareWithUnit(product.length, tI.volumes[0]) &&
-      compareWithUnit(product.width, tI.volumes[1]) &&
-      compareWithUnit(product.height, tI.volumes[2]) &&
+      compareWithUnit(productDimension.weight, tI.weight) &&
+      compareWithUnit(productDimension.length, tI.volumes[0]) &&
+      compareWithUnit(productDimension.width, tI.volumes[1]) &&
+      compareWithUnit(productDimension.height, tI.volumes[2]) &&
       (typeof tI.lengthGirth === 'undefined' || (lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth)))
     ) {
       targetTier = tI
@@ -73,10 +67,10 @@ export function determineTier(product: IProduct, tiers: Array<ITier>): Nullable<
     // The last tier grade  has a different logic: any matched condition should confirm this tier grad
     if (
       cI === total &&
-      (compareWithUnit(product.weight, tI.weight) ||
-        compareWithUnit(product.length, tI.volumes[0]) ||
-        compareWithUnit(product.width, tI.volumes[1]) ||
-        compareWithUnit(product.height, tI.volumes[2]) ||
+      (compareWithUnit(productDimension.weight, tI.weight) ||
+        compareWithUnit(productDimension.length, tI.volumes[0]) ||
+        compareWithUnit(productDimension.width, tI.volumes[1]) ||
+        compareWithUnit(productDimension.height, tI.volumes[2]) ||
         typeof tI.lengthGirth === 'undefined' ||
         (lengthGirth && compareWithUnit(lengthGirth, tI.lengthGirth)))
     ) {
@@ -87,7 +81,11 @@ export function determineTier(product: IProduct, tiers: Array<ITier>): Nullable<
   return targetTier
 }
 
-export function calculateDimensionalWeight(product: IProduct, tier: ITier, dimensionalWeightRule: IDimensionalWeight) {
+export function calculateDimensionalWeight(
+  product: IProductDimensionData,
+  tier: ITier,
+  dimensionalWeightRule: IDimensionalWeight
+) {
   let { length, width, height, weight } = product
   let lengthValue = length.value
   let widthValue = width.value
@@ -219,7 +217,7 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
               additionalUnitFee.fee.value +
             lastFixedFeeItem.fee.value
         } else {
-          fbaFee = (shippingWeightValue / additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value
+          fbaFee = Math.ceil(shippingWeightValue / additionalUnitFee.shippingWeight.value) * additionalUnitFee.fee.value
         }
         return {
           value: fbaFee,
@@ -232,16 +230,6 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
   return { value: NaN, currency: '' }
 }
 
-// Temp interface , final use IProduct
-interface IProductCategory {
-  // ??? maybe only category
-  categoryName?: string
-  category: string
-  rawCategory?: string
-  breadcrumbTree?: Array<{ name: string }>
-  price: number
-}
-
 interface ICalcCategoryResult {
   order: number
   by: string
@@ -252,8 +240,12 @@ interface ICalcCategoryResult {
  * by product.category or rowCategory or breadcrumbTree
  * by matchCategory or matchCategoryMapping
  */
-const calcCategory = (product: IProductCategory, matchCategory: string): Array<ICalcCategoryResult> => {
-  const minifyCategory = minify(matchCategory)
+const matchCategory = (
+  product: IProductCategory,
+  targetCategory: string,
+  country: string
+): Array<ICalcCategoryResult> => {
+  const minifyCategory = minify(targetCategory)
   const result = []
   if (product?.category && minify(product?.category) === minifyCategory) {
     result.push({ order: -1, by: 'category' })
@@ -262,7 +254,7 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Array<I
     result.push({ order: -1, by: 'rawCategory' })
   }
   // get country map category  // TODO
-  const categoryMapping = getCategoryMappingByCountryCode(product?.country || 'us')
+  const categoryMapping = getCategoryMappingByCountryCode(country)
   const mappingCategories = categoryMapping[minifyCategory] || [{ name: matchCategory, order: -1 }]
 
   if (mappingCategories) {
@@ -304,22 +296,31 @@ const calcCategory = (product: IProductCategory, matchCategory: string): Array<I
 
   return result
 }
-
-function calcReferralCategory(p: IProductCategory, rule: IReferralItem): Nullable<Array<ICalcCategoryResult>> {
+/**
+ * Match the referral rules with a categories tree.
+ * @param category The product category tree. For production environment, this might an array and two strings
+ * @param rule The rules for referral
+ * @returns An array
+ */
+function matchReferralCategory(
+  category: string,
+  country: string,
+  rule: IReferralItem
+): Nullable<Array<ICalcCategoryResult>> {
   let results: ICalcCategoryResult[] = []
   let excludingCategories = [...rule.excludingCategories]
+  // Check if the category should be excluded
   excludingCategories.forEach((c) => {
-    const res = calcCategory(p, c)
+    const res = matchCategory({ category }, c, country)
     if (res) {
       results.push(...res)
     }
   })
-
   if (results.length > 0) return null
-
+  // Check if the category should be included
   let matchCategories = [rule.category, ...rule.includingCategories]
   matchCategories.forEach((c) => {
-    const res = calcCategory(p, c)
+    const res = matchCategory({ category }, c, country)
     if (res) {
       results.push(...res)
     }
@@ -327,18 +328,22 @@ function calcReferralCategory(p: IProductCategory, rule: IReferralItem): Nullabl
   return results.length <= 0 ? null : results
 }
 
-export function calculateReferralFee(product: IProductCategory, rules: IReferralItem[]): IFeeUnit {
-  const { price } = product
-  let filRule = null
-  let refRules = []
+export function calculateReferralFee(
+  category: string,
+  price: number,
+  country: string,
+  rules: IReferralItem[]
+): IFeeUnit {
+  let winnerRule = null
+  let matchedRules = []
   let otherRule = null
   for (const rule of rules) {
-    if (otherRule === null && rule.otherable) {
+    if (otherRule === null && rule.isOther) {
       otherRule = rule
     }
-    const calcRes = calcReferralCategory(product, rule)
+    const calcRes = matchReferralCategory(category, country, rule)
     if (calcRes?.length) {
-      refRules.push({
+      matchedRules.push({
         _calc: calcRes,
         _maxCalcOrder: Math.max(...calcRes.map((c) => c.order)),
         ...rule,
@@ -346,25 +351,24 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
     }
   }
 
-  // how to calc filRule by refRules? eg: get order max!
+  // How to determine which rule will be applied finally? For now choose the maximum order!
   let maxOrderRule = null
-  for (const rRule of refRules) {
+  for (const rRule of matchedRules) {
     if (!maxOrderRule || maxOrderRule?._maxCalcOrder < rRule._maxCalcOrder) {
       maxOrderRule = rRule
     }
   }
-  filRule = refRules?.length ? maxOrderRule : otherRule
-  console.log('ReferralFee -> ', refRules, filRule)
+  winnerRule = matchedRules?.length ? maxOrderRule : otherRule
+  console.log('ReferralFee -> ', matchedRules, winnerRule)
 
-  if (filRule === null) {
+  if (winnerRule === null) {
     return { value: NaN, currency: NotAvailable }
   }
 
   let totalFee = 0
   let calculatedAmount = 0
 
-  for (const rateItem of filRule.rateItems) {
-    // part calc fee
+  for (const rateItem of winnerRule.rateItems) {
     totalFee +=
       (price > rateItem.maximumPrice ? rateItem.maximumPrice - rateItem.minimumPrice : price - calculatedAmount) *
       rateItem.rate
@@ -375,24 +379,26 @@ export function calculateReferralFee(product: IProductCategory, rules: IReferral
     }
   }
 
-  return { value: Math.max(filRule.minimumFee, totalFee), currency: filRule.currency }
+  return { value: Math.max(winnerRule.minimumFee, totalFee), currency: winnerRule.currency }
 }
 
-export function calculateClosingFee(product: IProductCategory, rules?: IClosing[]): IFeeUnit {
+export function calculateClosingFee(category: string, country: string, rules?: IClosing[]): IFeeUnit {
   const emptyFee = { value: 0, currency: NotAvailable }
   if (!rules) return emptyFee
   const closing2Fee = (r: IClosing): IFeeUnit => ({ value: r.fee, currency: r.currency })
   for (const r of rules) {
-    const calcRes = r.categories?.map((c) => calcCategory(product, c)).filter((res) => res !== null && res?.length > 0)
-    if (calcRes?.length > 0) {
-      console.log('ClosingFee -> ', r, calcRes)
+    const result = r.categories
+      ?.map((c) => matchCategory({ category }, c, country))
+      .filter((res) => res !== null && res?.length > 0)
+    if (result?.length > 0) {
+      console.log('ClosingFee -> ', r, result)
       return closing2Fee(r)
     }
   }
   return emptyFee
 }
 
-export function calcApparelByCategory(product: IProductCategory, rules?: IApparel[]): boolean {
+export function verifyApparelByCategory(product: IProductCategory, rules?: IApparel[]): boolean {
   if (!rules || !product) return false
   if (product?.breadcrumbTree) {
     const compValues = rules.map((c) => ({

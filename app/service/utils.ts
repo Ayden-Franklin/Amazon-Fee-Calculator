@@ -1,11 +1,11 @@
 import { NotAvailable } from '@src/service/constants'
+import { IMeasureUnit, ICalculateUnit } from '@src/types'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Qty = require('js-quantities')
 
 export function sortDimensions(length: number, width: number, height: number) {
-  const dimensions = [length, width, height].sort((a, b) => b - a)
-  return dimensions
+  return [length, width, height].sort((a, b) => b - a)
 }
 
 export function sortByUnit(a: IMeasureUnit, b: IMeasureUnit, c: IMeasureUnit) {
