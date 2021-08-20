@@ -5,7 +5,6 @@ import {
   loadPackagingRule,
   loadFBATable,
   loadReferralTable,
-  loadClosingFee,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import {

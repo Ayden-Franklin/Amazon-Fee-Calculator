@@ -1,8 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import {
-  determineTier,
-  calculateDimensionalWeight,
-  calculateShippingWeight,
   calculateFbaFee,
   calculateReferralFee,
   calculateClosingFee,
@@ -13,10 +10,9 @@ import {
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
 import { NotAvailable } from '@src/service/constants'
-import { sortByUnit } from '@src/service/utils'
 import { IMeasureUnit, Nullable } from '@src/types/'
 import { IRuleCollection, ITier } from '@src/types/rules'
-import { IProductDimensionData, IProductInput, IProductFee } from '@src/types/fees'
+import { IProductInput, IProductFee } from '@src/types/fees'
 import { IFeeUnit } from '@src/types'
 
 interface CalculatorState {

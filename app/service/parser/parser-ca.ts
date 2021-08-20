@@ -122,7 +122,6 @@ const standardTiersMap: Record<string, Array<string>> = {
   Oversize: ['Oversize', 'Oversize Special'],
 }
 export function parseDimensionalWeight(content: string) {
-  const empty = { value: NaN, unit: NotAvailable }
   const parseExpression = (text: string): { tierName: string; roundingUpUnit: ICalculateUnit } | undefined => {
     const values = text.split(' ')
     if (values.length < 4) return
@@ -220,7 +219,6 @@ export function parsePackagingWeight(content: string) {
 }
 
 export function parseShippingWeight(content: string): IShippingWeight[] {
-  const empty = { value: NaN, unit: NotAvailable }
   const expressions = content.match(/\d+(,\d+)*(\.\d+)?( g|kg) for \S+/g)
   const items: IShippingWeight[] = []
   const parseExpression = (text: string): { tierName: string; roundingUp: IMeasureUnit } | undefined => {

@@ -317,11 +317,11 @@ function parseFba(content: string) {
   }
   const parseFulfillmentFeePerUnit = (
     content: string
-  ): [IFeeUnit, IFulfillmentAdditionalUnitFee, number] | undefined => {
+  ): [IFeeUnit, IFulfillmentAdditionalUnitFee?, number?] | undefined => {
     const array = content.match(/\d+(\.\d+)?(\/lb)?/g)
     if (array && array.length > 0) {
       let fixedUnitFee = { value: parseFloat(array[0]), currency: '$' }
-      let additionalUnitFee: IFulfillmentAdditionalUnitFee
+      let additionalUnitFee: IFulfillmentAdditionalUnitFee | undefined
       // There should be 1 or 2 or 3 numbers
       if (array.length === 1) {
         return [fixedUnitFee]
@@ -383,29 +383,29 @@ function parseFba(content: string) {
       const maximumShippingWeight = shippingWeightResult[1]
       const fulfillmentFeeResult = parseFulfillmentFeePerUnit(fulfillmentFee)
       // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
-      if (fulfillmentFeeResult.length === 1) {
+      if (fulfillmentFeeResult && fulfillmentFeeResult.length === 1) {
         fixedUnitFees.push({
           minimumShippingWeight,
           maximumShippingWeight,
           fee: fulfillmentFeeResult[0],
           shippingWeightText,
         })
-      } else if (fulfillmentFeeResult.length === 3) {
-        additionalUnitFee = fulfillmentFeeResult[1]
+      } else if (fulfillmentFeeResult && fulfillmentFeeResult.length === 3) {
+        additionalUnitFee = fulfillmentFeeResult[1] as IFulfillmentAdditionalUnitFee
         // if fixedUnitFees has not any item, it is described by only one line  like `$87.93 + $0.79/lb above first 90 lbs`
         if (fixedUnitFees.length === 0) {
           fixedUnitFees.push({
             minimumShippingWeight: { unit: additionalUnitFee.shippingWeight.unit, value: 0, operator: '>' },
             maximumShippingWeight: {
               unit: additionalUnitFee.shippingWeight.unit,
-              value: fulfillmentFeeResult[2],
+              value: fulfillmentFeeResult[2] as number,
               operator: '<=',
             },
             fee: fulfillmentFeeResult[0],
-            shippingWeightText
+            shippingWeightText,
           })
         }
-        additionalUnitFee = fulfillmentFeeResult[1]
+        additionalUnitFee = fulfillmentFeeResult[1] as IFulfillmentAdditionalUnitFee
       }
       // console.log(' Finished a row: ')
       // console.log('                 currentProductTypeKey = ', currentProductTypeKey)

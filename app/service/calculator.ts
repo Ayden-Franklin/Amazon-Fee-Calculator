@@ -129,7 +129,7 @@ export function calculateDimensionalWeight(
   let lengthValue = length.value
   let widthValue = width.value
   let heightValue = height.value
-  let weightValue = weight.value
+  // let weightValue = weight.value
   const { volumeConstraints, weightConstraints, divisor } = dimensionalWeightRule
   if (volumeConstraints)
     for (const item of volumeConstraints) {
@@ -163,7 +163,7 @@ export function calculateDimensionalWeight(
       if (item.standardTierNames?.includes(tier.name) || item.tierName === tier.name) {
         if (!compareWithUnit(product.weight, item.roundingUpUnit)) {
           // TODO: if the units are not matched, they should be converted.
-          weightValue = item.roundingUpUnit.value
+          // weightValue = item.roundingUpUnit.value
           console.log(
             'calculateDimensionalWeight. rule -> adjust weight to ',
             item.roundingUpUnit.value,
@@ -224,7 +224,7 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
       isDangerous === ruleItem.isDangerous
     ) {
       const { fixedUnitFees, additionalUnitFee } = ruleItem
-      let lastFixedFeeItem: IFulfillmentFixedUnitFee
+      let lastFixedFeeItem: IFulfillmentFixedUnitFee | undefined
       for (const fixedUnitFee of fixedUnitFees) {
         lastFixedFeeItem = fixedUnitFee
         let target = fixedUnitFee.maximumShippingWeight
@@ -279,13 +279,9 @@ interface ICalcCategoryResult {
  * by product.category or rowCategory or breadcrumbTree
  * by matchCategory or matchCategoryMapping
  */
-const matchCategory = (
-  product: IProductCategory,
-  targetCategory: string,
-  country: string
-): Array<ICalcCategoryResult> => {
+const matchCategory = (product: IProductCategory, targetCategory: string, country: string): ICalcCategoryResult[] => {
   const minifyCategory = minify(targetCategory)
-  const result = []
+  const result: ICalcCategoryResult[] = []
   if (product?.category && minify(product?.category) === minifyCategory) {
     result.push({ order: -1, by: 'category' })
   }
@@ -339,13 +335,9 @@ const matchCategory = (
  * Match the referral rules with a categories tree.
  * @param category The product category tree. For production environment, this might an array and two strings
  * @param rule The rules for referral
- * @returns An array
+ * @returns An array  if the categories of this product maches with the including categores
  */
-function matchReferralCategory(
-  category: string,
-  country: string,
-  rule: IReferralItem
-): Nullable<Array<ICalcCategoryResult>> {
+function matchReferralCategory(category: string, country: string, rule: IReferralItem): Array<ICalcCategoryResult> {
   let results: ICalcCategoryResult[] = []
   let excludingCategories = [...rule.excludingCategories]
   // Check if the category should be excluded
@@ -355,7 +347,7 @@ function matchReferralCategory(
       results.push(...res)
     }
   })
-  if (results.length > 0) return null
+  if (results.length > 0) return []
   // Check if the category should be included
   let matchCategories = [rule.category, ...rule.includingCategories]
   matchCategories.forEach((c) => {
@@ -364,7 +356,7 @@ function matchReferralCategory(
       results.push(...res)
     }
   })
-  return results.length <= 0 ? null : results
+  return results
 }
 
 export function calculateReferralFee(
@@ -373,34 +365,36 @@ export function calculateReferralFee(
   country: string,
   rules: IReferralItem[]
 ): IFeeUnit {
-  let winnerRule = null
-  let matchedRules = []
-  let otherRule = null
+  interface MatchedRulesType extends IReferralItem {
+    _calc: ICalcCategoryResult[]
+    _maxCalcOrder: number
+  }
+  let winnerRule: IReferralItem | undefined
+  let matchedRules: MatchedRulesType[] = []
+  let otherRule: IReferralItem | undefined
   for (const rule of rules) {
-    if (otherRule === null && rule.isOther) {
+    if (!otherRule && rule.isOther) {
       otherRule = rule
     }
-    const calcRes = matchReferralCategory(category, country, rule)
-    if (calcRes?.length) {
+    const matchedCategories = matchReferralCategory(category, country, rule)
+    if (matchedCategories.length > 0) {
       matchedRules.push({
-        _calc: calcRes,
-        _maxCalcOrder: Math.max(...calcRes.map((c) => c.order)),
+        _calc: matchedCategories,
+        _maxCalcOrder: Math.max(...matchedCategories.map((c) => c.order)),
         ...rule,
       })
     }
   }
 
   // How to determine which rule will be applied finally? For now choose the maximum order!
-  let maxOrderRule = null
-  for (const rRule of matchedRules) {
-    if (!maxOrderRule || maxOrderRule?._maxCalcOrder < rRule._maxCalcOrder) {
-      maxOrderRule = rRule
-    }
+  if (matchedRules.length > 0) {
+    winnerRule = matchedRules.reduce((pre, cur) => (pre._maxCalcOrder < cur._maxCalcOrder ? cur : pre))
+  } else {
+    winnerRule = otherRule
   }
-  winnerRule = matchedRules?.length ? maxOrderRule : otherRule
   console.log('ReferralFee -> ', matchedRules, winnerRule)
 
-  if (winnerRule === null) {
+  if (!winnerRule) {
     return { value: NaN, currency: NotAvailable }
   }
 
