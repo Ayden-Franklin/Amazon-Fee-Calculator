@@ -8,6 +8,8 @@ import {
   calculateClosingFee,
   verifyApparelByCategory,
   standardizeDimensions,
+  calculateProductSize,
+  calculateWeight,
 } from '@src/service/calculator'
 import { StateStatus } from '@src/renderer/constants'
 import { NotAvailable } from '@src/service/constants'
@@ -55,35 +57,7 @@ const initialState: CalculatorState = {
 
 export const selectCalculator = (state) => state.calculator
 
-/**
- * rules => {
- *   country
- *   dimensionalWeightRule
- *   tierRules
- * }
- */
-function calculateProductSize(input: IProductDimensionData, rules: IRuleCollection): ITier {
-  if (!input) throw Error('Parameter is not provided to calculate!')
-  const tierRules: Array<ITier> = rules.tierRules ?? []
-  const productTier = determineTier(input, tierRules)
-  if (productTier) {
-    return productTier
-  }
-  throw Error(`Fail to calculate tier with parameters ${input}`)
-}
-function calculateWeight(input: IProductDimensionData, productTier: ITier, rules: IRuleCollection): IMeasureUnit {
-  if (!input) throw Error('Parameter is not provided to calculate!')
-  const dimensionalWeightRule = rules.dimensionalWeightRules
-  const dimensionalWeight = calculateDimensionalWeight(input, productTier, dimensionalWeightRule)
-  const weight = calculateShippingWeight({
-    tierName: productTier.name,
-    weight: input.weight,
-    dimensionalWeight: dimensionalWeight,
-    shippingWeights: rules.shippingWeightRules,
-  })
-  return weight
-}
-function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullable<IProductFee> {
+function startToEstimate(state: CalculatorState, country: string, rules: IRuleCollection): Nullable<IProductFee> {
   if (
     !state.tier ||
     !state.productInput ||
@@ -105,8 +79,8 @@ function startToEstimate(state: CalculatorState, rules: IRuleCollection): Nullab
     rules: rules.fbaRules,
   })
 
-  const referralFee = calculateReferralFee(productInput.category, productInput.price, 'us', rules.referralRules)
-  const closingFee = calculateClosingFee(productInput, rules.closingRules)
+  const referralFee = calculateReferralFee(productInput.category, productInput.price, country, rules.referralRules)
+  const closingFee = calculateClosingFee(productInput, country, rules.closingRules)
 
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
   const formatValue = (o: IFeeUnit): IFeeUnit => ({ ...o, value: numberFix2(o.value) })
@@ -168,21 +142,26 @@ const calculatorSlice = createSlice({
         'price',
         'cost',
       ])
-      const rules = action.payload
+      const { country, rules } = action.payload
+      if (!rules) {
+        // Because of the data injection. This might be undifined
+        return
+      }
       try {
         const productDimenions = standardizeDimensions(productInput)
-        const tier = calculateProductSize(productDimenions, rules)
-        const weight = calculateWeight(productDimenions, tier, rules)
+        const tier = calculateProductSize(productDimenions, rules.tierRules)
+        const weight = calculateWeight(productDimenions, tier, rules.dimensionalWeightRules, rules.shippingWeightRules)
         state.tier = tier
         state.shippingWeight = weight
         if (state.productInput) {
           state.productInput.isApparel = verifyApparelCategory(productInput, rules)
         }
-        const fees = startToEstimate(state, rules)
+        const fees = startToEstimate(state, country, rules)
         if (fees) {
           state.productFee = fees
         }
       } catch (error) {
+        console.log('Error occurs!', error)
         state.error = error.meeeage
       }
     },

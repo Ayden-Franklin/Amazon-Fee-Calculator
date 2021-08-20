@@ -3,12 +3,12 @@ import countryReducer from '@src/store/countrySlice'
 import assetReducer from '@src/store/assetSlice'
 import calculatorReducer from '@src/store/calculatorSlice'
 function interceptor({ getState }) {
-  return next => action => {
+  return (next) => (action) => {
     // console.log('will dispatch', action)
     if (action.type === 'calculator/calculate') {
       action.payload = {
         country: getState().country.code,
-        ...getState().asset.ruleCollection,
+        rules: { ...getState().asset.ruleCollection },
       }
     }
     // Call the next dispatch method in the middleware chain.

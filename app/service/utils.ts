@@ -41,7 +41,17 @@ export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit
     (reference.operator.includes('<') && r < 0)
   )
 }
-export function convertWeightUnit(operand: IMeasureUnit, targetUnit = 'lb'): number {
+export function convertLengthUnit(operand: IMeasureUnit, targetUnit = 'inches'): number {
+  if (operand) {
+    if (operand.unit === targetUnit) {
+      return operand.value
+    } else {
+      return Qty(`${operand.value} ${operand.unit}`).to(targetUnit).scalar
+    }
+  }
+  return NaN
+}
+export function convertWeightUnit(operand: IMeasureUnit, targetUnit = 'pounds'): number {
   if (operand) {
     if (operand.unit === targetUnit) {
       return operand.value

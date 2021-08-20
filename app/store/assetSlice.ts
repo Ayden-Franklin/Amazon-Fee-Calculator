@@ -61,6 +61,7 @@ const rulesSlice = createSlice({
         state.status = StateStatus.Succeeded
         state.content = action.payload
         state.ruleCollection = profitCalculator.parseRule()
+        // console.log(JSON.stringify(state.ruleCollection))
       })
       .addCase(fetchRuleContent.rejected, (state, action) => {
         state.status = StateStatus.Failed

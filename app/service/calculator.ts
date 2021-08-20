@@ -1,5 +1,5 @@
 import store from '@src/store'
-import { compareWithUnit, convertWeightUnit, minify, sortDimensions } from '@src/service/utils'
+import { compareWithUnit, convertLengthUnit, convertWeightUnit, minify, sortDimensions } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
 import { NotAvailable } from '@src/service/constants'
 import { IProductCategory, IProductDimensionData, IProductInput } from '@src/types/fees'
@@ -31,25 +31,64 @@ export function standardizeDimensions(input: IProductInput): IProductDimensionDa
 
 export function checkProductInputReady(): boolean {
   const productInput = store.getState().calculator.productInput
-  return productInput
-    ? [productInput.length, productInput.width, productInput.height, productInput.weight].every(Boolean)
-    : false
+  return (
+    !!productInput && [productInput.length, productInput.width, productInput.height, productInput.weight].every(Boolean)
+  )
 }
 
-function calcLengthGirth(longest: IMeasureUnit, median: IMeasureUnit, short: IMeasureUnit): Nullable<ICalculateUnit> {
+/**
+ * rules => {
+ *   country
+ *   dimensionalWeightRule
+ *   tierRules
+ * }
+ */
+export function calculateProductSize(input: IProductDimensionData, tierRules: ITier[]): ITier {
+  if (!input) throw Error('Parameter is not provided to calculate!')
+  const productTier = determineTier(input, tierRules)
+  if (productTier) {
+    return productTier
+  }
+  throw Error(`Fail to calculate tier with parameters ${input}`)
+}
+export function calculateWeight(
+  input: IProductDimensionData,
+  productTier: ITier,
+  dimensionalWeightRule: IDimensionalWeight,
+  shippingWeightRules: IShippingWeight[]
+): IMeasureUnit {
+  if (!input) throw Error('Parameter is not provided to calculate!')
+  const dimensionalWeight = calculateDimensionalWeight(input, productTier, dimensionalWeightRule)
+  const weight = calculateShippingWeight({
+    tierName: productTier.name,
+    weight: input.weight,
+    dimensionalWeight,
+    shippingWeightRules,
+  })
+  return weight
+}
+function calculateLengthGirth(
+  longest: IMeasureUnit,
+  median: IMeasureUnit,
+  short: IMeasureUnit
+): Nullable<ICalculateUnit> {
   if (longest.unit === median.unit && median.unit === short.unit) {
     return {
       value: longest.value + (median.value + short.value) * 2,
       unit: longest.unit,
     }
+  } else {
+    return {
+      value: longest.value + (convertLengthUnit(median, longest.unit) + convertLengthUnit(short, longest.unit)) * 2,
+      unit: longest.unit,
+    }
   }
-  return null
 }
-export function determineTier(productDimension: IProductDimensionData, tiers: Array<ITier>): Nullable<ITier> {
+export function determineTier(productDimension: IProductDimensionData, tiers: ITier[]): Nullable<ITier> {
   let cI = 0
   let total = tiers.length
   let targetTier: Nullable<ITier> = null
-  const lengthGirth = calcLengthGirth(productDimension.length, productDimension.width, productDimension.height)
+  const lengthGirth = calculateLengthGirth(productDimension.length, productDimension.width, productDimension.height)
   // weight
   while (cI < total) {
     const tI = tiers[cI]
@@ -144,14 +183,14 @@ export function calculateShippingWeight({
   tierName,
   weight,
   dimensionalWeight,
-  shippingWeights,
+  shippingWeightRules,
 }: {
   tierName: string
   weight: IMeasureUnit
   dimensionalWeight: number
-  shippingWeights: IShippingWeight[]
+  shippingWeightRules: IShippingWeight[]
 }) {
-  const shippingWeightItem = shippingWeights.find(
+  const shippingWeightItem = shippingWeightRules.find(
     (shippingWeight) =>
       (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) &&
       (!shippingWeight.weightConstraint ||

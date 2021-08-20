@@ -3,7 +3,6 @@ import { HashRouter, Switch, Route, useRouteMatch } from 'react-router-dom'
 import Container from '@material-ui/core/Container'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import { makeStyles } from '@material-ui/core/styles'
-import styles from '@src/renderer/container/root/index.less'
 import DefaultPage from '@src/renderer/container/default'
 import Header from '@src/renderer/container/header'
 import Footer from '@src/renderer/container/footer'
@@ -12,8 +11,8 @@ import RuleTypePage from '@src/renderer/components/rule-type-page'
 const SECTIONS = [
   { title: 'Tiers', url: 'tier' },
   { title: 'Dimensional weight', url: 'dimensionalWeight' },
-  { title: 'Packaging weight', url: 'packaging' },
-  { title: 'Shipping weight', url: 'shipping' },
+  { title: 'Packaging weight', url: 'packagingWeight' },
+  { title: 'Shipping weight', url: 'shippingWeight' },
   { title: 'FBA Fee', url: 'fba' },
   { title: 'Referral Fee', url: 'referral' },
   { title: 'Closing Fee', url: 'closing' },

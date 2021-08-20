@@ -561,7 +561,7 @@ function parseReferralSubItem(content: string) {
   $(content)
     .find('li')
     .each((_, element) => {
-      const description = $(element).find('span').text()
+      const description = $(element).find('span').text().replaceAll(/\n\s+/g, ' ')
       const array = description.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
       if (array && array?.length > 1) {

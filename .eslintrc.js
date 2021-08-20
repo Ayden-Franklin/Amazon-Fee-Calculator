@@ -5,6 +5,8 @@ module.exports = {
     'alloy/typescript',
     'plugin:react-hooks/recommended',
     'plugin:prettier/recommended',
+    'eslint:recommended',
+    'plugin:react/recommended',
   ],
   globals: {
     __dirname: false,

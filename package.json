@@ -6,6 +6,7 @@
   "scripts": {
     "start:main": "webpack --config ./webpack/webpack.main.dev.js && electron ./dist/electron.js",
     "start:render": "webpack serve --config ./webpack/webpack.render.dev.js",
+    "lint": "eslint 'app/**/*.ts' 'test/**/*.ts'",
     "test": "jest"
   },
   "author": "Ayden Franklin",
