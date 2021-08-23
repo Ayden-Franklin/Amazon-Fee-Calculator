@@ -12,3 +12,6 @@ settings.json
 .DS_STORE
 .npmrc
 inject_global.ts
+test/calc/*.pdf
+test/calc/*.jpg
+test/calc/*.json

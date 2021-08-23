@@ -53,7 +53,11 @@ const initialState: CalculatorState = {
 
 export const selectCalculator = (state) => state.calculator
 
-function startToEstimate(state: CalculatorState, country: string, rules: IRuleCollection): Nullable<IProductFee> {
+export function startToEstimate(
+  state: CalculatorState,
+  country: string,
+  rules: IRuleCollection
+): Nullable<IProductFee> {
   if (
     !state.tier ||
     !state.productInput ||
@@ -91,7 +95,7 @@ function startToEstimate(state: CalculatorState, country: string, rules: IRuleCo
     ),
   }
 }
-function verifyApparelCategory(productInput: IProductInput, ruleCollection: IRuleCollection): boolean {
+export function verifyApparelCategory(productInput: IProductInput, ruleCollection: IRuleCollection): boolean {
   if (!productInput) return false
   const product = productInput ? JSON.parse(JSON.stringify(productInput)) : {}
   product.category = product.category || ''
