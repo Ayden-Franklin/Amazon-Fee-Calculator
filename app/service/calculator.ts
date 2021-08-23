@@ -419,13 +419,17 @@ export function calculateReferralFee(
   return { value: Math.max(winnerRule.minimumFee, totalFee), currency: winnerRule.currency }
 }
 
-export function calculateClosingFee(category: string, country: string, rules?: IClosing[]): IFeeUnit {
+export function calculateClosingFee(
+  productCategories: IProductCategory,
+  country: string,
+  rules?: IClosing[]
+): IFeeUnit {
   const emptyFee = { value: 0, currency: NotAvailable }
   if (!rules) return emptyFee
   const closing2Fee = (r: IClosing): IFeeUnit => ({ value: r.fee, currency: r.currency })
   for (const r of rules) {
     const result = r.categories
-      ?.map((c) => matchCategory({ category }, c, country))
+      ?.map((c) => matchCategory(productCategories, c, country))
       .filter((res) => res !== null && res?.length > 0)
     if (result?.length > 0) {
       console.log('ClosingFee -> ', r, result)
@@ -435,14 +439,14 @@ export function calculateClosingFee(category: string, country: string, rules?: I
   return emptyFee
 }
 
-export function verifyApparelByCategory(product: IProductCategory, rules?: IApparel[]): boolean {
-  if (!rules || !product) return false
-  if (product?.breadcrumbTree) {
+export function verifyApparelByCategory(productCategories: IProductCategory, rules?: IApparel[]): boolean {
+  if (!rules || !productCategories) return false
+  if (productCategories?.breadcrumbTree) {
     const compValues = rules.map((c) => ({
       name: minify(c.matchCategory),
       require: c.requireParent?.map((rc) => minify(rc)),
     }))
-    const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
+    const mifyCategories = productCategories?.breadcrumbTree?.map((bc) => minify(bc.name))
     const fitByCategory = compValues.filter((c) => {
       if (c.require) {
         return c.require.every((rc) => mifyCategories.includes(rc)) && mifyCategories.includes(c.name)
