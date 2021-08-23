@@ -125,7 +125,7 @@ export function calculateDimensionalWeight(
   tier: ITier,
   dimensionalWeightRule: IDimensionalWeight
 ) {
-  let { length, width, height, weight } = product
+  let { length, width, height } = product
   let lengthValue = length.value
   let widthValue = width.value
   let heightValue = height.value
@@ -282,10 +282,10 @@ interface ICalcCategoryResult {
 const matchCategory = (product: IProductCategory, targetCategory: string, country: string): ICalcCategoryResult[] => {
   const minifyCategory = minify(targetCategory)
   const result: ICalcCategoryResult[] = []
-  if (product?.category && minify(product?.category) === minifyCategory) {
+  if (product.category && minify(product.category) === minifyCategory) {
     result.push({ order: -1, by: 'category' })
   }
-  if (product?.rawCategory && minify(product?.rawCategory) === minifyCategory) {
+  if (product.rawCategory && minify(product.rawCategory) === minifyCategory) {
     result.push({ order: -1, by: 'rawCategory' })
   }
   // get country map category  // TODO
@@ -299,15 +299,15 @@ const matchCategory = (product: IProductCategory, targetCategory: string, countr
       require: c.require?.map((rc) => minify(rc)),
     }))
 
-    if (product?.category) {
-      const mifyCategory = minify(product?.category)
+    if (product.category) {
+      const mifyCategory = minify(product.category)
       const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
       if (fitByCategory.length) {
         result.push(...fitByCategory.map((c) => ({ ...c, by: 'mapping -> category' })))
       }
     }
 
-    if (product?.rawCategory) {
+    if (product.rawCategory) {
       const mifyCategory = minify(product?.rawCategory)
       const fitByCategory = compValues.filter((c) => c.name === mifyCategory)
       if (fitByCategory.length) {
@@ -315,7 +315,7 @@ const matchCategory = (product: IProductCategory, targetCategory: string, countr
       }
     }
 
-    if (product?.breadcrumbTree) {
+    if (product.breadcrumbTree) {
       const mifyCategories = product?.breadcrumbTree?.map((bc) => minify(bc.name))
       const fitByCategory = compValues.filter((c) => {
         if (c.require) {
@@ -337,12 +337,16 @@ const matchCategory = (product: IProductCategory, targetCategory: string, countr
  * @param rule The rules for referral
  * @returns An array  if the categories of this product maches with the including categores
  */
-function matchReferralCategory(category: string, country: string, rule: IReferralItem): Array<ICalcCategoryResult> {
+function matchReferralCategory(
+  productCategories: IProductCategory,
+  country: string,
+  rule: IReferralItem
+): Array<ICalcCategoryResult> {
   let results: ICalcCategoryResult[] = []
   let excludingCategories = [...rule.excludingCategories]
   // Check if the category should be excluded
   excludingCategories.forEach((c) => {
-    const res = matchCategory({ category }, c, country)
+    const res = matchCategory(productCategories, c, country)
     if (res) {
       results.push(...res)
     }
@@ -351,7 +355,7 @@ function matchReferralCategory(category: string, country: string, rule: IReferra
   // Check if the category should be included
   let matchCategories = [rule.category, ...rule.includingCategories]
   matchCategories.forEach((c) => {
-    const res = matchCategory({ category }, c, country)
+    const res = matchCategory(productCategories, c, country)
     if (res) {
       results.push(...res)
     }
@@ -360,7 +364,7 @@ function matchReferralCategory(category: string, country: string, rule: IReferra
 }
 
 export function calculateReferralFee(
-  category: string,
+  productCategories: IProductCategory,
   price: number,
   country: string,
   rules: IReferralItem[]
@@ -376,7 +380,7 @@ export function calculateReferralFee(
     if (!otherRule && rule.isOther) {
       otherRule = rule
     }
-    const matchedCategories = matchReferralCategory(category, country, rule)
+    const matchedCategories = matchReferralCategory(productCategories, country, rule)
     if (matchedCategories.length > 0) {
       matchedRules.push({
         _calc: matchedCategories,
