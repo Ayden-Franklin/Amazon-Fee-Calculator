@@ -48,8 +48,8 @@ export class UsProfitCalculator implements IProfitCalculator {
     const dimensionalWeightRules = Parser.parseDimensionalWeight(this.content.dimensionalWeight)
     const shippingWeightRules = Parser.parseShippingWeight(this.content.shippingWeight)
     const fbaRules = Parser.parseFba(this.content.fba)
-    const apparelRules = Parser.parseApparel(this.fbaExtra?.apparel)
-    const referralRules = Parser.parseReferral(this.content.referral, this.referralExtra)
+    const apparelRules = Parser.parseApparel(this.fbaExtra?.apparel || '')
+    const referralRules = Parser.parseReferral(this.content.referral, this.referralExtra || {})
     // closingFee
     const closingRules = Parser.parseClosing(this.content.closing)
     return {

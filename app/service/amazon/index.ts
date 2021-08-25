@@ -5,13 +5,15 @@ import Constants, { FeeRuleContentKey } from './constants'
 const cacheStore = (function () {
   return {
     get: (key: string) => {
-      if (typeof global !== 'undefined') {
+      if (typeof global !== 'undefined' && typeof global.localStorage !== 'undefined') {
         const value = global.localStorage.getItem(key)
         if (value) return value
       }
     },
     set: (key: string, value: any) => {
-      global.localStorage.setItem(key, value)
+      if (typeof global !== 'undefined' && typeof global.localStorage !== 'undefined') {
+        global.localStorage.setItem(key, value)
+      }
     },
   }
 })()
@@ -25,6 +27,13 @@ function fetchWithCacheByCountryItemValue(rq: {
   // cache handle
   const cache = cacheStore.get(rqUrl)
   if (cache) return Promise.resolve(onRqBody(cache))
+  if (typeof global === 'undefined' || typeof global.localStorage === 'undefined') {
+    // `got` not support nodeVersion 14
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('node-fetch')(rqUrl)
+      .then((res: any) => res.text())
+      .then((text: string) => onRqBody(text))
+  }
   // request
   return got(rqUrl)
     .then((response) => {
