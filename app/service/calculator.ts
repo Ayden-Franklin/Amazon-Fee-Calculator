@@ -19,7 +19,7 @@ export function standardizeDimensions(input: IProductInput): IProductDimensionDa
   const defaultLengthUnit = 'inches'
   let { length, width, height } = { ...input }
   // Sort the value because in our database there is only one field to store the unit of dimensions
-  const [shortest, median, longest] = sortDimensions(length, width, height)
+  const [longest, median, shortest] = sortDimensions(length, width, height)
   const formatUnit = (value: number, unit: string) => ({ value, unit: unit || defaultLengthUnit })
   return {
     length: formatUnit(longest, input.dimensionUnit),

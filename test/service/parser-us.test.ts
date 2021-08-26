@@ -1,4 +1,5 @@
 import Parser from '../../app/service/parser/parser-us'
+import { ITier } from '../../app/types/rules'
 const content = `<table class="help-table">               
 <thead>
 <tr>                     
