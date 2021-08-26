@@ -134,10 +134,18 @@ async function calcByMvp(country: string, productAsins: Array<string>): Promise<
   // for products calc => ......
   const asin = productAsins[0]
   const productByDB = await getProductInfo(asin)
-  const infoArgs = ['length', 'width', 'height', 'weight', 'dimensionUnit', 'weightUnit', 'price'].reduce(
-    (info, key) => Object.assign(info, { [key]: productByDB[key] }),
-    {}
-  )
+  const infoArgs = [
+    'length',
+    'width',
+    'height',
+    'weight',
+    'dimensionUnit',
+    'weightUnit',
+    'price',
+    'breadcrumbTree',
+    'category',
+    'rawCategory',
+  ].reduce((info, key) => Object.assign(info, { [key]: productByDB[key] }), {})
   if (Object.values(infoArgs).every((v) => !v)) {
     throw Error(`calcByMvp request product get some error ${asin}`)
   }
@@ -180,7 +188,7 @@ async function main() {
   console.log('start calc mvp', country, productAsins)
   const mvpResult = await calcByMvp(country, productAsins)
   // comparison
-  console.log('generate comparison files')
+  console.log('generate  comparison files')
   comparison(officialResult, mvpResult)
 }
 

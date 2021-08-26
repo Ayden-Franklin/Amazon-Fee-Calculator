@@ -79,7 +79,7 @@ export function startToEstimate(
     rules: rules.fbaRules,
   })
 
-  const referralFee = calculateReferralFee(productInput.category, productInput.price, country, rules.referralRules)
+  const referralFee = calculateReferralFee(productInput, productInput.price, country, rules.referralRules)
   const closingFee = calculateClosingFee(productInput, country, rules.closingRules)
 
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))

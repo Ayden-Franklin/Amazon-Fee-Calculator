@@ -290,7 +290,7 @@ const matchCategory = (product: IProductCategory, targetCategory: string, countr
   }
   // get country map category  // TODO
   const categoryMapping = getCategoryMappingByCountryCode(country)
-  const mappingCategories = categoryMapping[minifyCategory] || [{ name: matchCategory, order: -1 }]
+  const mappingCategories = categoryMapping[minifyCategory] || [{ name: minifyCategory, order: -1 }]
 
   if (mappingCategories) {
     const compValues = mappingCategories.map((c) => ({
