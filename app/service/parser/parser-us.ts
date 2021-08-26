@@ -561,13 +561,13 @@ function parseReferralSubItem(content: string) {
   $(content)
     .find('li')
     .each((_, element) => {
-      const description = $(element).find('span')?.text()?.replaceAll?.(/\n\s+/g, ' ')
+      const description = $(element).find('span')?.text()?.replace?.(/\n\s+/g, ' ')
       const array = description?.match(/(\d+(,\d+)*(\.\d*)?)/g)
 
       if (array && array?.length > 1) {
         let rate = parseInt(array[0], 10) / 100
-        let priceV1 = parseFloat(array[1].replaceAll(',', ''))
-        let priceV2 = parseFloat(array[2]?.replaceAll(',', ''))
+        let priceV1 = parseFloat(array[1].replace(/,/g, ''))
+        let priceV2 = parseFloat(array[2]?.replace(/,/g, ''))
         // console.log('array', array, priceV1, priceV2)
 
         const lastRate = rateItems.length && rateItems[rateItems.length - 1]
