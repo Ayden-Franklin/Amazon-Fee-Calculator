@@ -1,8 +1,6 @@
 import { NotAvailable } from '@src/service/constants'
 import { IMeasureUnit, ICalculateUnit } from '@src/types'
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const Qty = require('js-quantities')
+import Qty from 'js-quantities'
 
 export function sortDimensions(length: number, width: number, height: number) {
   return [length, width, height].sort((a, b) => b - a)
@@ -34,6 +32,9 @@ export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit
   // diff unit Comparison
   const operandV = `${operand.value} ${operand.unit}`
   const referenceV = `${reference.value} ${reference.unit}`
+  console.log(' ------- ')
+  console.log(operandV)
+  console.log(referenceV)
   const r = Qty(operandV).compareTo(Qty(referenceV))
   return (
     (reference.operator.includes('=') && r === 0) ||

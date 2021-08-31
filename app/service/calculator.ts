@@ -17,6 +17,7 @@ import { ICalculateUnit, IFeeUnit, IMeasureUnit, Nullable } from '@src/types'
 
 export function standardizeDimensions(input: IProductInput): IProductDimensionData {
   const defaultLengthUnit = 'inches'
+  const defaultWeighthUnit = 'pounds'
   let { length, width, height } = { ...input }
   // Sort the value because in our database there is only one field to store the unit of dimensions
   const [longest, median, shortest] = sortDimensions(length, width, height)
@@ -25,7 +26,7 @@ export function standardizeDimensions(input: IProductInput): IProductDimensionDa
     length: formatUnit(longest, input.dimensionUnit),
     width: formatUnit(median, input.dimensionUnit),
     height: formatUnit(shortest, input.dimensionUnit),
-    weight: { value: input.weight, unit: input.weightUnit || 'pounds' },
+    weight: { value: input.weight, unit: input.weightUnit || defaultWeighthUnit },
   }
 }
 
@@ -120,7 +121,7 @@ export function determineTier(productDimension: IProductDimensionData, tiers: IT
   return targetTier
 }
 
-export function calculateDimensionalWeight(
+function calculateDimensionalWeight(
   product: IProductDimensionData,
   tier: ITier,
   dimensionalWeightRule: IDimensionalWeight
@@ -176,7 +177,7 @@ export function calculateDimensionalWeight(
       }
     }
   let dimensionalWeight = (lengthValue * widthValue * heightValue) / divisor
-  console.log('calculateDimensionalWeight. rule -> divided by ', divisor)
+  console.log('calculateDimensionalWeight. rule -> divided by ', divisor, ' = ', dimensionalWeight)
   return dimensionalWeight
 }
 export function calculateShippingWeight({
@@ -189,7 +190,7 @@ export function calculateShippingWeight({
   weight: IMeasureUnit
   dimensionalWeight: number
   shippingWeightRules: IShippingWeight[]
-}) {
+}): IMeasureUnit {
   const shippingWeightItem = shippingWeightRules.find(
     (shippingWeight) =>
       (shippingWeight.standardTierNames?.includes(tierName) || shippingWeight.tierName === tierName) &&

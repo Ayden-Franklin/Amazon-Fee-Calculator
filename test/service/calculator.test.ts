@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs'
-import { standardizeDimensions, calculateProductSize } from '../../app/service/calculator'
+import { standardizeDimensions, calculateProductSize, calculateShippingWeight } from '../../app/service/calculator'
 const BASE_PRODUCT = {
   length: 0.79,
   width: 5.79,
@@ -73,5 +73,62 @@ describe('Start to test tier', () => {
     const productDimenions = standardizeDimensions({ ...BASE_PRODUCT, weight: 160, weightUnit: 'lb' })
     const tier = calculateProductSize(productDimenions, rules['us'].tierRules)
     expect(tier.name).toEqual('Special oversize')
+  })
+})
+
+describe('Start to test shipping weight', () => {
+  test('calculateWeight - this product weight should be 11 ounces(unit weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Small standard-size',
+      weight: { value: 11, unit: 'ounces' },
+      dimensionalWeight: 14.8,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 11, unit: 'ounces' })
+  })
+  test('calculateWeight - this product weight should be 14.8 ounces(The greater of the unit weight or dimensional weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Small standard-size',
+      weight: { value: 13, unit: 'ounces' },
+      dimensionalWeight: 14.8,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 14.8, unit: 'ounces' })
+  })
+  test('calculateWeight - this product weight should be 3.5 lb(The greater of the unit weight or dimensional weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Large standard-size',
+      weight: { value: 3.5, unit: 'lb' },
+      dimensionalWeight: 0.11649146762589928,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 3.5, unit: 'lb' })
+  })
+  test('calculateWeight - this product weight should be 9.8 lb(The greater of the unit weight or dimensional weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Large standard-size',
+      weight: { value: 3.5, unit: 'lb' },
+      dimensionalWeight: 9.8,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 9.8, unit: 'lb' })
+  })
+  test('calculateWeight - this product weight should be 115 lb(The greater of the unit weight or dimensional weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Large oversize',
+      weight: { value: 115, unit: 'lb' },
+      dimensionalWeight: 99.8,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 115, unit: 'lb' })
+  })
+  test('calculateWeight - this product weight should be 99.8 lb(The greater of the unit weight or dimensional weight)', () => {
+    const weight = calculateShippingWeight({
+      tierName: 'Large oversize',
+      weight: { value: 95, unit: 'lb' },
+      dimensionalWeight: 99.8,
+      shippingWeightRules: rules['us'].shippingWeightRules,
+    })
+    expect(weight).toEqual({ value: 99.8, unit: 'lb' })
   })
 })
