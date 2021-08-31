@@ -120,8 +120,8 @@ export function determineTier(productDimension: IProductDimensionData, tiers: IT
   console.log('determineTier. rule -> ', targetTier)
   return targetTier
 }
-
-function calculateDimensionalWeight(
+// Export it for unit test
+export function calculateDimensionalWeight(
   product: IProductDimensionData,
   tier: ITier,
   dimensionalWeightRule: IDimensionalWeight

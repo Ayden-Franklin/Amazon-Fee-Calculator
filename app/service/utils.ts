@@ -32,9 +32,6 @@ export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit
   // diff unit Comparison
   const operandV = `${operand.value} ${operand.unit}`
   const referenceV = `${reference.value} ${reference.unit}`
-  console.log(' ------- ')
-  console.log(operandV)
-  console.log(referenceV)
   const r = Qty(operandV).compareTo(Qty(referenceV))
   return (
     (reference.operator.includes('=') && r === 0) ||
