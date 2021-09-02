@@ -8,15 +8,20 @@ import {
   loadExtraRule,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
+import { NorthAmerica } from '@src/service/countries/NorthAmerica'
 import Parser from '@src/service/parser/parser-us'
 import { Country, Nullable } from '@src/types'
-import { IRuleContent } from '@src/types/rules'
-export class UsProfitCalculator implements IProfitCalculator {
+import { IRuleCollection, IRuleContent } from '@src/types/rules'
+import { IProductCategory } from '@src/types/fees'
+import { verifyApparelByCategory } from '../calculator'
+export class UsProfitCalculator extends NorthAmerica implements IProfitCalculator {
   currentCountry: Country
   content: IRuleContent
+  ruleCollection!: IRuleCollection
   fbaExtra: Nullable<Record<string, string>>
   referralExtra: Nullable<Record<string, string>>
   constructor(country: Country) {
+    super()
     this.content = {
       tier: 'Loading tier content for US',
       dimensionalWeight: 'Loading dimensional weight content for US',
@@ -43,7 +48,7 @@ export class UsProfitCalculator implements IProfitCalculator {
     const closing = await loadClosingFee(this.currentCountry.code)
     this.content = { tier, dimensionalWeight, packagingWeight: null, shippingWeight, fba, referral, closing }
   }
-  parseRule() {
+  parseRule(): IRuleCollection {
     const tierRules = Parser.parseTier(this.content.tier)
     const dimensionalWeightRules = Parser.parseDimensionalWeight(this.content.dimensionalWeight)
     const shippingWeightRules = Parser.parseShippingWeight(this.content.shippingWeight)
@@ -52,7 +57,7 @@ export class UsProfitCalculator implements IProfitCalculator {
     const referralRules = Parser.parseReferral(this.content.referral, this.referralExtra || {})
     // closingFee
     const closingRules = Parser.parseClosing(this.content.closing)
-    return {
+    this.ruleCollection = {
       tierRules,
       dimensionalWeightRules,
       shippingWeightRules,
@@ -61,14 +66,11 @@ export class UsProfitCalculator implements IProfitCalculator {
       referralRules,
       closingRules,
     }
+    return this.ruleCollection
   }
-  calculateFbaFee(): number | Error {
-    return 0
-  }
-  calculateReferralFee(): number | Error {
-    return 0
-  }
-  calculateClosingFee(): number | Error {
-    return 0
+  verifyApparelCategory(productCategories: IProductCategory): boolean {
+    if (!productCategories) return false
+    const safeCategories = JSON.parse(JSON.stringify(productCategories))
+    return verifyApparelByCategory(safeCategories, this.ruleCollection.apparelRules)
   }
 }

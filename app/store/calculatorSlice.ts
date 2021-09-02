@@ -1,24 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import {
-  calculateFbaFee,
-  calculateReferralFee,
-  calculateClosingFee,
-  verifyApparelByCategory,
-  standardizeDimensions,
-  calculateProductSize,
-  calculateWeight,
-} from '@src/service/calculator'
+import { standardizeDimensions } from '@src/service/calculator'
+import { profitCalculator } from '@src/store/assetSlice'
 import { StateStatus } from '@src/renderer/constants'
 import { NotAvailable } from '@src/service/constants'
 import { IMeasureUnit, Nullable } from '@src/types/'
-import { IRuleCollection, ITier } from '@src/types/rules'
+import { ITier } from '@src/types/rules'
 import { IProductInput, IProductFee } from '@src/types/fees'
 import { IFeeUnit } from '@src/types'
 
 interface CalculatorState {
   productInput?: IProductInput
   loading: boolean
-  tier: Nullable<ITier>
+  tier?: ITier
   shippingWeight: IMeasureUnit
   productFee: IProductFee
   status: StateStatus
@@ -27,7 +20,6 @@ interface CalculatorState {
 const initialFee = { value: 0, currency: '' }
 const initialState: CalculatorState = {
   loading: false,
-  tier: null,
   shippingWeight: { value: 0, unit: NotAvailable },
   status: StateStatus.Idle,
   productInput: {
@@ -53,34 +45,22 @@ const initialState: CalculatorState = {
 
 export const selectCalculator = (state) => state.calculator
 
-export function startToEstimate(
-  state: CalculatorState,
-  country: string,
-  rules: IRuleCollection
-): Nullable<IProductFee> {
-  if (
-    !state.tier ||
-    !state.productInput ||
-    !state.shippingWeight ||
-    !rules.fbaRules ||
-    !rules.referralRules ||
-    !rules.closingRules
-  ) {
+export function startToEstimate(state: CalculatorState): Nullable<IProductFee> {
+  if (!state.tier || !state.productInput || !state.shippingWeight) {
     return null
   }
   const productInput = JSON.parse(JSON.stringify(state.productInput))
   productInput.category = productInput.category || ''
 
-  const fbaFee = calculateFbaFee({
+  const fbaFee = profitCalculator.calculateFbaFee({
     tierName: state.tier.name,
     shippingWeight: state.shippingWeight,
     isApparel: productInput.isApparel,
     isDangerous: productInput.isDangerous,
-    rules: rules.fbaRules,
   })
 
-  const referralFee = calculateReferralFee(productInput, productInput.price, country, rules.referralRules)
-  const closingFee = calculateClosingFee(productInput, country, rules.closingRules)
+  const referralFee = profitCalculator.calculateReferralFee(productInput, productInput.price)
+  const closingFee = profitCalculator.calculateClosingFee(productInput)
 
   const numberFix2 = (num: number) => parseFloat(num.toFixed(2))
   const formatValue = (o: IFeeUnit): IFeeUnit => ({ ...o, value: numberFix2(o.value) })
@@ -94,13 +74,6 @@ export function startToEstimate(
       state.productInput.price - (state.productInput.cost ?? 0) - fbaFee.value - referralFee.value - closingFee.value
     ),
   }
-}
-export function verifyApparelCategory(productInput: IProductInput, ruleCollection: IRuleCollection): boolean {
-  if (!productInput) return false
-  const product = productInput ? JSON.parse(JSON.stringify(productInput)) : {}
-  product.category = product.category || ''
-
-  return verifyApparelByCategory(product, ruleCollection.apparelRules)
 }
 
 function smoothFileds(obj: any, fileds: string[]) {
@@ -133,7 +106,7 @@ const calculatorSlice = createSlice({
       const category = action.payload
       state.productInput = { ...state.productInput, category: category }
     },
-    calculate: (state, action) => {
+    calculate: (state) => {
       const productInput = smoothFileds(JSON.parse(JSON.stringify(state.productInput)), [
         'width',
         'length',
@@ -142,23 +115,21 @@ const calculatorSlice = createSlice({
         'price',
         'cost',
       ])
-      const { country, rules } = action.payload
-      if (!rules) {
-        // Because of the data injection. This might be undifined
-        return
-      }
+      if (!profitCalculator) return
       try {
         const productDimenions = standardizeDimensions(productInput)
-        const tier = calculateProductSize(productDimenions, rules.tierRules)
-        const weight = calculateWeight(productDimenions, tier, rules.dimensionalWeightRules, rules.shippingWeightRules)
-        state.tier = tier
-        state.shippingWeight = weight
-        if (state.productInput) {
-          state.productInput.isApparel = verifyApparelCategory(productInput, rules)
-        }
-        const fees = startToEstimate(state, country, rules)
-        if (fees) {
-          state.productFee = fees
+        const tier = profitCalculator.determineTier(productDimenions)
+        if (tier !== null) {
+          const weight = profitCalculator.calculateWeight(productDimenions, tier)
+          state.tier = tier
+          state.shippingWeight = weight
+          if (state.productInput) {
+            state.productInput.isApparel = profitCalculator.verifyApparelCategory(productInput)
+          }
+          const fees = startToEstimate(state)
+          if (fees) {
+            state.productFee = fees
+          }
         }
       } catch (error) {
         console.log('Error occurs!', error)

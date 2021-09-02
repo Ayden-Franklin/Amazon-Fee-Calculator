@@ -7,6 +7,7 @@ import {
   loadReferralTable,
 } from '@src/service/amazon'
 import { IProfitCalculator } from '@src/service/IProfitCalculator'
+import { NorthAmerica } from '@src/service/countries/NorthAmerica'
 import {
   parseTier,
   parseDimensionalWeight,
@@ -17,12 +18,14 @@ import {
   parseClosing,
 } from '@src/service/parser/parser-mx'
 import { Country } from '@src/types'
-import { IRuleContent } from '@src/types/rules'
+import { IRuleCollection, IRuleContent } from '@src/types/rules'
 
-export class MxProfitCalculator implements IProfitCalculator {
+export class MxProfitCalculator extends NorthAmerica implements IProfitCalculator {
   currentCountry: Country
   content: IRuleContent
+  ruleCollection!: IRuleCollection
   constructor(country: Country) {
+    super()
     this.content = {
       tier: 'Loading tier content for Mexico',
       dimensionalWeight: 'Loading dimensional weight content for Mexico',
@@ -47,7 +50,7 @@ export class MxProfitCalculator implements IProfitCalculator {
     const { referral, closing, tier } = this.content
     const tierRules = parseTier(tier)
     const dimensionalWeightRules = parseDimensionalWeight(this.content.dimensionalWeight)
-    let packagingWeightRules = null
+    let packagingWeightRules
     if (this.content.packagingWeight) {
       packagingWeightRules = parsePackagingWeight(this.content.packagingWeight)
     }
@@ -56,7 +59,7 @@ export class MxProfitCalculator implements IProfitCalculator {
     const referralRules = parseReferral(referral)
 
     const closingRules = parseClosing(closing)
-    return {
+    this.ruleCollection = {
       tierRules,
       dimensionalWeightRules,
       packagingWeightRules,
@@ -65,6 +68,7 @@ export class MxProfitCalculator implements IProfitCalculator {
       referralRules,
       closingRules,
     }
+    return this.ruleCollection
   }
   calculateFbaFee(): number | Error {
     return 0

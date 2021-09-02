@@ -102,7 +102,7 @@ export interface IRuleContent {
 export interface IRuleCollection {
   tierRules: ITier[]
   dimensionalWeightRules: IDimensionalWeight
-  packagingRules?: IPackagingWeight[]
+  packagingWeightRules?: IPackagingWeight[]
   shippingWeightRules: IShippingWeight[]
   fbaRules: IFbaItem[]
   referralRules: IReferralItem[]

@@ -16,7 +16,7 @@ export interface StateSlice {
 }
 const initialState: StateSlice = InitializedStateSlice
 
-let profitCalculator: IProfitCalculator
+export let profitCalculator: IProfitCalculator
 
 export const fetchRuleContent = createAsyncThunk('rules/fetchRuleContent', async (): Promise<any> => {
   try {

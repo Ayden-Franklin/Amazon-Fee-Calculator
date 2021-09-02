@@ -2,7 +2,7 @@ import store from '@src/store'
 import { compareWithUnit, convertLengthUnit, convertWeightUnit, minify, sortDimensions } from '@src/service/utils'
 import { getCategoryMappingByCountryCode } from '@src/service/category'
 import { NotAvailable } from '@src/service/constants'
-import { IProductCategory, IProductDimensionData, IProductInput } from '@src/types/fees'
+import { IProductCategory, IProductDimensionData, IProductFbaData, IProductInput } from '@src/types/fees'
 import {
   IApparel,
   IClosing,
@@ -209,12 +209,7 @@ export function calculateShippingWeight({
     unit: weight.unit,
   }
 }
-
-interface FbaParameter {
-  tierName: string
-  shippingWeight: IMeasureUnit
-  isApparel: boolean
-  isDangerous: boolean
+interface FbaParameter extends IProductFbaData {
   rules: IFbaItem[]
 }
 export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangerous, rules }: FbaParameter): IFeeUnit {

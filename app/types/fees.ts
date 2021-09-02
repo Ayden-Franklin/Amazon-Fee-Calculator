@@ -24,6 +24,13 @@ export interface IProductCategory {
   rawCategory?: string
   breadcrumbTree?: Array<{ name: string }>
 }
+
+export interface IProductFbaData {
+  tierName: string
+  shippingWeight: IMeasureUnit
+  isApparel: boolean
+  isDangerous: boolean
+}
 export interface IProductFee {
   fbaFee: IFeeUnit
   referralFee: IFeeUnit
