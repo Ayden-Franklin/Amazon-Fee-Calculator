@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { calculateShippingWeight, standardizeDimensions, calculateWeight } from '../../app/service/calculator'
+import { UsProfitCalculator } from '../../app/service/countries/USProfitCalculator'
 
 const rules = {}
 function initializeRules() {
@@ -9,6 +10,8 @@ function initializeRules() {
 }
 beforeAll(() => {
   initializeRules()
+  const usFeesCalculator = new UsProfitCalculator('us')
+  console.log(usFeesCalculator.parseRule)
 })
 
 test('calculateWeight - this product weight should be 99.8 lb(The greater of the unit weight or dimensional weight)', () => {

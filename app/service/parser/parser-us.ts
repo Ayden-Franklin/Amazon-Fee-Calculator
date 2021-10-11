@@ -632,6 +632,19 @@ function parseApparel(content: Nullable<string>): IApparel[] {
   return [
     { matchCategory: 'Clothing', requireParent: ['Clothing, Shoes & Jewelry'] },
     { matchCategory: 'Clothing', requireParent: ['Sports & Outdoors'] },
+    { matchCategory: 'Belts', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Neckties', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Bow Ties', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Cravats', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Cummerbunds', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Tie Sets', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Hats & Caps', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Scarves & Wraps', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Lab, Safety & Work Gloves', requireParent: ['Hand & Arm Protection'] },
+    { matchCategory: 'Costumes', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Costumes', requireParent: ['Dress Up & Pretend Play'] },
+    { matchCategory: 'Footwear', requireParent: ['Clothing, Shoes & Jewelry'] },
+    { matchCategory: 'Masks', requireParent: ['Clothing, Shoes & Jewelry'] },
   ]
 }
 
