@@ -26,8 +26,8 @@ export function compareWithUnit(operand: IMeasureUnit, reference: ICalculateUnit
   if (operand.unit === NotAvailable) return false
 
   if (operand.unit === reference.unit) {
-    // eslint-disable-next-line no-eval
-    return global.eval(`${operand.value}  ${reference?.operator} ${reference.value}`)
+    // eslint-disable-next-line no-new-func
+    return Function(`"use strict";return (${operand.value} ${reference.operator} ${reference.value})`)()
   }
   // diff unit Comparison
   const operandV = `${operand.value} ${operand.unit}`

@@ -37,6 +37,7 @@ export default {
   softwarecomputervideogames: [
     { name: 'Video Games', order: 1 },
     { name: 'Software', order: 1 },
+    { name: 'Joysticks', require: ['Video Games', 'Accessories'], order: 3 },
   ],
   // "Toys & Games",
   toolshomeimprovement: [{ name: 'Tools & Home Improvement', order: 0 }],
