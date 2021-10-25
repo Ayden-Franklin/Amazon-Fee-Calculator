@@ -18,6 +18,8 @@ export default {
   electronicsaccessories: [
     { name: 'Accessories & Supplies', require: ['Electronics'], order: 1 },
     { name: 'Smartwatches', require: ['Electronics'], order: 2 },
+    { name: 'Batteries', require: ['Cell Phones & Accessories'], order: 2 },
+    { name: 'Cradles', require: ['Cell Phones & Accessories'], order: 1 },
   ],
   furniture: [{ name: 'Furniture', order: 0 }],
   homegarden: [{ name: 'Patio, Lawn & Garden', order: 1 }],
@@ -25,6 +27,8 @@ export default {
   compactappliances: [
     { name: 'Small Appliances', order: 2 },
     { name: 'Compact Appliances', order: 1 },
+    { name: 'Washers & Dryers', require: ['Laundry Appliances'], order: 1 },
+    { name: 'Dishwashers', require: ['Appliances'], order: 1 },
   ],
   mattresses: [{ name: 'Mattresses', order: 2 }],
   music: [{ name: 'music', order: 0 }],
@@ -75,6 +79,7 @@ export default {
     { name: 'Sunglasses', order: 2 },
     { name: 'Handbags & Wallets', order: 2 },
     { name: 'Shoes & Wallets', order: 2 },
+    { name: 'Shoes', order: 1 },
   ],
   sportscollectibles: [{ name: 'Sports', require: ['Collectibles & Fine Art'], order: 2 }],
   // demo: B08J5LPB6G or B08FWKGKC2 ??

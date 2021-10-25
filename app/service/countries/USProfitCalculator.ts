@@ -11,9 +11,9 @@ import { IProfitCalculator } from '@src/service/IProfitCalculator'
 import { NorthAmerica } from '@src/service/countries/NorthAmerica'
 import Parser from '@src/service/parser/parser-us'
 import { Country, Nullable } from '@src/types'
-import { IRuleCollection, IRuleContent } from '@src/types/rules'
-import { IProductCategory } from '@src/types/fees'
-import { verifyApparelByCategory } from '../calculator'
+import { IRuleCollection, IRuleContent, ITier } from '@src/types/rules'
+import { IProductCategory, IProductDimensionData } from '@src/types/fees'
+import { determineTier, verifyApparelByCategory } from '../calculator'
 export class UsProfitCalculator extends NorthAmerica implements IProfitCalculator {
   currentCountry: Country
   content: IRuleContent
@@ -72,5 +72,15 @@ export class UsProfitCalculator extends NorthAmerica implements IProfitCalculato
     if (!productCategories) return false
     const safeCategories = JSON.parse(JSON.stringify(productCategories))
     return verifyApparelByCategory(safeCategories, this.ruleCollection.apparelRules)
+  }
+  determineTier(productDimension: IProductDimensionData): Nullable<ITier> {
+    let tier = determineTier(productDimension, this.ruleCollection.tierRules)
+    if (tier && tier.name !== 'Special oversize') {
+      console.log('try to calculate tier again, current tier is ', tier)
+      const weight = this.calculateWeight(productDimension, tier)
+      tier = determineTier({ ...productDimension, weight }, this.ruleCollection.tierRules)
+      console.log(' the new tier is ', tier)
+    }
+    return tier
   }
 }

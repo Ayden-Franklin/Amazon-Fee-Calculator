@@ -67,6 +67,7 @@ export interface IReferralItem extends ICurrency {
   isOther: boolean
   excludingCategories: string[]
   includingCategories: string[]
+  isSteppedPrice: boolean
   rateItems: IReferralRateFee[]
   minimumFee: number
 }

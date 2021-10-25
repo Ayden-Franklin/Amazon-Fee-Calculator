@@ -488,7 +488,7 @@ function parseReferral(content: string, subContent?: StringRecord) {
       isOther: ['Everything Else'].includes(category),
       excludingCategories,
       includingCategories,
-      // rangeItems: !rateOnlyOne ? parseReferralSubItem($(rateEle).toString()) : [],
+      isSteppedPrice: $(rateEle).toString().indexOf('portion') > -1,
       rateItems: parseReferralSubItem($(rateEle).toString()),
       minimumFee: parseFloat(feeValue) || 0,
       currency: currency?.trim().replace('--', '') || NotAvailable,

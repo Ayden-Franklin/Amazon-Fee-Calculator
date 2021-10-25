@@ -244,6 +244,7 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
         if (shippingWeight.unit !== additionalUnitFee.shippingWeight.unit) {
           shippingWeightValue = convertWeightUnit(shippingWeight, additionalUnitFee.shippingWeight.unit)
         }
+        shippingWeightValue = parseFloat(shippingWeightValue.toFixed(2))
         let fbaFee = 0
         if (lastFixedFeeItem) {
           fbaFee =
@@ -399,11 +400,25 @@ export function calculateReferralFee(
   if (!winnerRule) {
     return { value: NaN, currency: NotAvailable }
   }
-
   let referralFee = 0
-  const rateItem = winnerRule.rateItems.find((item) => price > item.minimumPrice && price <= item.maximumPrice)
-  if (rateItem) {
-    referralFee = price * rateItem.rate
+  if (winnerRule.isSteppedPrice) {
+    let calculatedAmount = 0
+
+    for (const rateItem of winnerRule.rateItems) {
+      referralFee +=
+        (price > rateItem.maximumPrice ? rateItem.maximumPrice - rateItem.minimumPrice : price - calculatedAmount) *
+        rateItem.rate
+      calculatedAmount += rateItem.maximumPrice
+
+      if (calculatedAmount >= price) {
+        break
+      }
+    }
+  } else {
+    const rateItem = winnerRule.rateItems.find((item) => price > item.minimumPrice && price <= item.maximumPrice)
+    if (rateItem) {
+      referralFee = price * rateItem.rate
+    }
   }
   return { value: Math.max(winnerRule.minimumFee, referralFee), currency: winnerRule.currency }
 }
