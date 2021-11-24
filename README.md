@@ -1,17 +1,12 @@
-# About Test Calc
-1. create .env at /test/calc/.env
+# Description
+This is a calculator for Amazon fee including FBA fee, referral fee and variable closing fee. According to the rules published on Amazon website, the fees can be calculated with dimension information, price and category.
 
+### Screen shot
+![Screen shot](assets/images/screen.png)
 
-        PUPPETEER_EXECUTABLE_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
-        PIPELINES_API=http://localhost:3002
-        PRODUCT_COUNTRY=us
-        PRODUCT_ASIN=B08QRR73ZJ
-        PUPPETEER_HEADLESS=false
-
-2. draw char 
-
-    [use AnyChart NodeJS module requires ImageMagick and librsvg](https://github.com/AnyChart/AnyChart-NodeJS#download-and-install)
-
-3. run
-
-        npm run test-calc
+# Supported marketplaces
+U.S, Canada and Mexico are suppoerted currently. I'll add other marketplaces in the future.
+# How to run
+1. Clone this project and run `npm install` or `yarn install`
+2. Run `npm run start:render` first and open another terminal to run `npm run start:main`
+3. (Optional) Run `npm run test` for unit tests.
