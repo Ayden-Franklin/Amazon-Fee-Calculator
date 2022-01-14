@@ -253,7 +253,7 @@ export function parseFba(content: string) {
   const parseShippingAndFeeCell = (
     shippingWeightContent: string,
     fulfillmentFeeContent: string
-  ): [IFulfillmentFixedUnitFee | IFulfillmentAdditionalUnitFee, string] | undefined => {
+  ): IFulfillmentFixedUnitFee | IFulfillmentAdditionalUnitFee | undefined => {
     const fees = fulfillmentFeeContent.match(/CAD \$|\d+(,\d+)?(\.\d+)?/g)
     const fee =
       fees && fees.length === 2 ? { value: parseFloat(fees[1]), currency: fees[0] } : { value: NaN, currency: '' }
@@ -263,39 +263,32 @@ export function parseFba(content: string) {
       const unit = array.length === 2 ? array[1] : array[2]
       if (array.length === 2) {
         if (shippingWeightContent.includes('Each')) {
-          return [
-            {
-              shippingWeight: { value: v1, unit },
-              fee,
-              shippingWeightText: shippingWeightContent,
-            },
-            'IFulfillmentAdditionalUnitFee',
-          ]
+          return {
+            shippingWeight: { value: v1, unit },
+            fee,
+            shippingWeightText: shippingWeightContent,
+          }
         } else if (shippingWeightContent.includes('First')) {
-          return [
-            {
-              minimumShippingWeight: { value: 0, unit, operator: '>' },
-              maximumShippingWeight: { value: v1, unit, operator: '<=' },
-              fee,
-              shippingWeightText: shippingWeightContent,
-            },
-            'IFulfillmentFixedUnitFee',
-          ]
+          return {
+            minimumShippingWeight: { value: 0, unit, operator: '>' },
+            maximumShippingWeight: { value: v1, unit, operator: '<=' },
+            fee,
+            shippingWeightText: shippingWeightContent,
+          }
         }
       } else if (array.length === 3) {
         const v2 = parseFloat(array[1].replace(',', ''))
-        return [
-          {
-            minimumShippingWeight: { value: v1, unit, operator: '>' },
-            maximumShippingWeight: { value: v2, unit, operator: '<=' },
-            fee,
-            shippingWeightText: shippingWeightContent,
-          },
-          'IFulfillmentFixedUnitFee',
-        ]
+        return {
+          minimumShippingWeight: { value: v1, unit, operator: '>' },
+          maximumShippingWeight: { value: v2, unit, operator: '<=' },
+          fee,
+          shippingWeightText: shippingWeightContent,
+        }
       }
     }
   }
+  const isIFulfillmentFixedUnitFee = (parameter: any) =>
+    parameter.minimumShippingWeight && parameter.maximumShippingWeight
   const fbaRuleItems: IFbaItem[] = []
   const $ = cheerio.load(content)
   let fixedUnitFees: IFulfillmentFixedUnitFee[] = []
@@ -327,10 +320,16 @@ export function parseFba(content: string) {
         fixedUnitFees = []
       }
       const result = parseShippingAndFeeCell(shippingWeightText, fulfillmentFeeText)
-      if (result && result[1] === 'IFulfillmentFixedUnitFee') {
-        fixedUnitFees.push(result[0])
-      } else if (result && result[1] === 'IFulfillmentAdditionalUnitFee') {
-        additionalUnitFee = result[0]
+      if (result) {
+        if (isIFulfillmentFixedUnitFee(result)) {
+          fixedUnitFees.push(result as IFulfillmentFixedUnitFee)
+        } else {
+          additionalUnitFee = result as IFulfillmentAdditionalUnitFee
+          if (fixedUnitFees.length > 0) {
+            additionalUnitFee.fixedFee = fixedUnitFees[fixedUnitFees.length - 1].fee
+            additionalUnitFee.fixedShippingWeight = fixedUnitFees[fixedUnitFees.length - 1].maximumShippingWeight
+          }
+        }
       }
     }
     if (rowIndex === rows.length - 1) {

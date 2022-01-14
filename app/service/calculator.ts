@@ -246,7 +246,15 @@ export function calculateFbaFee({ tierName, shippingWeight, isApparel, isDangero
         }
         shippingWeightValue = parseFloat(shippingWeightValue.toFixed(2))
         let fbaFee = 0
-        if (lastFixedFeeItem) {
+        if (additionalUnitFee.fixedShippingWeight && additionalUnitFee.fixedFee) {
+          fbaFee =
+            Math.ceil(
+              (shippingWeightValue - additionalUnitFee.fixedShippingWeight.value) /
+                additionalUnitFee.shippingWeight.value
+            ) *
+              additionalUnitFee.fee.value +
+            additionalUnitFee.fixedFee.value
+        } else if (lastFixedFeeItem) {
           fbaFee =
             Math.ceil(
               (shippingWeightValue - lastFixedFeeItem.maximumShippingWeight.value) /
