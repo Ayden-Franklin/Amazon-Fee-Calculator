@@ -20,6 +20,7 @@ export default {
     { name: 'Smartwatches', require: ['Electronics'], order: 2 },
     { name: 'Batteries', require: ['Cell Phones & Accessories'], order: 2 },
     { name: 'Cradles', require: ['Cell Phones & Accessories'], order: 1 },
+    { name: 'Chargers & Power Adapters', require: ['Cell Phones & Accessories'], order: 1 },
   ],
   furniture: [{ name: 'Furniture', order: 0 }],
   homegarden: [{ name: 'Patio, Lawn & Garden', order: 1 }],
