@@ -50,6 +50,8 @@ export interface IFulfillmentFixedUnitFee {
   shippingWeightText: string
 }
 export interface IFulfillmentAdditionalUnitFee {
+  fixedShippingWeight?: IMeasureUnit
+  fixedFee?: IFeeUnit
   shippingWeight: IMeasureUnit
   fee: IFeeUnit
   shippingWeightText: string

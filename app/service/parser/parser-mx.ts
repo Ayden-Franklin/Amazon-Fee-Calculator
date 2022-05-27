@@ -1,7 +1,7 @@
 import cheerio from 'cheerio'
 import { NotAvailable } from '@src/service/constants'
 import { minify } from '@src/service/utils'
-import { ICalculateUnit, IMeasureUnit, StringRecord, Nullable } from '@src/types'
+import { ICalculateUnit, IMeasureUnit, StringRecord, Nullable, IFeeUnit } from '@src/types'
 import {
   ITier,
   IPackagingWeightItem,
@@ -269,7 +269,11 @@ export function parseFba(content: string) {
   const parseShippingAndFeeCell = (
     shippingWeightContent: string,
     fulfillmentFeeContent: string
-  ): [IFulfillmentFixedUnitFee | IFulfillmentAdditionalUnitFee, string] | undefined => {
+  ):
+    | IFulfillmentFixedUnitFee
+    | IFulfillmentAdditionalUnitFee
+    | { fixedShippingWeight: IMeasureUnit; fixedFee: IFeeUnit }
+    | undefined => {
     const fees = fulfillmentFeeContent.match(/MXN|\d+(,\d+)?(\.\d+)?/g)
     const fee =
       fees && fees.length === 2 ? { value: parseFloat(fees[1]), currency: fees[0] } : { value: NaN, currency: '' }
@@ -277,42 +281,44 @@ export function parseFba(content: string) {
     if (array && array?.length > 1) {
       const v1 = parseFloat(array[0])
       const unit = array.length === 2 ? array[1] : array[2]
+      // in cases 'First 0.25 kg' or 'After 5 kg'
       if (array.length === 2) {
-        if (shippingWeightContent.includes('For every additional')) {
-          return [
-            {
-              shippingWeight: { value: v1, unit },
-              fee,
-              shippingWeightText: shippingWeightContent,
-            },
-            'IFulfillmentAdditionalUnitFee',
-          ]
-        } else if (shippingWeightContent.includes('First')) {
-          return [
-            {
-              minimumShippingWeight: { value: 0, unit, operator: '>' },
-              maximumShippingWeight: { value: v1, unit, operator: '<=' },
-              fee,
-              shippingWeightText: shippingWeightContent,
-            },
-            'IFulfillmentFixedUnitFee',
-          ]
+        if (shippingWeightContent.includes('First')) {
+          return {
+            minimumShippingWeight: { value: 0, unit, operator: '>' },
+            maximumShippingWeight: { value: v1, unit, operator: '<=' },
+            fee,
+            shippingWeightText: shippingWeightContent,
+          }
+        } else if (shippingWeightContent.includes('After')) {
+          return {
+            fixedShippingWeight: { value: v1, unit },
+            fixedFee: fee,
+          }
         }
       } else if (array.length >= 3) {
-        const v2 = parseFloat(array.length === 3 ? array[1] : array[2])
-        const unit2 = array.length === 3 ? unit : array[3]
-        return [
-          {
+        if (shippingWeightContent.includes('For every additional')) {
+          return {
+            shippingWeight: { value: v1, unit },
+            fee,
+            shippingWeightText: shippingWeightContent,
+          }
+        } else {
+          const v2 = parseFloat(array.length === 3 ? array[1] : array[2])
+          const unit2 = array.length === 3 ? unit : array[3]
+          return {
             minimumShippingWeight: { value: v1, unit, operator: '>' },
             maximumShippingWeight: { value: v2, unit: unit2, operator: '<=' },
             fee,
             shippingWeightText: shippingWeightContent,
-          },
-          'IFulfillmentFixedUnitFee',
-        ]
+          }
+        }
       }
     }
   }
+  const isFixedUnitFee = (parameter: any) => parameter.currency && parameter.value
+  const isIFulfillmentFixedUnitFee = (parameter: any) =>
+    parameter.minimumShippingWeight && parameter.maximumShippingWeight
   const fbaRuleItems: IFbaItem[] = []
   const $ = cheerio.load(content)
   $('.help-table').each((_, table) => {
@@ -320,6 +326,7 @@ export function parseFba(content: string) {
       $(table).find('thead tr:eq(0)').find('th').text().trimLeft().split(' ').shift() || 'unknown'
     const fixedUnitFees: IFulfillmentFixedUnitFee[] = []
     let additionalUnitFee: IFulfillmentAdditionalUnitFee
+    let fixedPart: { fixedShippingWeight: IMeasureUnit; fixedFee: IFeeUnit }
     const rows = $(table).find('tbody tr')
     rows.each((rowIndex, tr) => {
       const cells = $(tr)
@@ -327,11 +334,20 @@ export function parseFba(content: string) {
         .map((_, cell): string => $(cell).text())
       const [shippingWeightText, fulfillmentFeeText] = cells
       const result = parseShippingAndFeeCell(shippingWeightText, fulfillmentFeeText)
-      if (result && result[1] === 'IFulfillmentFixedUnitFee') {
-        fixedUnitFees.push(result[0] as IFulfillmentFixedUnitFee)
-      } else if (result && result[1] === 'IFulfillmentAdditionalUnitFee') {
-        additionalUnitFee = result[0] as IFulfillmentAdditionalUnitFee
+      if (result) {
+        if (isFixedUnitFee(result)) {
+          fixedPart = result as { fixedShippingWeight: IMeasureUnit; fixedFee: IFeeUnit }
+        } else if (isIFulfillmentFixedUnitFee(result)) {
+          fixedUnitFees.push(result as IFulfillmentFixedUnitFee)
+        } else {
+          additionalUnitFee = result as IFulfillmentAdditionalUnitFee
+          if (fixedPart) {
+            additionalUnitFee.fixedFee = fixedPart.fixedFee
+            additionalUnitFee.fixedShippingWeight = fixedPart.fixedShippingWeight
+          }
+        }
       }
+
       if (rowIndex === rows.length - 1) {
         // push the last one item
         const tierData = determineTier(currentProductTierKey)
