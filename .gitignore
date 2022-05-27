@@ -15,3 +15,6 @@ inject_global.ts
 test/calc/*.pdf
 test/calc/*.jpg
 test/calc/*.json
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat

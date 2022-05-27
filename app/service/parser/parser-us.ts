@@ -315,16 +315,14 @@ function parseFba(content: string) {
       ]
     }
   }
-  const parseFulfillmentFeePerUnit = (
-    content: string
-  ): [IFeeUnit, IFulfillmentAdditionalUnitFee?, number?] | undefined => {
+  const parseFulfillmentFeePerUnit = (content: string): IFeeUnit | IFulfillmentAdditionalUnitFee | undefined => {
     const array = content.match(/\d+(\.\d+)?(\/lb)?/g)
     if (array && array.length > 0) {
       let fixedUnitFee = { value: parseFloat(array[0]), currency: '$' }
       let additionalUnitFee: IFulfillmentAdditionalUnitFee | undefined
       // There should be 1 or 2 or 3 numbers
       if (array.length === 1) {
-        return [fixedUnitFee]
+        return fixedUnitFee
       } else {
         let firstWeightAmount = 1
         if (array.length === 3) {
@@ -333,15 +331,21 @@ function parseFba(content: string) {
         const additionalUnitFeeResult = parseAdditionalUnitFee(array[1])
         if (additionalUnitFeeResult && additionalUnitFeeResult.length === 2) {
           additionalUnitFee = {
+            fixedShippingWeight: {
+              unit: additionalUnitFeeResult[0].unit,
+              value: firstWeightAmount,
+            },
+            fixedFee: fixedUnitFee,
             shippingWeight: additionalUnitFeeResult[0],
             fee: additionalUnitFeeResult[1],
             shippingWeightText: content,
           }
         }
-        return [fixedUnitFee, additionalUnitFee, firstWeightAmount]
+        return additionalUnitFee
       }
     }
   }
+  const isFixedUnitFee = (parameter: any) => parameter.currency && parameter.value
   const fbaRuleItems: IFbaItem[] = []
   const $ = cheerio.load(content)
   let fixedUnitFees: IFulfillmentFixedUnitFee[] = []
@@ -382,46 +386,34 @@ function parseFba(content: string) {
       const minimumShippingWeight = shippingWeightResult[0]
       const maximumShippingWeight = shippingWeightResult[1]
       const fulfillmentFeeResult = parseFulfillmentFeePerUnit(fulfillmentFee)
-      // [firstWeightAmount, firstWeightFee, additionalUnitFee] = parseFulfillmentFeePerUnit(fulfillmentFee)
-      if (fulfillmentFeeResult && fulfillmentFeeResult.length === 1) {
-        fixedUnitFees.push({
-          minimumShippingWeight,
-          maximumShippingWeight,
-          fee: fulfillmentFeeResult[0],
-          shippingWeightText,
-        })
-      } else if (fulfillmentFeeResult && fulfillmentFeeResult.length === 3) {
-        additionalUnitFee = fulfillmentFeeResult[1] as IFulfillmentAdditionalUnitFee
-        // if fixedUnitFees has not any item, it is described by only one line  like `$87.93 + $0.79/lb above first 90 lbs`
-        if (fixedUnitFees.length === 0) {
+      if (fulfillmentFeeResult) {
+        if (isFixedUnitFee(fulfillmentFeeResult)) {
           fixedUnitFees.push({
-            minimumShippingWeight: { unit: additionalUnitFee.shippingWeight.unit, value: 0, operator: '>' },
-            maximumShippingWeight: {
-              unit: additionalUnitFee.shippingWeight.unit,
-              value: fulfillmentFeeResult[2] as number,
-              operator: '<=',
-            },
-            fee: fulfillmentFeeResult[0],
+            minimumShippingWeight,
+            maximumShippingWeight,
+            fee: fulfillmentFeeResult as IFeeUnit,
             shippingWeightText,
           })
+        } else {
+          // in this case, it is described by only one line  like `$87.93 + $0.79/lb above first 90 lbs`
+          additionalUnitFee = fulfillmentFeeResult as IFulfillmentAdditionalUnitFee
         }
-        additionalUnitFee = fulfillmentFeeResult[1] as IFulfillmentAdditionalUnitFee
+        // console.log(' Finished a row: ')
+        // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
+        // console.log('                 currentProductTierKey = ', currentProductTierKey)
+        // console.log('                 shippingWeight = ', shippingWeight)
+        // console.log('                 fulfillmentFee = ', fulfillmentFee)
+        // const fulfillmentItem: IFulfillmentItem = {
+        //   shippingWeightText,
+        //   fee: fulfillmentFee,
+        //   minimumShippingWeight,
+        //   maximumShippingWeight,
+        //   firstWeightAmount,
+        //   firstWeightFee,
+        //   additionalUnitFee,
+        // }
+        // fulfillmentItems.push(fulfillmentItem)
       }
-      // console.log(' Finished a row: ')
-      // console.log('                 currentProductTypeKey = ', currentProductTypeKey)
-      // console.log('                 currentProductTierKey = ', currentProductTierKey)
-      // console.log('                 shippingWeight = ', shippingWeight)
-      // console.log('                 fulfillmentFee = ', fulfillmentFee)
-      // const fulfillmentItem: IFulfillmentItem = {
-      //   shippingWeightText,
-      //   fee: fulfillmentFee,
-      //   minimumShippingWeight,
-      //   maximumShippingWeight,
-      //   firstWeightAmount,
-      //   firstWeightFee,
-      //   additionalUnitFee,
-      // }
-      // fulfillmentItems.push(fulfillmentItem)
     }
     if (rowIndex === rows.length - 1) {
       // push the last one item
